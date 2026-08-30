@@ -1271,20 +1271,29 @@ export default function SquarePage() {
                           </button>
                         </div>
 
-                        <label className="flex items-center gap-1.5 text-[11px] text-[#707070] cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(newCommentAnonymous[post.id])}
-                            onChange={(e) =>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[11px] font-medium text-[#707070]">Comment anonymously</span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={Boolean(newCommentAnonymous[post.id])}
+                            onClick={() =>
                               setNewCommentAnonymous((prev) => ({
                                 ...prev,
-                                [post.id]: e.target.checked,
+                                [post.id]: !prev[post.id],
                               }))
                             }
-                            className="w-3.5 h-3.5 rounded text-[#FBBF24]"
-                          />
-                          <span>Comment anonymously</span>
-                        </label>
+                            className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
+                              newCommentAnonymous[post.id] ? 'bg-[#FBBF24]' : 'bg-[#E5E7EB]'
+                            }`}
+                          >
+                            <div
+                              className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                                newCommentAnonymous[post.id] ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </form>
                     </div>
                   )}
@@ -1489,15 +1498,27 @@ export default function SquarePage() {
                   )}
                 </div>
 
-                <label className="flex items-center gap-2 text-xs text-[#707070] cursor-pointer pt-1">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#FBBF24]"
-                  />
-                  <span>Post anonymously (hides your name & avatar)</span>
-                </label>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
+                  <div>
+                    <span className="text-xs font-bold text-[#0E0E0E] block">Post Anonymously</span>
+                    <span className="text-[10px] text-[#707070]">Hides your name, avatar, and church</span>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isAnonymous}
+                    onClick={() => setIsAnonymous(!isAnonymous)}
+                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                      isAnonymous ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                    }`}
+                  >
+                    <div
+                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                        isAnonymous ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
 
                 <div className="flex items-center gap-2 pt-2">
                   <button

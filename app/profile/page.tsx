@@ -1024,35 +1024,62 @@ export default function ProfilePage() {
                         Buddy Permissions & Sharing
                       </span>
 
-                      <label className="flex items-center justify-between text-xs text-[#0E0E0E] cursor-pointer">
+                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
                         <span>Clock-in Together (allow session invites)</span>
-                        <input
-                          type="checkbox"
-                          checked={buddy.permissions.canInviteToClockIn}
-                          onChange={() => handleTogglePermission(buddy, 'canInviteToClockIn')}
-                          className="w-4 h-4 rounded text-[#FBBF24] focus:ring-[#FBBF24]"
-                        />
-                      </label>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={buddy.permissions.canInviteToClockIn}
+                          onClick={() => handleTogglePermission(buddy, 'canInviteToClockIn')}
+                          className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
+                            buddy.permissions.canInviteToClockIn ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                          }`}
+                        >
+                          <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                              buddy.permissions.canInviteToClockIn ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
 
-                      <label className="flex items-center justify-between text-xs text-[#0E0E0E] cursor-pointer">
+                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
                         <span>Notify on Clock-in (send push alert)</span>
-                        <input
-                          type="checkbox"
-                          checked={buddy.permissions.sendNotificationOnStart}
-                          onChange={() => handleTogglePermission(buddy, 'sendNotificationOnStart')}
-                          className="w-4 h-4 rounded text-[#FBBF24] focus:ring-[#FBBF24]"
-                        />
-                      </label>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={buddy.permissions.sendNotificationOnStart}
+                          onClick={() => handleTogglePermission(buddy, 'sendNotificationOnStart')}
+                          className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
+                            buddy.permissions.sendNotificationOnStart ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                          }`}
+                        >
+                          <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                              buddy.permissions.sendNotificationOnStart ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
 
-                      <label className="flex items-center justify-between text-xs text-[#0E0E0E] cursor-pointer">
+                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
                         <span>Share History (allow viewing full session log)</span>
-                        <input
-                          type="checkbox"
-                          checked={buddy.permissions.canViewDetailedHistory}
-                          onChange={() => handleTogglePermission(buddy, 'canViewDetailedHistory')}
-                          className="w-4 h-4 rounded text-[#FBBF24] focus:ring-[#FBBF24]"
-                        />
-                      </label>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={buddy.permissions.canViewDetailedHistory}
+                          onClick={() => handleTogglePermission(buddy, 'canViewDetailedHistory')}
+                          className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
+                            buddy.permissions.canViewDetailedHistory ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                          }`}
+                        >
+                          <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                              buddy.permissions.canViewDetailedHistory ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1418,36 +1445,63 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <label className="flex items-center justify-between cursor-pointer">
-                <span>Daily Clock-In Reminders</span>
-                <input
-                  type="checkbox"
-                  checked={notifDailyReminders}
-                  onChange={(e) => setNotifDailyReminders(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#FBBF24]"
-                />
-              </label>
+            <div className="space-y-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0E0E0E]">Daily Clock-In Reminders</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifDailyReminders}
+                  onClick={() => setNotifDailyReminders(!notifDailyReminders)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                    notifDailyReminders ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      notifDailyReminders ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
-              <label className="flex items-center justify-between cursor-pointer">
-                <span>Buddy Nudge Alerts</span>
-                <input
-                  type="checkbox"
-                  checked={notifBuddyNudges}
-                  onChange={(e) => setNotifBuddyNudges(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#FBBF24]"
-                />
-              </label>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0E0E0E]">Buddy Nudge Alerts</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifBuddyNudges}
+                  onClick={() => setNotifBuddyNudges(!notifBuddyNudges)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                    notifBuddyNudges ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      notifBuddyNudges ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
-              <label className="flex items-center justify-between cursor-pointer">
-                <span>Group Activity & Live Sessions</span>
-                <input
-                  type="checkbox"
-                  checked={notifGroupActivity}
-                  onChange={(e) => setNotifGroupActivity(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#FBBF24]"
-                />
-              </label>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0E0E0E]">Group Activity & Live Sessions</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifGroupActivity}
+                  onClick={() => setNotifGroupActivity(!notifGroupActivity)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                    notifGroupActivity ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      notifGroupActivity ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
               <div className="pt-2 border-t border-[#E5E7EB] space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
@@ -1455,11 +1509,11 @@ export default function ProfilePage() {
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] text-[#707070] block mb-1">Day of Week</label>
+                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Day of Week</label>
                     <select
                       value={reviewDayOfWeek}
                       onChange={(e) => setReviewDayOfWeek(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs font-bold"
+                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E]"
                     >
                       <option value="Sunday">Sunday</option>
                       <option value="Monday">Monday</option>
@@ -1468,12 +1522,12 @@ export default function ProfilePage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-[#707070] block mb-1">Time</label>
+                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Time</label>
                     <input
                       type="time"
                       value={reviewReminderTime}
                       onChange={(e) => setReviewReminderTime(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs font-mono font-bold"
+                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E]"
                     />
                   </div>
                 </div>
@@ -1483,7 +1537,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setIsNotificationsOpen(false)}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md"
+              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
             >
               Done
             </button>
@@ -1493,41 +1547,63 @@ export default function ProfilePage() {
 
       {/* Privacy & Public Sharing Modal */}
       {isPrivacyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
               <h3 className="text-sm font-bold text-[#0E0E0E]">Privacy & Public Sharing</h3>
-              <button onClick={() => setIsPrivacyOpen(false)} className="text-[#707070]">
+              <button
+                type="button"
+                onClick={() => setIsPrivacyOpen(false)}
+                className="p-1 rounded-xl text-[#707070] hover:text-[#0E0E0E]"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <label className="flex items-center justify-between cursor-pointer">
-                <span>Share Streak with Buddies</span>
-                <input
-                  type="checkbox"
-                  checked={publicStreak}
-                  onChange={(e) => setPublicStreak(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#FBBF24]"
-                />
-              </label>
+            <div className="space-y-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0E0E0E]">Share Streak with Buddies</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={publicStreak}
+                  onClick={() => setPublicStreak(!publicStreak)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                    publicStreak ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      publicStreak ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
 
-              <label className="flex items-center justify-between cursor-pointer">
-                <span>Share Milestones & Badges to Square</span>
-                <input
-                  type="checkbox"
-                  checked={publicMilestones}
-                  onChange={(e) => setPublicMilestones(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#FBBF24]"
-                />
-              </label>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0E0E0E]">Share Milestones & Badges to Square</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={publicMilestones}
+                  onClick={() => setPublicMilestones(!publicMilestones)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                    publicMilestones ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      publicMilestones ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsPrivacyOpen(false)}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md"
+              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
             >
               Save Privacy Settings
             </button>

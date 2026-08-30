@@ -396,13 +396,26 @@ export function SessionSummaryModal({
                 </div>
               </div>
 
-              <input
-                type="checkbox"
+              <button
+                type="button"
+                role="switch"
                 disabled={!isBothComplete}
-                checked={shareToSquare && isBothComplete}
-                onChange={(e) => setShareToSquare(e.target.checked)}
-                className="w-4 h-4 rounded text-[#FBBF24] focus:ring-[#FBBF24] disabled:opacity-40"
-              />
+                aria-checked={shareToSquare && isBothComplete}
+                onClick={() => isBothComplete && setShareToSquare(!shareToSquare)}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                  !isBothComplete
+                    ? 'opacity-40 cursor-not-allowed bg-[#E5E7EB]'
+                    : shareToSquare
+                    ? 'bg-[#0E0E0E] cursor-pointer'
+                    : 'bg-[#E5E7EB] cursor-pointer'
+                }`}
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    shareToSquare && isBothComplete ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
 
             {!isBothComplete && (
