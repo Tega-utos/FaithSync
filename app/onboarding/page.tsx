@@ -30,14 +30,14 @@ export default function OnboardingPage() {
   const [minuteInput, setMinuteInput] = useState('00')
 
   // Buddy Code (6-digit UID uppercase)
-  const [syncCode, setSyncCode] = useState('SYNC88')
+  const [syncCode, setSyncCode] = useState('')
   const [friendCode, setFriendCode] = useState('')
 
   // Toast state
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('Invite code copied to clipboard!')
 
-  // 1. Authenticate user & extract 6-digit sync code from UID
+  // 1. Authenticate user & extract genuine 6-digit sync code
   useEffect(() => {
     async function initUser() {
       const supabase = createClient()
@@ -51,7 +51,8 @@ export default function OnboardingPage() {
       }
 
       setUserId(user.id)
-      
+
+      let assignedCode = ''
       const { data: profile } = await supabase
         .from('profiles')
         .select('buddy_code')
@@ -59,8 +60,13 @@ export default function OnboardingPage() {
         .maybeSingle()
 
       if (profile?.buddy_code) {
-        setSyncCode(profile.buddy_code)
+        assignedCode = profile.buddy_code
+      } else {
+        assignedCode = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+        await supabase.from('profiles').update({ buddy_code: assignedCode }).eq('id', user.id)
       }
+
+      setSyncCode(assignedCode)
     }
 
     initUser()
@@ -103,7 +109,7 @@ export default function OnboardingPage() {
   // Copy Invite Action with Pill Toast
   const handleCopyInvite = () => {
     if (typeof navigator !== 'undefined') {
-      const inviteUrl = `${window.location.origin}/welcome?ref=${syncCode}`
+      const inviteUrl = `${window.location.origin}/welcome?ref=${syncCode || 'FAITH'}`
       navigator.clipboard.writeText(inviteUrl)
       setToastMessage('Invite link copied to clipboard!')
       setShowToast(true)
@@ -118,29 +124,31 @@ export default function OnboardingPage() {
     const supabase = createClient()
     const scheduledTime = `${hourInput}:${minuteInput}`
 
-    await (supabase.from('profiles') as any).upsert(
-      {
-        id: userId,
-        buddy_code: syncCode,
-        preferences: {
-          targets: {
-            prayer: prayerTarget,
-            study: studyTarget,
-          },
-          reminderTimes: {
-            daily: scheduledTime,
-            prayer: scheduledTime,
-          },
-          notifDailyReminders: true,
-          notifBuddyNudges: true,
-          notifGroupActivity: true,
-          publicStreak: true,
-          publicMilestones: true,
+    const updatePayload: Record<string, any> = {
+      id: userId,
+      preferences: {
+        targets: {
+          prayer: prayerTarget,
+          study: studyTarget,
         },
-        updated_at: new Date().toISOString(),
+        reminderTimes: {
+          daily: scheduledTime,
+          prayer: scheduledTime,
+        },
+        notifDailyReminders: true,
+        notifBuddyNudges: true,
+        notifGroupActivity: true,
+        publicStreak: true,
+        publicMilestones: true,
       },
-      { onConflict: 'id' }
-    )
+      updated_at: new Date().toISOString(),
+    }
+
+    if (syncCode) {
+      updatePayload.buddy_code = syncCode
+    }
+
+    await (supabase.from('profiles') as any).upsert(updatePayload, { onConflict: 'id' })
 
     await supabase.auth.updateUser({
       data: {
@@ -152,10 +160,8 @@ export default function OnboardingPage() {
 
     if (customFriendCode && customFriendCode.trim()) {
       try {
-        const { user: friendProfile } = await searchUserBySyncCode(customFriendCode, userId)
-        if (friendProfile?.id) {
-          await sendBuddyRequest(friendProfile.id, userId)
-        }
+        const { sendBuddyCodeConnect } = await import('@/features/buddies/services/buddyService')
+        await sendBuddyCodeConnect(customFriendCode.trim())
       } catch (err) {
         console.error('Buddy connect error:', err)
       }
