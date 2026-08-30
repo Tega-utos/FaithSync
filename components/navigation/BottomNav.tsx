@@ -28,14 +28,16 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none flex justify-center pb-[max(10px,env(safe-area-inset-bottom))] px-3">
-      <div className="w-full max-w-[min(340px,calc(100vw-32px))] pointer-events-auto bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] px-1.5 py-1 grid grid-cols-3 items-center">
+      <div className="w-full max-w-[min(340px,calc(100vw-32px))] pointer-events-auto bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] p-1 grid grid-cols-3 gap-1 items-center">
         {/* ========================================================================= */}
         {/* 1. HOME (/home or /)                                                      */}
         {/* ========================================================================= */}
         <Link
           href="/"
-          className={`flex flex-col items-center justify-center py-0.5 rounded-xl transition-all group ${
-            isHome ? 'text-[#0E0E0E]' : 'text-[#9095A1] hover:text-[#0E0E0E]'
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 group ${
+            isHome
+              ? 'bg-[#FAF6EE] border border-[#E5E7EB] shadow-2xs text-[#0E0E0E]'
+              : 'border border-transparent text-[#9095A1] hover:text-[#0E0E0E]'
           }`}
         >
           <div className="relative flex items-center justify-center">
@@ -64,8 +66,10 @@ export function BottomNav() {
         {/* ========================================================================= */}
         <Link
           href="/clock-in"
-          className={`flex flex-col items-center justify-center py-0.5 rounded-xl transition-all group ${
-            isClockIn ? 'text-[#0E0E0E]' : 'text-[#9095A1] hover:text-[#0E0E0E]'
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 group ${
+            isClockIn
+              ? 'bg-[#FAF6EE] border border-[#E5E7EB] shadow-2xs text-[#0E0E0E]'
+              : 'border border-transparent text-[#9095A1] hover:text-[#0E0E0E]'
           }`}
         >
           <div className="relative flex items-center justify-center">
@@ -103,8 +107,10 @@ export function BottomNav() {
         {/* ========================================================================= */}
         <Link
           href="/sync"
-          className={`flex flex-col items-center justify-center py-0.5 rounded-xl transition-all group ${
-            isSync ? 'text-[#0E0E0E]' : 'text-[#9095A1] hover:text-[#0E0E0E]'
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 group ${
+            isSync
+              ? 'bg-[#FAF6EE] border border-[#E5E7EB] shadow-2xs text-[#0E0E0E]'
+              : 'border border-transparent text-[#9095A1] hover:text-[#0E0E0E]'
           }`}
         >
           <div className="relative flex items-center justify-center">
