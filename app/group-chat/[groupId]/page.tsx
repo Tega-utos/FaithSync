@@ -441,16 +441,8 @@ export default function GroupChatPage() {
             href={`/group-info/${groupId}`}
             className="flex items-center gap-2.5 truncate hover:opacity-90 transition-opacity flex-1 min-w-0"
           >
-            <div className="relative flex items-center -space-x-2 shrink-0">
-              <div className="w-8 h-8 rounded-full bg-[#0E0E0E] text-white text-[10px] font-black flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
-                S
-              </div>
-              <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#0E0E0E] text-[10px] font-black flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
-                D
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white text-[#0E0E0E] text-[10px] font-black flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
-                H
-              </div>
+            <div className="w-8 h-8 rounded-full bg-[#0E0E0E] text-[#FBBF24] text-xs font-black flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs shrink-0">
+              {groupName.charAt(0).toUpperCase()}
             </div>
 
             <div className="truncate">

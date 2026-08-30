@@ -42,34 +42,30 @@ export default function GroupInfoPage() {
 
   const [group, setGroup] = useState({
     id: (groupId as string) || '',
-    name: 'Friday Morning Bible Study',
-    category: 'Community Group',
-    church: 'Elevation Church',
-    rules:
-      'Keep all conversations uplifting and focused on Scripture. Respect everyone’s prayer requests and privacy, and encourage daily habit consistency.',
-    inviteCode: 'SYNC-7721',
-    isPrivate: true,
-    memberCount: 12,
+    name: 'Group Fellowship',
+    category: 'Bible Study',
+    church: 'Local Assembly',
+    rules: 'Keep all conversations uplifting and focused on Scripture. Encourage daily consistency.',
+    inviteCode: '',
+    isPrivate: false,
+    memberCount: 1,
   })
 
-  const [members, setMembers] = useState<GroupMember[]>([
-    { id: 'm-1', name: 'Sarah Gold', initial: 'S', role: 'admin', streakDays: 24 },
-    { id: 'm-2', name: 'Pastor David', initial: 'D', role: 'member', streakDays: 31 },
-    { id: 'm-3', name: 'Hannah Grace', initial: 'H', role: 'member', streakDays: 14 },
-    { id: 'm-4', name: 'Emmanuel Vance', initial: 'E', role: 'member', streakDays: 7 },
-    { id: 'm-5', name: 'John Mark', initial: 'J', role: 'member', streakDays: 19 },
-    { id: 'm-6', name: 'Deborah K.', initial: 'D', role: 'member', streakDays: 12 },
-  ])
-
+  const [members, setMembers] = useState<GroupMember[]>([])
   const [copied, setCopied] = useState(false)
   const [isMember, setIsMember] = useState(!isPreview)
-  const [isAdmin, setIsAdmin] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isEditingRules, setIsEditingRules] = useState(false)
   const [tempRules, setTempRules] = useState('')
 
   useEffect(() => {
     async function loadGroupData() {
       if (!groupId) return
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
       const realGroup = await fetchGroupById(groupId)
       if (realGroup) {
         setGroup({
@@ -77,18 +73,60 @@ export default function GroupInfoPage() {
           name: realGroup.name,
           category: realGroup.category,
           church: realGroup.church,
-          rules: realGroup.guidelines || 'Daily Clock-in • Respect Fellow Members',
+          rules: realGroup.guidelines || 'Keep conversations uplifting. Clock in together regularly.',
           memberCount: realGroup.memberCount || 1,
           inviteCode: realGroup.code || `SYNC-${realGroup.id.slice(0, 6).toUpperCase()}`,
-          isPrivate: true,
+          isPrivate: false,
         })
-      } else {
-        const stored = localStorage.getItem(`fs_group_${groupId}`)
-        if (stored) {
-          try {
-            setGroup(JSON.parse(stored))
-          } catch {}
+      }
+
+      // Fetch Real Members
+      try {
+        const { data: memberRows } = await (supabase
+          .from('group_members') as any)
+          .select(`
+            id,
+            role,
+            user_id,
+            user_profile:profiles!group_members_user_id_fkey(id, display_name, avatar_url)
+          `)
+          .eq('group_id', groupId)
+
+        if (memberRows && memberRows.length > 0) {
+          const loadedMembers: GroupMember[] = memberRows.map((m: any) => {
+            const pName = m.user_profile?.display_name || 'Believer'
+            return {
+              id: m.user_id,
+              name: pName,
+              initial: pName.charAt(0).toUpperCase(),
+              role: m.role || 'member',
+              avatarUrl: m.user_profile?.avatar_url || null,
+              streakDays: 0,
+            }
+          })
+          setMembers(loadedMembers)
+
+          if (user) {
+            const myMembership = memberRows.find((m: any) => m.user_id === user.id)
+            if (myMembership) {
+              setIsMember(true)
+              setIsAdmin(myMembership.role === 'owner' || myMembership.role === 'admin')
+            }
+          }
+        } else if (user) {
+          setMembers([
+            {
+              id: user.id,
+              name: user.user_metadata?.full_name || 'Me',
+              initial: (user.user_metadata?.full_name || 'M').charAt(0).toUpperCase(),
+              role: 'admin',
+              streakDays: 0,
+            },
+          ])
+          setIsAdmin(true)
         }
+      } catch (err) {
+        console.error('Error loading real group members:', err)
       }
     }
     loadGroupData()

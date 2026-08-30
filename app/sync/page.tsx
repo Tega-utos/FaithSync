@@ -616,18 +616,12 @@ export default function SyncPage() {
                   </div>
 
                   <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#F3F4F6]">
-                    <div className="flex items-center -space-x-1.5">
-                      <div className="w-6 h-6 rounded-full bg-[#0E0E0E] text-white text-[9px] font-bold flex items-center justify-center border border-white">
-                        D
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#0E0E0E] text-[#FBBF24] text-[10px] font-black flex items-center justify-center border border-white shadow-xs">
+                        {group.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-[#FBBF24] text-white text-[9px] font-bold flex items-center justify-center border border-white">
-                        H
-                      </div>
-                      <div className="w-6 h-6 rounded-full bg-[#FAF6EE] text-[#0E0E0E] text-[9px] font-bold flex items-center justify-center border border-[#E5E7EB]">
-                        +{Math.max(0, group.memberCount - 2)}
-                      </div>
-                      <span className="text-[10px] text-[#707070] ml-2 font-medium">
-                        {group.memberCount} members
+                      <span className="text-[10px] text-[#707070] font-medium">
+                        {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
                       </span>
                     </div>
 
