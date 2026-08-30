@@ -684,36 +684,41 @@ export default function SquarePage() {
     setSendingConnectRequest(true)
     try {
       const supabase = createClient()
+      const targetUserId = connectModalPost.author_id || connectModalPost.user_id
 
-      // 1. Create pending buddy connection with Square Connection type
-      const { data: conn } = await (supabase
+      if (!targetUserId) throw new Error('Target believer ID missing.')
+
+      // 1. Create pending connection with Square Connection type
+      const { data: conn, error: connErr } = await (supabase
         .from('buddies') as any)
         .insert({
           user_id: currentUser.id,
-          buddy_id: connectModalPost.user_id,
+          buddy_id: targetUserId,
           status: 'pending',
           connection_type: 'square',
         })
         .select()
         .single()
 
-      // 2. Dispatch intro message
-      if (conn) {
-        await supabase.from('messages').insert({
-          chat_id: conn.id,
-          sender_id: currentUser.id,
-          content: connectMessage.trim(),
-          message_type: 'text',
-        })
+      if (connErr) console.warn('Connection record note:', connErr.message)
 
-        // 3. Dispatch alert notification
-        await supabase.from('notifications').insert({
-          user_id: connectModalPost.user_id,
-          type: 'buddy_request',
-          text: `**${currentUser.user_metadata?.full_name || 'A Believer'}** sent you a connection request from the Square!`,
-          route_url: '/sync',
-        })
-      }
+      // 2. Dispatch direct intro message
+      await (supabase.from('messages') as any).insert({
+        sender_id: currentUser.id,
+        recipient_id: targetUserId,
+        content: connectMessage.trim(),
+        message_type: 'text',
+      })
+
+      // 3. Dispatch alert notification to recipient
+      await (supabase.from('notifications') as any).insert({
+        user_id: targetUserId,
+        sender_id: currentUser.id,
+        type: 'buddy_request',
+        title: currentUser.user_metadata?.full_name || 'A Believer',
+        text: `Sent you a connection request from the Square: "${connectMessage.trim().slice(0, 60)}..."`,
+        route_url: '/sync',
+      })
 
       setConnectSent(true)
       setTimeout(() => {
@@ -1122,25 +1127,48 @@ export default function SquarePage() {
                       </div>
                     </div>
 
-                    {/* Comments Toggle Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleComments(post.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs ${
-                        openCommentsPostId === post.id
-                          ? 'bg-[#0E0E0E] text-white'
-                          : 'bg-[#FAF6EE] text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]'
-                      }`}
-                    >
-                      <ChatCircle size={15} weight="bold" />
-                      <span>
-                        {post.commentCount > 0
-                          ? `${post.commentCount} ${
-                              post.commentCount === 1 ? 'Comment' : 'Comments'
-                            }`
-                          : 'Comment'}
-                      </span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Connect Button: Present on every post EXCEPT record posts, anonymous posts, or own posts */}
+                      {!post.is_anonymous &&
+                        post.post_type !== 'record' &&
+                        currentUser &&
+                        post.author_id !== currentUser.id &&
+                        post.user_id !== currentUser.id && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setConnectModalPost(post)
+                              setConnectMessage('')
+                              setConnectSent(false)
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF6EE] text-[#0E0E0E] hover:bg-[#FAF6EE]/80 border border-[#E5E7EB] hover:border-[#FBBF24] transition-all flex items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
+                            title="Connect with author via Square Chat"
+                          >
+                            <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
+                            <span>Connect</span>
+                          </button>
+                        )}
+
+                      {/* Comments Toggle Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleComments(post.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
+                          openCommentsPostId === post.id
+                            ? 'bg-[#0E0E0E] text-white'
+                            : 'bg-[#FAF6EE] text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]'
+                        }`}
+                      >
+                        <ChatCircle size={15} weight="bold" />
+                        <span>
+                          {post.commentCount > 0
+                            ? `${post.commentCount} ${
+                                post.commentCount === 1 ? 'Comment' : 'Comments'
+                              }`
+                            : 'Comment'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Expandable Comments Section */}
