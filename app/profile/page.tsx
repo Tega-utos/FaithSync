@@ -462,22 +462,46 @@ export default function ProfilePage() {
     }
   }
 
-  // Save Targets Modal
-  // Save Targets Modal (Optimistic UI)
+  // Open Edit Targets Modal with Current Values
+  const handleOpenEditTargets = () => {
+    setTempPrayerTarget(prayerTarget || 15)
+    setTempStudyTarget(studyTarget || 15)
+    setIsEditTargetsOpen(true)
+  }
+
+  // Save Targets Modal (Optimistic UI + Cross-Screen Local Storage + Multi-tier DB Sync)
   const handleSaveTargets = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const finalPrayer = Math.max(1, Math.min(tempPrayerTarget || 15, 720))
+    const finalStudy = Math.max(1, Math.min(tempStudyTarget || 15, 720))
 
     const prevPrayer = prayerTarget
     const prevStudy = studyTarget
 
     // 1. Immediate optimistic UI update
-    setPrayerTarget(tempPrayerTarget)
-    setStudyTarget(tempStudyTarget)
+    setPrayerTarget(finalPrayer)
+    setStudyTarget(finalStudy)
     setIsEditTargetsOpen(false)
     setToastMessage('Goals & reminders updated ✓')
     setTimeout(() => setToastMessage(null), 3000)
 
-    // 2. Background sync
+    // Cross-screen reactive cache
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'faithsync_user_targets',
+          JSON.stringify({
+            prayerTarget: finalPrayer,
+            studyTarget: finalStudy,
+            prayerReminderTime,
+            studyReminderTime,
+          })
+        )
+      }
+    } catch (_) {}
+
+    // 2. Multi-tier Background sync
     try {
       const supabase = createClient()
       const {
@@ -495,8 +519,8 @@ export default function ProfilePage() {
       const prevPrefs = (profile?.preferences as any) || {}
       const newPrefs = {
         ...prevPrefs,
-        prayerTarget: tempPrayerTarget,
-        studyTarget: tempStudyTarget,
+        prayerTarget: finalPrayer,
+        studyTarget: finalStudy,
         prayerReminderTime,
         studyReminderTime,
       }
@@ -772,8 +796,8 @@ export default function ProfilePage() {
 
           <button
             type="button"
-            onClick={() => setIsEditTargetsOpen(true)}
-            className="text-xs font-bold text-[#FBBF24] hover:underline"
+            onClick={handleOpenEditTargets}
+            className="text-xs font-bold text-[#FBBF24] hover:underline cursor-pointer"
           >
             Edit Targets
           </button>
@@ -1214,24 +1238,66 @@ export default function ProfilePage() {
 
       {/* Edit Targets Modal */}
       {isEditTargetsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Edit Daily Goals & Reminders</h3>
-              <button onClick={() => setIsEditTargetsOpen(false)} className="text-[#707070]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+              <div>
+                <h3 className="text-sm font-bold text-[#0E0E0E]">Edit Daily Goals & Reminders</h3>
+                <p className="text-[10px] text-[#707070]">Customize your daily prayer and study targets</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditTargetsOpen(false)}
+                className="p-1 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveTargets} className="space-y-4">
-              {/* Prayer Goal & Reminder Time */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-[#0E0E0E] flex items-center gap-1">
-                    <HandsPraying size={14} weight="fill" className="text-[#FBBF24]" /> Daily Prayer Goal
+            <form onSubmit={handleSaveTargets} className="space-y-5">
+              {/* 1. Prayer Goal Section */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                    <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" />
+                    <span>Daily Prayer Goal</span>
                   </span>
-                  <span className="font-mono-tabular font-bold text-[#0E0E0E]">{tempPrayerTarget} min</span>
+
+                  {/* Direct Number Input */}
+                  <div className="flex items-center gap-1.5 bg-[#FAF6EE] px-2.5 py-1 rounded-xl border border-[#E5E7EB]">
+                    <input
+                      type="number"
+                      min={1}
+                      max={720}
+                      value={tempPrayerTarget}
+                      onChange={(e) =>
+                        setTempPrayerTarget(Math.max(1, Math.min(720, parseInt(e.target.value) || 1)))
+                      }
+                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-[#0E0E0E] outline-none"
+                    />
+                    <span className="text-[11px] font-bold text-[#707070]">min</span>
+                  </div>
                 </div>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[10, 15, 30, 45, 60, 90].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setTempPrayerTarget(mins)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                        tempPrayerTarget === mins
+                          ? 'bg-[#0E0E0E] text-white shadow-xs'
+                          : 'bg-[#F9FAFB] border border-[#E5E7EB] text-[#4B5563] hover:border-[#FBBF24]'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+
+                {/* Synchronized Range Slider */}
                 <input
                   type="range"
                   min={5}
@@ -1239,27 +1305,64 @@ export default function ProfilePage() {
                   step={5}
                   value={tempPrayerTarget}
                   onChange={(e) => setTempPrayerTarget(Number(e.target.value))}
-                  className="w-full accent-[#0E0E0E] bg-[#E5E7EB] h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#FBBF24] bg-[#F3F4F6] h-2 rounded-lg cursor-pointer"
                 />
-                <div className="flex items-center justify-between pt-1">
-                  <label className="text-[10px] font-bold text-[#707070]">Reminder Time:</label>
+
+                {/* Reminder Time Picker */}
+                <div className="flex items-center justify-between pt-1 border-t border-[#F3F4F6]">
+                  <label className="text-[11px] font-bold text-[#707070]">Daily Reminder:</label>
                   <input
                     type="time"
                     value={prayerReminderTime}
                     onChange={(e) => setPrayerReminderTime(e.target.value)}
-                    className="px-2 py-1 bg-white border border-[#E5E7EB] rounded-lg text-xs font-mono font-bold"
+                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
                   />
                 </div>
               </div>
 
-              {/* Study Goal & Reminder Time */}
-              <div className="space-y-2 pt-2 border-t border-[#E5E7EB]">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-[#0E0E0E] flex items-center gap-1">
-                    <BookOpen size={14} className="text-[#FBBF24]" /> Daily Study Goal
+              {/* 2. Scripture Study Goal Section */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                    <BookOpen size={16} className="text-[#234537]" weight="fill" />
+                    <span>Daily Study Goal</span>
                   </span>
-                  <span className="font-mono-tabular font-bold text-[#FBBF24]">{tempStudyTarget} min</span>
+
+                  {/* Direct Number Input */}
+                  <div className="flex items-center gap-1.5 bg-[#FAF6EE] px-2.5 py-1 rounded-xl border border-[#E5E7EB]">
+                    <input
+                      type="number"
+                      min={1}
+                      max={720}
+                      value={tempStudyTarget}
+                      onChange={(e) =>
+                        setTempStudyTarget(Math.max(1, Math.min(720, parseInt(e.target.value) || 1)))
+                      }
+                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-[#0E0E0E] outline-none"
+                    />
+                    <span className="text-[11px] font-bold text-[#707070]">min</span>
+                  </div>
                 </div>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[10, 15, 30, 45, 60, 90].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setTempStudyTarget(mins)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                        tempStudyTarget === mins
+                          ? 'bg-[#234537] text-white shadow-xs'
+                          : 'bg-[#F9FAFB] border border-[#E5E7EB] text-[#4B5563] hover:border-[#234537]'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+
+                {/* Synchronized Range Slider */}
                 <input
                   type="range"
                   min={5}
@@ -1267,25 +1370,38 @@ export default function ProfilePage() {
                   step={5}
                   value={tempStudyTarget}
                   onChange={(e) => setTempStudyTarget(Number(e.target.value))}
-                  className="w-full accent-[#0E0E0E] bg-[#E5E7EB] h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#234537] bg-[#F3F4F6] h-2 rounded-lg cursor-pointer"
                 />
-                <div className="flex items-center justify-between pt-1">
-                  <label className="text-[10px] font-bold text-[#707070]">Reminder Time:</label>
+
+                {/* Reminder Time Picker */}
+                <div className="flex items-center justify-between pt-1 border-t border-[#F3F4F6]">
+                  <label className="text-[11px] font-bold text-[#707070]">Daily Reminder:</label>
                   <input
                     type="time"
                     value={studyReminderTime}
                     onChange={(e) => setStudyReminderTime(e.target.value)}
-                    className="px-2 py-1 bg-white border border-[#E5E7EB] rounded-lg text-xs font-mono font-bold"
+                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] focus:outline-none focus:border-[#234537]"
                   />
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
-              >
-                Update Targets & Reminders
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditTargetsOpen(false)}
+                  className="w-1/3 py-3 px-4 rounded-2xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] hover:text-[#0E0E0E]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#0E0E0E] text-white py-3 px-4 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <Check size={16} weight="bold" className="text-[#FBBF24]" />
+                  <span>Save Daily Targets</span>
+                </button>
+              </div>
             </form>
           </div>
         </div>
