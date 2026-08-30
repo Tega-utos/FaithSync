@@ -115,7 +115,7 @@ export default function FindBuddyPage() {
             .select(`
               id,
               user_id,
-              user_profile:profiles!buddies_user_id_fkey(display_name, church)
+              user_profile:profiles!buddies_user_id_fkey(display_name)
             `)
             .eq('buddy_id', user.id)
             .eq('status', 'pending')
@@ -127,7 +127,7 @@ export default function FindBuddyPage() {
                 senderId: r.user_id,
                 name: r.user_profile?.display_name || 'A Believer',
                 initial: (r.user_profile?.display_name || 'B').charAt(0).toUpperCase(),
-                church: r.user_profile?.church || 'Local Assembly',
+                church: 'Local Assembly',
               }))
             )
           }

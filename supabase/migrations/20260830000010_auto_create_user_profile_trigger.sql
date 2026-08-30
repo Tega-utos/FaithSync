@@ -3,6 +3,9 @@
 -- File: supabase/migrations/20260830000010_auto_create_user_profile_trigger.sql
 -- ==============================================================================
 
+-- 0. Ensure church column exists safely
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS church TEXT DEFAULT 'Local Assembly';
+
 -- 1. Helper Function: Generate unique unambiguous 6-character code
 CREATE OR REPLACE FUNCTION public.generate_unique_buddy_code()
 RETURNS TEXT AS $$

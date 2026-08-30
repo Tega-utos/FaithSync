@@ -55,10 +55,20 @@ export async function searchUserBySyncCode(
   }
 
   const supabase = createClient()
+  const cleanCore = normalized.replace(/^(FS|SYNC)[-_]?/, '')
+  const possibleCodes = [
+    normalized,
+    cleanCore,
+    `FS-${cleanCore}`,
+    `FS${cleanCore}`,
+    `SYNC-${cleanCore}`,
+    `SYNC${cleanCore}`,
+  ]
+
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, avatar_url, church, buddy_code')
-    .eq('buddy_code', normalized)
+    .select('id, display_name, avatar_url, buddy_code')
+    .in('buddy_code', possibleCodes)
     .maybeSingle()
 
   if (error || !data) {
@@ -74,7 +84,7 @@ export async function searchUserBySyncCode(
       id: data.id,
       displayName: data.display_name || 'A Believer',
       avatarUrl: data.avatar_url,
-      church: data.church || 'Local Assembly',
+      church: 'Local Assembly',
       buddyCode: data.buddy_code || normalized,
     },
   }
@@ -293,8 +303,8 @@ export async function getMyBuddies(currentUserId: string): Promise<{
       buddy_id,
       status,
       created_at,
-      user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, church, buddy_code),
-      buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, church, buddy_code)
+      user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, buddy_code),
+      buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, buddy_code)
     `)
     .or(`user_id.eq.${currentUserId},buddy_id.eq.${currentUserId}`)
     .order('created_at', { ascending: false })

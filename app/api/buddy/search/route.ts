@@ -30,20 +30,21 @@ export async function GET(req: NextRequest) {
     // 2. Query profiles
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, church, buddy_code')
+      .select('id, display_name, avatar_url, buddy_code')
       .neq('id', user.id)
 
     if (query) {
-      const cleanCode = query.toUpperCase()
+      const cleanCode = query.toUpperCase().replace(/^(FS|SYNC)[-_]?/, '')
       profilesQuery = profilesQuery.or(
-        `display_name.ilike.%${query}%,church.ilike.%${query}%,buddy_code.ilike.%${cleanCode}%`
+        `display_name.ilike.%${query}%,buddy_code.ilike.%${query}%,buddy_code.ilike.%${cleanCode}%`
       )
     }
 
     const { data: profiles, error } = await profilesQuery.limit(50)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Search query error:', error)
+      return NextResponse.json({ results: [] })
     }
 
     const results = (profiles || []).map((p: any) => {
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
         name: p.display_name || 'A Believer',
         initial: (p.display_name || 'B').charAt(0).toUpperCase(),
         avatarUrl: p.avatar_url,
-        church: p.church || 'Local Assembly',
+        church: 'Local Assembly',
         buddyCode: p.buddy_code || '',
         activityLevel: 'Daily Active',
         goalLength: '15m Daily',
