@@ -81,7 +81,29 @@ export async function searchUserBySyncCode(
 }
 
 /**
- * Stage 3: Send a buddy request or auto-accept if mutual request exists
+ * Stage 3: Send a buddy request by code via server API (bypasses any client RLS restrictions)
+ */
+export async function sendBuddyCodeConnect(
+  code: string
+): Promise<{ success: boolean; status?: 'pending' | 'accepted'; message?: string; error?: string }> {
+  try {
+    const res = await fetch('/api/buddy/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      return { success: false, error: data.error || 'Failed to connect with buddy.' }
+    }
+    return { success: true, status: data.status, message: data.message }
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Network error while adding buddy.' }
+  }
+}
+
+/**
+ * Stage 3: Send a buddy request by User ID or auto-accept if mutual request exists
  */
 export async function sendBuddyRequest(
   targetUserId: string,
@@ -172,9 +194,21 @@ export async function approveBuddyRequest(
   connectionId: string,
   currentUserId: string
 ): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch('/api/buddy/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ connectionId }),
+    })
+    const data = await res.json()
+    if (res.ok && data.success) {
+      return { success: true }
+    }
+  } catch {}
+
   const supabase = createClient()
 
-  // Update status to accepted
+  // Fallback direct update
   const { data: updated, error } = await supabase
     .from('buddies')
     .update({ status: 'accepted' })
@@ -202,28 +236,6 @@ export async function approveBuddyRequest(
     }
   } catch (chatErr) {
     console.error('Chat creation error:', chatErr)
-  }
-
-  // Notify original requester
-  try {
-    const partnerId = updated.user_id === currentUserId ? updated.buddy_id : updated.user_id
-    const { data: approverProf } = await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id', currentUserId)
-      .single()
-
-    const approverName = approverProf?.display_name || 'A Believer'
-    await supabase.from('notifications').insert({
-      user_id: partnerId,
-      sender_id: currentUserId,
-      type: 'buddy_accepted',
-      title: 'Buddy Request Accepted',
-      text: `**${approverName}** accepted your accountability buddy request!`,
-      route_url: `/buddy-chat/${currentUserId}`,
-    })
-  } catch (notifErr) {
-    console.error('Notification error:', notifErr)
   }
 
   return { success: true }

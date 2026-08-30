@@ -26,6 +26,7 @@ import { normalizeCode, shareOrCopyCode } from '@/lib/utils/syncCodes'
 import {
   searchUserBySyncCode,
   sendBuddyRequest,
+  sendBuddyCodeConnect,
   approveBuddyRequest,
   deleteBuddyConnection,
   subscribeToBuddyUpdates,
@@ -214,26 +215,34 @@ export default function FindBuddyPage() {
 
     setSearchingCode(true)
     try {
-      const { user: found, error: lookupErr } = await searchUserBySyncCode(codeQuery, currentUser.id)
-
-      if (lookupErr || !found) {
-        setCodeLookupError(lookupErr || 'No believer found with this Sync Code. Please verify and try again.')
-        return
-      }
-
-      const res = await sendBuddyRequest(found.id, currentUser.id)
+      const res = await sendBuddyCodeConnect(codeQuery)
       if (!res.success) {
         setCodeLookupError(res.error || 'Failed to connect with buddy.')
         return
       }
 
-      setUsers((prev) =>
-        prev.map((u) => (u.id === found.id ? { ...u, connectionStatus: res.status } : u))
-      )
       setCodeQuery('')
-    } catch (err) {
+      // Reload directory data
+      const supabase = createClient()
+      const { data: myBuddies } = await supabase
+        .from('buddies')
+        .select('user_id, buddy_id, status')
+        .or(`user_id.eq.${currentUser.id},buddy_id.eq.${currentUser.id}`)
+
+      const statusMap: Record<string, 'pending' | 'accepted'> = {}
+      let acceptedCount = 0
+      ;(myBuddies || []).forEach((b: any) => {
+        const otherId = b.user_id === currentUser.id ? b.buddy_id : b.user_id
+        statusMap[otherId] = b.status
+        if (b.status === 'accepted') acceptedCount++
+      })
+      setActiveBuddyCount(acceptedCount)
+      setUsers((prev) =>
+        prev.map((u) => (statusMap[u.id] ? { ...u, connectionStatus: statusMap[u.id] } : u))
+      )
+    } catch (err: any) {
       console.error('Code lookup error:', err)
-      setCodeLookupError('Unable to complete lookup. Please try again.')
+      setCodeLookupError(err?.message || 'Unable to complete lookup. Please try again.')
     } finally {
       setSearchingCode(false)
     }

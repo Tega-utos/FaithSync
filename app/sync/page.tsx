@@ -65,6 +65,7 @@ import {
   getMyBuddies,
   searchUserBySyncCode,
   sendBuddyRequest,
+  sendBuddyCodeConnect,
   approveBuddyRequest,
   deleteBuddyConnection,
   subscribeToBuddyUpdates,
@@ -647,19 +648,7 @@ export default function SyncPage() {
                 setBuddyCodeError(null)
 
                 try {
-                  const { user: found, error: searchErr } = await searchUserBySyncCode(
-                    buddyCodeInput,
-                    currentUser.id
-                  )
-
-                  if (searchErr || !found) {
-                    setBuddyCodeError(
-                      searchErr || 'No believer found with this Sync Code. Please verify and try again.'
-                    )
-                    return
-                  }
-
-                  const res = await sendBuddyRequest(found.id, currentUser.id)
+                  const res = await sendBuddyCodeConnect(buddyCodeInput)
                   if (!res.success) {
                     setBuddyCodeError(res.error || 'Failed to send buddy request.')
                     return
@@ -692,9 +681,9 @@ export default function SyncPage() {
                       lastMessage: 'Let’s clock in together!',
                     }))
                   )
-                } catch (err) {
+                } catch (err: any) {
                   console.error('Add buddy error:', err)
-                  setBuddyCodeError('Unable to complete request. Please try again.')
+                  setBuddyCodeError(err?.message || 'Unable to complete request. Please try again.')
                 } finally {
                   setSendingBuddyRequest(false)
                 }
