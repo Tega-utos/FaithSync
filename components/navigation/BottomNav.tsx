@@ -12,7 +12,8 @@ export function BottomNav() {
 
   const isVisible = shouldShowAppShell(pathname)
 
-  if (!isVisible) {
+  // Hide BottomNav in Community Square (/square) as navigation is via Back to SynC
+  if (!isVisible || pathname?.startsWith('/square')) {
     return null
   }
 

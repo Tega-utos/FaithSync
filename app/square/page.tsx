@@ -757,16 +757,20 @@ export default function SquarePage() {
   const charsRemaining = charLimit - postContent.length
 
   return (
-    <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
-      {/* Back Navigation */}
-      <div>
+    <div className="command-center-container px-4 sm:px-6 pt-3 pb-20 space-y-4">
+      {/* Top Header / Back Navigation */}
+      <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]/60">
         <Link
           href="/sync"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors group"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#0E0E0E] hover:border-[#FBBF24] transition-all group shadow-2xs active:scale-95"
         >
-          <CaretLeft size={16} weight="bold" className="group-hover:-translate-x-0.5 transition-transform" />
-          <span>Back to Sync</span>
+          <CaretLeft size={16} weight="bold" className="text-[#FBBF24] group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to SynC</span>
         </Link>
+
+        <span className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+          Community Feed
+        </span>
       </div>
 
       {/* Hero Section */}
@@ -1308,7 +1312,7 @@ export default function SquarePage() {
       <button
         type="button"
         onClick={handleOpenCompose}
-        className="fixed bottom-24 right-5 sm:right-8 z-40 w-14 h-14 rounded-full bg-[#FBBF24] text-white shadow-[0_8px_30px_rgba(251,191,36,0.55)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center ring-4 ring-[#FBBF24]/20"
+        className="fixed bottom-6 right-5 sm:right-8 z-40 w-14 h-14 rounded-full bg-[#FBBF24] text-white shadow-[0_8px_30px_rgba(251,191,36,0.55)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center ring-4 ring-[#FBBF24]/20"
         title="Share to Square"
       >
         <Plus size={24} weight="bold" />
