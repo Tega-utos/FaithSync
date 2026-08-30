@@ -67,7 +67,35 @@ export async function POST(req: Request) {
       savedSessionId = data?.id
     }
 
-    // 2. Recalculate Consecutive Streak ("All or Nothing" Dual Requirement)
+    // 2. Update user_stats daily prayer/study targets and total minutes
+    const durationMins = Math.floor(finalDuration / 60)
+    if (durationMins > 0) {
+      try {
+        const { data: currentStats } = await (supabase
+          .from('user_stats') as any)
+          .select('total_devotion_mins, prayer_mins_today, study_mins_today, total_sessions')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (currentStats) {
+          const updatePayload: any = {
+            total_devotion_mins: (currentStats.total_devotion_mins || 0) + durationMins,
+            total_sessions: (currentStats.total_sessions || 0) + 1,
+            updated_at: new Date().toISOString(),
+          }
+          if (type === 'prayer') {
+            updatePayload.prayer_mins_today = (currentStats.prayer_mins_today || 0) + durationMins
+          } else {
+            updatePayload.study_mins_today = (currentStats.study_mins_today || 0) + durationMins
+          }
+          await (supabase.from('user_stats') as any).update(updatePayload).eq('user_id', user.id)
+        }
+      } catch (statsErr) {
+        console.error('Failed to update user_stats:', statsErr)
+      }
+    }
+
+    // 3. Recalculate Consecutive Streak ("All or Nothing" Dual Requirement)
     let updatedStreak = 0
     try {
       const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
@@ -86,7 +114,7 @@ export async function POST(req: Request) {
       updatedStreak = (profile as any)?.streak_count || 0
     }
 
-    // 3. Share to Square if requested
+    // 4. Share to Square if requested
     if (sharedToSquare && reflection?.trim()) {
       await (supabase.from('square_posts') as any).insert({
         user_id: user.id,
