@@ -66,17 +66,35 @@ export default function GroupInfoPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
-      const realGroup = await fetchGroupById(groupId)
-      if (realGroup) {
+      const { data: grpData } = await (supabase
+        .from('groups') as any)
+        .select(`
+          id,
+          name,
+          category,
+          church,
+          code,
+          invite_code,
+          guidelines,
+          is_private,
+          created_by,
+          group_members (count)
+        `)
+        .eq('id', groupId)
+        .maybeSingle()
+
+      const isCreator = Boolean(user && grpData?.created_by === user.id)
+
+      if (grpData) {
         setGroup({
-          id: realGroup.id,
-          name: realGroup.name,
-          category: realGroup.category,
-          church: realGroup.church,
-          rules: realGroup.guidelines || 'Keep conversations uplifting. Clock in together regularly.',
-          memberCount: realGroup.memberCount || 1,
-          inviteCode: realGroup.code || `SYNC-${realGroup.id.slice(0, 6).toUpperCase()}`,
-          isPrivate: false,
+          id: grpData.id,
+          name: grpData.name,
+          category: grpData.category,
+          church: grpData.church || 'Local Assembly',
+          rules: grpData.guidelines || 'Keep conversations uplifting. Clock in together regularly.',
+          memberCount: grpData.group_members?.[0]?.count || 1,
+          inviteCode: grpData.invite_code || grpData.code || `SYNC-${grpData.id.slice(0, 6).toUpperCase()}`,
+          isPrivate: grpData.is_private || false,
         })
       }
 
@@ -95,11 +113,12 @@ export default function GroupInfoPage() {
         if (memberRows && memberRows.length > 0) {
           const loadedMembers: GroupMember[] = memberRows.map((m: any) => {
             const pName = m.user_profile?.display_name || 'Believer'
+            const isThisUserCreator = grpData?.created_by === m.user_id
             return {
               id: m.user_id,
               name: pName,
               initial: pName.charAt(0).toUpperCase(),
-              role: m.role || 'member',
+              role: isThisUserCreator || m.role === 'owner' || m.role === 'admin' ? 'admin' : 'member',
               avatarUrl: m.user_profile?.avatar_url || null,
               streakDays: 0,
             }
@@ -108,9 +127,9 @@ export default function GroupInfoPage() {
 
           if (user) {
             const myMembership = memberRows.find((m: any) => m.user_id === user.id)
-            if (myMembership) {
+            if (myMembership || isCreator) {
               setIsMember(true)
-              setIsAdmin(myMembership.role === 'owner' || myMembership.role === 'admin')
+              setIsAdmin(isCreator || myMembership?.role === 'owner' || myMembership?.role === 'admin')
             }
           }
         } else if (user) {
@@ -123,6 +142,7 @@ export default function GroupInfoPage() {
               streakDays: 0,
             },
           ])
+          setIsMember(true)
           setIsAdmin(true)
         }
       } catch (err) {
@@ -150,28 +170,67 @@ export default function GroupInfoPage() {
     })
   }
 
-  const handleJoinGroup = () => {
+  const handleJoinGroup = async () => {
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      await (supabase.from('group_members') as any).upsert({
+        group_id: groupId,
+        user_id: user.id,
+        role: 'member',
+      })
+    }
     setIsMember(true)
     router.push(`/group-chat/${groupId}`)
   }
 
-  const handleSaveRules = () => {
+  const handleSaveRules = async () => {
     if (tempRules.trim()) {
-      setGroup((prev) => {
-        const next = { ...prev, rules: tempRules.trim() }
-        localStorage.setItem(`fs_group_${groupId}`, JSON.stringify(next))
-        return next
-      })
+      setGroup((prev) => ({ ...prev, rules: tempRules.trim() }))
+      const supabase = createClient()
+      await (supabase.from('groups') as any)
+        .update({ guidelines: tempRules.trim() })
+        .eq('id', groupId)
     }
     setIsEditingRules(false)
   }
 
-  const handleKickMember = (memberId: string) => {
+  const handleKickMember = async (memberId: string) => {
     setMembers((prev) => prev.filter((m) => m.id !== memberId))
     setGroup((prev) => ({ ...prev, memberCount: Math.max(1, prev.memberCount - 1) }))
+    const supabase = createClient()
+    await (supabase.from('group_members') as any)
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', memberId)
   }
 
-  const handleLeaveGroup = () => {
+  const handleToggleAdminRole = async (memberId: string, currentRole: 'admin' | 'member') => {
+    const nextRole = currentRole === 'admin' ? 'member' : 'admin'
+    setMembers((prev) =>
+      prev.map((m) => (m.id === memberId ? { ...m, role: nextRole } : m))
+    )
+    const supabase = createClient()
+    await (supabase.from('group_members') as any)
+      .update({ role: nextRole })
+      .eq('group_id', groupId)
+      .eq('user_id', memberId)
+  }
+
+  const handleLeaveGroup = async () => {
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (user) {
+      await (supabase.from('group_members') as any)
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', user.id)
+    }
     setIsMember(false)
     router.push('/sync')
   }
@@ -285,15 +344,30 @@ export default function GroupInfoPage() {
                 </div>
               </div>
 
-              {/* Admin Authority: Kick abusive members */}
-              {isAdmin && member.role !== 'admin' && (
-                <button
-                  type="button"
-                  onClick={() => handleKickMember(member.id)}
-                  className="px-2.5 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] bg-[#FFF0F0] border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors"
-                >
-                  Remove
-                </button>
+              {/* Admin Authority: Promote/Demote and Kick abusive members */}
+              {isAdmin && member.id !== group.id && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAdminRole(member.id, member.role)}
+                    className={`px-2 py-1 rounded-xl text-[10px] font-bold border transition-colors ${
+                      member.role === 'admin'
+                        ? 'bg-amber-50 border-[#FBBF24]/50 text-[#B45309] hover:bg-amber-100'
+                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                    }`}
+                    title={member.role === 'admin' ? 'Demote from Admin' : 'Make Co-Admin'}
+                  >
+                    {member.role === 'admin' ? 'Demote' : '+ Admin'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleKickMember(member.id)}
+                    className="px-2 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] bg-[#FFF0F0] border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
               )}
             </div>
           ))}

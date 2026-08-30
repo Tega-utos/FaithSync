@@ -156,7 +156,21 @@ export default function GroupChatPage() {
           }
         }
 
-        // 2. Fetch real member count
+        // 2. Fetch membership role
+        if (user) {
+          const { data: myMember } = await (supabase
+            .from('group_members') as any)
+            .select('role')
+            .eq('group_id', groupId)
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+          if (myMember?.role === 'owner' || myMember?.role === 'admin') {
+            setIsHostUser(true)
+          }
+        }
+
+        // 3. Fetch real member count
         const { count } = await (supabase
           .from('group_members') as any)
           .select('*', { count: 'exact', head: true })
