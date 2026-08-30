@@ -80,8 +80,14 @@
   --border-light: #F3F4F6;
   --card-border: #E5E7EB;
   --card-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.04), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
-  --dock-bg: rgba(255, 255, 255, 0.95);
-  --dock-border: rgba(229, 231, 235, 0.8);
+  --dock-bg: rgba(250, 250, 247, 0.72);
+  --dock-border: rgba(0, 0, 0, 0.08);
+
+  /* Glassmorphic Floating Nav Variables */
+  --nav-bg: rgba(250, 250, 247, 0.72);
+  --nav-blur: blur(24px) saturate(180%);
+  --nav-border: rgba(0, 0, 0, 0.08);
+  --nav-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
 
   /* 3. Extended Gray Palette */
   --gray-50: #F9FAFB;
@@ -286,4 +292,48 @@ input:-webkit-autofill:active {
 
 .auth-bottom-glow {
   background: radial-gradient(circle at 50% 100%, rgba(251, 191, 36, 0.22) 0%, rgba(251, 191, 36, 0.05) 50%, transparent 80%);
+}
+
+/* Modern Instagram / YouVersion / iOS 18 Glassmorphic Floating Nav Dock */
+.modern-floating-dock {
+  width: calc(100% - 32px);
+  max-width: 448px;
+  height: 54px;
+  background: var(--nav-bg);
+  backdrop-filter: var(--nav-blur);
+  -webkit-backdrop-filter: var(--nav-blur);
+  border: 1px solid var(--nav-border);
+  border-radius: 28px;
+  box-shadow: var(--nav-shadow);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 50;
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.modern-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px;
+  border-radius: 20px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.modern-nav-item:active {
+  transform: scale(0.93);
+}
+
+.ph-nav {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
