@@ -48,19 +48,13 @@ export async function GET(request: Request) {
         console.error('Error auto-provisioning OAuth profile:', profileErr)
       }
 
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${targetPath}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${targetPath}`)
-      } else {
-        return NextResponse.redirect(`${origin}${targetPath}`)
-      }
+      // Always redirect to the application's clean origin URL
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
+      return NextResponse.redirect(`${siteUrl}${targetPath}`)
     }
   }
 
   // Return the user to login with helpful error message
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate session`)
+  const fallbackOrigin = process.env.NEXT_PUBLIC_SITE_URL || origin
+  return NextResponse.redirect(`${fallbackOrigin}/login?error=Could not authenticate session`)
 }
