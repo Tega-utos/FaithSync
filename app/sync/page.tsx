@@ -213,27 +213,43 @@ export default function SyncPage() {
     }
   }
 
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+  const [createGroupError, setCreateGroupError] = useState<string | null>(null)
+
   // Create Group Handler (uses atomic code from backend/service)
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newGroupName.trim()) return
 
-    const res = await createGroup({
-      name: newGroupName.trim(),
-      category: newGroupCategory,
-      church: newGroupChurch.trim() || undefined,
-      guidelines: newGroupRules.trim() || undefined,
-      is_private: newGroupIsPrivate,
-    })
+    setIsCreatingGroup(true)
+    setCreateGroupError(null)
 
-    if (!res) return
+    try {
+      const res = await createGroup({
+        name: newGroupName.trim(),
+        category: newGroupCategory,
+        church: newGroupChurch.trim() || undefined,
+        guidelines: newGroupRules.trim() || undefined,
+        is_private: newGroupIsPrivate,
+      })
 
-    setCreatedGroupId(res.id)
-    setCreatedInviteCode(res.code)
+      if (!res) {
+        setCreateGroupError('Could not create group. Please check database tables or try again.')
+        return
+      }
 
-    const updatedGroups = await fetchGroups()
-    setGroups(updatedGroups)
-    setCreateGroupStep('success')
+      setCreatedGroupId(res.id)
+      setCreatedInviteCode(res.code)
+
+      const updatedGroups = await fetchGroups()
+      setGroups(updatedGroups)
+      setCreateGroupStep('success')
+    } catch (err: any) {
+      console.error('Create group error:', err)
+      setCreateGroupError(err?.message || 'Failed to create group.')
+    } finally {
+      setIsCreatingGroup(false)
+    }
   }
 
   // Join Group with Code Handler (uses normalizeCode: trims whitespace & uppercases)
@@ -749,6 +765,12 @@ export default function SyncPage() {
 
             {createGroupStep === 'form' ? (
               <form onSubmit={handleCreateGroup} className="space-y-4 pt-1">
+                {createGroupError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
+                    {createGroupError}
+                  </div>
+                )}
+
                 {/* 1. Group Profile Picture Upload */}
                 <div className="flex flex-col items-center justify-center space-y-2 py-1">
                   <div className="relative">
@@ -780,7 +802,10 @@ export default function SyncPage() {
                     type="text"
                     required
                     value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
+                    onChange={(e) => {
+                      setNewGroupName(e.target.value)
+                      setCreateGroupError(null)
+                    }}
                     placeholder="e.g. Friday Morning Bible Study"
                     className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-xs"
                   />
@@ -864,10 +889,17 @@ export default function SyncPage() {
                 {/* Submit: Gold Create Group Button */}
                 <button
                   type="submit"
-                  disabled={!newGroupName.trim()}
-                  className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40"
+                  disabled={!newGroupName.trim() || isCreatingGroup}
+                  className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Create Group
+                  {isCreatingGroup ? (
+                    <>
+                      <CircleNotch size={16} className="animate-spin text-[#FBBF24]" />
+                      <span>Creating Group...</span>
+                    </>
+                  ) : (
+                    <span>Create Group</span>
+                  )}
                 </button>
               </form>
             ) : (
