@@ -15,6 +15,7 @@ import {
   CircleNotch,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 interface MilestoneStats {
   completedSessions: number
@@ -142,11 +143,12 @@ export default function MilestonesPage() {
           const pMins = Math.floor(totalPrayerSecs / 60)
           const sMins = Math.floor(totalStudySecs / 60)
           const totMins = pMins + sMins
+          const realStreak = await calculateUserStreak(user.id, supabase)
 
           setStats({
             completedSessions: verifiedSessions.length,
             totalMinutes: totMins,
-            currentStreakDays: uniqueDays.size,
+            currentStreakDays: realStreak,
             prayerMinutes: pMins,
             studyMinutes: sMins,
           })

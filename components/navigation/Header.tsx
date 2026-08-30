@@ -9,6 +9,7 @@ import { useTimer } from '@/context/TimerContext'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { shouldShowAppShell } from '@/lib/navigation/shellVisibility'
 import { Logo } from '@/components/Logo'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 export function Header() {
   const pathname = usePathname()
@@ -32,11 +33,9 @@ export function Header() {
         if (currentUser) {
           setUser(currentUser)
 
-          // Fetch streak
-          const { data: streakData } = await (supabase.rpc as any)('get_user_streak', {
-            p_user_id: currentUser.id,
-          })
-          if (streakData) setStreak(Number(streakData))
+          // Fetch authentic real-database streak
+          const realStreak = await calculateUserStreak(currentUser.id, supabase)
+          setStreak(realStreak)
 
           // Fetch unread notifications count
           const { count } = await supabase

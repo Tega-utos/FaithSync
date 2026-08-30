@@ -36,6 +36,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { shareOrCopyCode } from '@/lib/utils/syncCodes'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 interface BuddyPartner {
   id: string
@@ -246,12 +247,13 @@ export default function ProfilePage() {
 
           const pMins = Math.floor(totalPrayerSecs / 60)
           const sMins = Math.floor(totalStudySecs / 60)
-          setStreakDays(uniqueDays.size)
+          const realStreak = await calculateUserStreak(user.id, supabase)
+          setStreakDays(realStreak)
           setSquareShareCount(publicCount)
           setMilestoneStats({
             completedSessions: verified.length,
             totalMinutes: pMins + sMins,
-            currentStreakDays: uniqueDays.size,
+            currentStreakDays: realStreak,
             prayerMinutes: pMins,
             studyMinutes: sMins,
           })
