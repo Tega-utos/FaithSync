@@ -272,15 +272,20 @@ export default function HomePage() {
             key={req.id}
             className="p-3 rounded-xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center justify-between gap-3 animate-in fade-in"
           >
-            <div className="flex items-center gap-2.5 truncate">
+            <Link
+              href={`/profile/${req.senderId}`}
+              className="flex items-center gap-2.5 min-w-0 flex-1 group hover:opacity-85 transition-all"
+            >
               <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-white font-bold text-xs flex items-center justify-center shrink-0">
                 {req.senderInitial}
               </div>
-              <div className="truncate">
-                <p className="text-xs font-bold text-[#0E0E0E] truncate">{req.senderName}</p>
+              <div className="min-w-0 flex-1 truncate">
+                <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
+                  {req.senderName} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview</span>
+                </p>
                 <p className="text-[10px] text-[#707070]">Sent buddy request</p>
               </div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
