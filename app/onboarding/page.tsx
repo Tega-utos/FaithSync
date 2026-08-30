@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/Logo'
+import { searchUserBySyncCode, sendBuddyRequest } from '@/features/buddies/services/buddyService'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -50,8 +51,16 @@ export default function OnboardingPage() {
       }
 
       setUserId(user.id)
-      const code = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
-      setSyncCode(code)
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('buddy_code')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profile?.buddy_code) {
+        setSyncCode(profile.buddy_code)
+      }
     }
 
     initUser()
@@ -143,18 +152,9 @@ export default function OnboardingPage() {
 
     if (customFriendCode && customFriendCode.trim()) {
       try {
-        const { data: friendProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('buddy_code', customFriendCode.trim().toUpperCase())
-          .maybeSingle()
-
-        if (friendProfile?.id && friendProfile.id !== userId) {
-          await (supabase.from('buddies') as any).insert({
-            user_id: userId,
-            buddy_id: friendProfile.id,
-            status: 'pending',
-          })
+        const { user: friendProfile } = await searchUserBySyncCode(customFriendCode, userId)
+        if (friendProfile?.id) {
+          await sendBuddyRequest(friendProfile.id, userId)
         }
       } catch (err) {
         console.error('Buddy connect error:', err)

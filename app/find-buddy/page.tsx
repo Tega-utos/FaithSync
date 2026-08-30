@@ -23,6 +23,13 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeCode, shareOrCopyCode } from '@/lib/utils/syncCodes'
+import {
+  searchUserBySyncCode,
+  sendBuddyRequest,
+  approveBuddyRequest,
+  deleteBuddyConnection,
+  subscribeToBuddyUpdates,
+} from '@/features/buddies/services/buddyService'
 
 interface DirectoryUserItem {
   id: string
@@ -50,7 +57,7 @@ export default function FindBuddyPage() {
 
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  const [myBuddyCode, setMyBuddyCode] = useState('SYNC-7721')
+  const [myBuddyCode, setMyBuddyCode] = useState('')
   const [myChurch, setMyChurch] = useState('')
 
   // Search & Filter States
@@ -75,6 +82,8 @@ export default function FindBuddyPage() {
   const [codeLookupError, setCodeLookupError] = useState<string | null>(null)
 
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null
+
     async function loadDirectoryData() {
       try {
         const supabase = createClient()
@@ -163,6 +172,12 @@ export default function FindBuddyPage() {
 
             setUsers(formatted)
           }
+
+          if (!unsubscribe) {
+            unsubscribe = subscribeToBuddyUpdates(user.id, () => {
+              loadDirectoryData()
+            })
+          }
         }
       } catch (err) {
         console.error('Directory load error:', err)
@@ -172,16 +187,19 @@ export default function FindBuddyPage() {
     }
 
     loadDirectoryData()
+
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
   }, [])
 
-  // Join by exact code
+  // Join by exact code (Stage 2 & 3)
   const handleSearchByCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!codeQuery.trim()) return
 
     setCodeLookupError(null)
 
-    // The Trinity Limit: Max 3 active buddies
     if (activeBuddyCount >= 3) {
       setCodeLookupError(
         'The Trinity Limit: You have reached the maximum limit of 3 active accountability buddies.'
@@ -189,44 +207,30 @@ export default function FindBuddyPage() {
       return
     }
 
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+
     setSearchingCode(true)
     try {
-      const supabase = createClient()
-      const formattedCode = normalizeCode(codeQuery)
+      const { user: found, error: lookupErr } = await searchUserBySyncCode(codeQuery, currentUser.id)
 
-      // The Anti-Solo Rule: Strictly prevent self-referential buddy codes
-      if (formattedCode === normalizeCode(myBuddyCode)) {
-        setCodeLookupError('The Anti-Solo Rule: You cannot add yourself as an accountability buddy.')
+      if (lookupErr || !found) {
+        setCodeLookupError(lookupErr || 'No believer found with this Sync Code. Please verify and try again.')
         return
       }
 
-      const { data: found } = await supabase
-        .from('profiles')
-        .select('id, display_name, church, avatar_url')
-        .eq('buddy_code', formattedCode)
-        .maybeSingle()
-
-      if (found && currentUser) {
-        // Anti-Solo validation by ID
-        if (found.id === currentUser.id) {
-          setCodeLookupError('The Anti-Solo Rule: You cannot add yourself as an accountability buddy.')
-          return
-        }
-
-        // Send request
-        await supabase.from('buddies').insert({
-          user_id: currentUser.id,
-          buddy_id: found.id,
-          status: 'pending',
-        })
-
-        setUsers((prev) =>
-          prev.map((u) => (u.id === found.id ? { ...u, connectionStatus: 'pending' } : u))
-        )
-        setCodeQuery('')
-      } else {
-        setCodeLookupError('No believer found with this Sync Code. Please verify and try again.')
+      const res = await sendBuddyRequest(found.id, currentUser.id)
+      if (!res.success) {
+        setCodeLookupError(res.error || 'Failed to connect with buddy.')
+        return
       }
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === found.id ? { ...u, connectionStatus: res.status } : u))
+      )
+      setCodeQuery('')
     } catch (err) {
       console.error('Code lookup error:', err)
       setCodeLookupError('Unable to complete lookup. Please try again.')
@@ -235,7 +239,7 @@ export default function FindBuddyPage() {
     }
   }
 
-  // Connect Button Handler
+  // Connect Button Handler (Stage 3)
   const handleSendConnect = async (targetUser: DirectoryUserItem) => {
     if (!currentUser) {
       router.push('/login')
@@ -256,16 +260,18 @@ export default function FindBuddyPage() {
     )
 
     try {
-      const supabase = createClient()
-      await supabase.from('buddies').insert({
-        user_id: currentUser.id,
-        buddy_id: targetUser.id,
-        status: 'pending',
-      })
-    } catch {}
+      const res = await sendBuddyRequest(targetUser.id, currentUser.id)
+      if (res.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === targetUser.id ? { ...u, connectionStatus: res.status } : u))
+        )
+      }
+    } catch (err) {
+      console.error('Connect error:', err)
+    }
   }
 
-  // Approve / Ignore Handlers
+  // Approve / Ignore Handlers (Stage 5)
   const handleApprove = async (reqId: string) => {
     if (activeBuddyCount >= 3) {
       setCodeLookupError(
@@ -274,20 +280,26 @@ export default function FindBuddyPage() {
       return
     }
 
+    if (!currentUser) return
+
     try {
-      const supabase = createClient()
-      await supabase.from('buddies').update({ status: 'accepted' }).eq('id', reqId)
-      setPendingRequests((prev) => prev.filter((r) => r.id !== reqId))
-      setActiveBuddyCount((prev) => prev + 1)
-    } catch {}
+      const res = await approveBuddyRequest(reqId, currentUser.id)
+      if (res.success) {
+        setPendingRequests((prev) => prev.filter((r) => r.id !== reqId))
+        setActiveBuddyCount((prev) => prev + 1)
+      }
+    } catch (err) {
+      console.error('Approve error:', err)
+    }
   }
 
   const handleIgnore = async (reqId: string) => {
     try {
-      const supabase = createClient()
-      await supabase.from('buddies').delete().eq('id', reqId)
+      await deleteBuddyConnection(reqId)
       setPendingRequests((prev) => prev.filter((r) => r.id !== reqId))
-    } catch {}
+    } catch (err) {
+      console.error('Ignore error:', err)
+    }
   }
 
   // Copy & Share code handler

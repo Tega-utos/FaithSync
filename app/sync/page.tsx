@@ -61,6 +61,14 @@ interface SquareActivityItem {
 
 import { fetchGroups, createGroup, joinGroupByCode, GroupItem } from '@/features/groups/services/groupService'
 import { normalizeCode, shareOrCopyCode } from '@/lib/utils/syncCodes'
+import {
+  getMyBuddies,
+  searchUserBySyncCode,
+  sendBuddyRequest,
+  approveBuddyRequest,
+  deleteBuddyConnection,
+  subscribeToBuddyUpdates,
+} from '@/features/buddies/services/buddyService'
 
 export default function SyncPage() {
   const router = useRouter()
@@ -80,6 +88,8 @@ export default function SyncPage() {
   // Modals
   const [isAddBuddyOpen, setIsAddBuddyOpen] = useState(false)
   const [buddyCodeInput, setBuddyCodeInput] = useState('')
+  const [buddyCodeError, setBuddyCodeError] = useState<string | null>(null)
+  const [sendingBuddyRequest, setSendingBuddyRequest] = useState(false)
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
   const [createGroupStep, setCreateGroupStep] = useState<'form' | 'success'>('form')
   const [newGroupName, setNewGroupName] = useState('')
@@ -99,6 +109,8 @@ export default function SyncPage() {
   const [joining, setJoining] = useState(false)
 
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null
+
     async function loadSyncData() {
       try {
         const supabase = createClient()
@@ -116,57 +128,39 @@ export default function SyncPage() {
         const realGroups = await fetchGroups()
         setGroups(realGroups)
 
-        // Fetch Buddy Connections
-        const { data: connRows } = await supabase
-          .from('buddies')
-          .select(`
-            id,
-            status,
-            user_id,
-            buddy_id,
-            user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, church),
-            buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, church)
-          `)
-          .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+        // Fetch Buddy Connections via robust service
+        const { active, pendingIncoming } = await getMyBuddies(user.id)
 
-        const pendingList: IncomingRequestItem[] = []
-        const acceptedBuddies: BuddyItem[] = []
+        setIncomingRequests(
+          pendingIncoming.map((c) => ({
+            id: c.id,
+            senderId: c.partnerId,
+            senderName: c.partnerName,
+            senderInitial: c.partnerInitial,
+            senderAvatar: c.partnerAvatar,
+            senderChurch: c.partnerChurch,
+          }))
+        )
 
-        ;(connRows || []).forEach((c: any) => {
-          if (c.status === 'pending') {
-            if (c.buddy_id === user.id) {
-              const name = c.user_profile?.display_name || 'A Believer'
-              pendingList.push({
-                id: c.id,
-                senderId: c.user_id,
-                senderName: name,
-                senderInitial: name.charAt(0).toUpperCase(),
-                senderAvatar: c.user_profile?.avatar_url || null,
-                senderChurch: c.user_profile?.church || 'Local Assembly',
-              })
-            }
-          } else if (c.status === 'accepted') {
-            const isUserSender = c.user_id === user.id
-            const partner = isUserSender ? c.buddy_profile : c.user_profile
-            const pId = isUserSender ? c.buddy_id : c.user_id
-            const pName = partner?.display_name || 'Accountability Buddy'
+        setBuddies(
+          active.map((c) => ({
+            id: c.partnerId,
+            connectionId: c.id,
+            name: c.partnerName,
+            initial: c.partnerInitial,
+            avatarUrl: c.partnerAvatar,
+            church: c.partnerChurch,
+            isOnline: false,
+            lastActive: 'Active today',
+            lastMessage: 'Let’s clock in together!',
+          }))
+        )
 
-            acceptedBuddies.push({
-              id: pId,
-              connectionId: c.id,
-              name: pName,
-              initial: pName.charAt(0).toUpperCase(),
-              avatarUrl: partner?.avatar_url || null,
-              church: partner?.church || 'Grace Assembly',
-              isOnline: false,
-              lastActive: 'Active today',
-              lastMessage: 'Let’s clock in together!',
-            })
-          }
-        })
-
-        setIncomingRequests(pendingList)
-        setBuddies(acceptedBuddies)
+        if (!unsubscribe) {
+          unsubscribe = subscribeToBuddyUpdates(user.id, () => {
+            loadSyncData()
+          })
+        }
       } catch (err) {
         console.error('Sync load error:', err)
       } finally {
@@ -175,24 +169,47 @@ export default function SyncPage() {
     }
 
     loadSyncData()
+
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
   }, [])
 
-  // Approve Request
+  // Approve Request (Stage 5)
   const handleApproveRequest = async (reqId: string) => {
+    if (!currentUser) return
     try {
-      const supabase = createClient()
-      await supabase.from('buddies').update({ status: 'accepted' }).eq('id', reqId)
-      setIncomingRequests((prev) => prev.filter((r) => r.id !== reqId))
-    } catch {}
+      const res = await approveBuddyRequest(reqId, currentUser.id)
+      if (res.success) {
+        setIncomingRequests((prev) => prev.filter((r) => r.id !== reqId))
+        const { active } = await getMyBuddies(currentUser.id)
+        setBuddies(
+          active.map((c) => ({
+            id: c.partnerId,
+            connectionId: c.id,
+            name: c.partnerName,
+            initial: c.partnerInitial,
+            avatarUrl: c.partnerAvatar,
+            church: c.partnerChurch,
+            isOnline: false,
+            lastActive: 'Active today',
+            lastMessage: 'Let’s clock in together!',
+          }))
+        )
+      }
+    } catch (err) {
+      console.error('Approve error:', err)
+    }
   }
 
   // Ignore Request
   const handleIgnoreRequest = async (reqId: string) => {
     try {
-      const supabase = createClient()
-      await supabase.from('buddies').delete().eq('id', reqId)
+      await deleteBuddyConnection(reqId)
       setIncomingRequests((prev) => prev.filter((r) => r.id !== reqId))
-    } catch {}
+    } catch (err) {
+      console.error('Ignore error:', err)
+    }
   }
 
   // Create Group Handler (uses atomic code from backend/service)
@@ -621,32 +638,66 @@ export default function SyncPage() {
               onSubmit={async (e) => {
                 e.preventDefault()
                 if (!buddyCodeInput.trim()) return
-                const code = buddyCodeInput.trim().toUpperCase()
+                if (!currentUser) {
+                  router.push('/login')
+                  return
+                }
+
+                setSendingBuddyRequest(true)
+                setBuddyCodeError(null)
 
                 try {
-                  const supabase = createClient()
-                  const { data: targetUser } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('buddy_code', code)
-                    .single()
+                  const { user: found, error: searchErr } = await searchUserBySyncCode(
+                    buddyCodeInput,
+                    currentUser.id
+                  )
 
-                  if (targetUser && currentUser) {
-                    await supabase.from('buddies').insert({
-                      user_id: currentUser.id,
-                      buddy_id: targetUser.id,
-                      status: 'pending',
-                      permissions: {
-                        canInviteToClockIn: true,
-                        sendNotificationOnStart: true,
-                        canViewDetailedHistory: false,
-                      },
-                    })
+                  if (searchErr || !found) {
+                    setBuddyCodeError(
+                      searchErr || 'No believer found with this Sync Code. Please verify and try again.'
+                    )
+                    return
                   }
-                } catch {}
 
-                setIsAddBuddyOpen(false)
-                setBuddyCodeInput('')
+                  const res = await sendBuddyRequest(found.id, currentUser.id)
+                  if (!res.success) {
+                    setBuddyCodeError(res.error || 'Failed to send buddy request.')
+                    return
+                  }
+
+                  setIsAddBuddyOpen(false)
+                  setBuddyCodeInput('')
+                  // Reload list
+                  const { active, pendingIncoming } = await getMyBuddies(currentUser.id)
+                  setIncomingRequests(
+                    pendingIncoming.map((c) => ({
+                      id: c.id,
+                      senderId: c.partnerId,
+                      senderName: c.partnerName,
+                      senderInitial: c.partnerInitial,
+                      senderAvatar: c.partnerAvatar,
+                      senderChurch: c.partnerChurch,
+                    }))
+                  )
+                  setBuddies(
+                    active.map((c) => ({
+                      id: c.partnerId,
+                      connectionId: c.id,
+                      name: c.partnerName,
+                      initial: c.partnerInitial,
+                      avatarUrl: c.partnerAvatar,
+                      church: c.partnerChurch,
+                      isOnline: false,
+                      lastActive: 'Active today',
+                      lastMessage: 'Let’s clock in together!',
+                    }))
+                  )
+                } catch (err) {
+                  console.error('Add buddy error:', err)
+                  setBuddyCodeError('Unable to complete request. Please try again.')
+                } finally {
+                  setSendingBuddyRequest(false)
+                }
               }}
               className="space-y-3"
             >
@@ -654,22 +705,38 @@ export default function SyncPage() {
                 Enter your friend’s unique 6-character Buddy Code (e.g. SYNC26) to send an invite.
               </p>
 
+              {buddyCodeError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+                  {buddyCodeError}
+                </div>
+              )}
+
               <input
                 type="text"
                 required
                 maxLength={8}
                 value={buddyCodeInput}
-                onChange={(e) => setBuddyCodeInput(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setBuddyCodeInput(e.target.value.toUpperCase())
+                  setBuddyCodeError(null)
+                }}
                 placeholder="e.g. SYNC26"
                 className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl text-center font-mono font-black text-sm uppercase tracking-widest text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
               />
 
               <button
                 type="submit"
-                disabled={!buddyCodeInput.trim()}
-                className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40"
+                disabled={!buddyCodeInput.trim() || sendingBuddyRequest}
+                className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                Send Buddy Request
+                {sendingBuddyRequest ? (
+                  <>
+                    <CircleNotch size={16} className="animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  'Send Buddy Request'
+                )}
               </button>
             </form>
           </div>

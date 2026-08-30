@@ -187,7 +187,14 @@ export default function ProfilePage() {
         setEditChurch(resolvedChurch)
         setEditBio(resolvedBio)
         setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null)
-        setBuddyCode(profile?.buddy_code || `SYNC-${user.id.slice(0, 4).toUpperCase()}`)
+        
+        let validBuddyCode = profile?.buddy_code
+        if (!validBuddyCode) {
+          const generated = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+          validBuddyCode = generated
+          supabase.from('profiles').update({ buddy_code: generated }).eq('id', user.id).then(() => {})
+        }
+        setBuddyCode(validBuddyCode)
 
         const prefs = (profile?.preferences as any) || user.user_metadata?.preferences || {}
         const pT = prefs.prayerTarget || prefs.targets?.prayer || 15
