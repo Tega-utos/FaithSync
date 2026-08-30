@@ -211,10 +211,17 @@ export function NotificationDropdown({
   }
 
   return (
-    <div
-      ref={dropdownRef}
-      className="absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-32px))] bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl shadow-[0_16px_40px_rgba(0,0,0,0.12)] p-4 space-y-3 animate-in zoom-in-95 duration-200"
-    >
+    <>
+      {/* Mobile Backdrop to prevent background touches and enable easy closing */}
+      <div
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs sm:hidden animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      <div
+        ref={dropdownRef}
+        className="fixed sm:absolute top-16 sm:top-12 left-4 sm:left-auto right-4 sm:right-0 z-50 w-auto sm:w-88 max-w-[calc(100vw-32px)] sm:max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-4 space-y-3 animate-in zoom-in-95 duration-200"
+      >
       {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
         <div className="flex items-center gap-2">
@@ -302,7 +309,8 @@ export function NotificationDropdown({
         )}
       </div>
     </div>
-  )
+  </>
+)
 }
 
 export default NotificationDropdown
