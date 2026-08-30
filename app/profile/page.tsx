@@ -1431,7 +1431,7 @@ export default function ProfilePage() {
                     type="time"
                     value={prayerReminderTime}
                     onChange={(e) => setPrayerReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#FBBF24]"
                   />
                 </div>
               </div>
@@ -1496,7 +1496,7 @@ export default function ProfilePage() {
                     type="time"
                     value={studyReminderTime}
                     onChange={(e) => setStudyReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] focus:outline-none focus:border-[#234537]"
+                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537]"
                   />
                 </div>
               </div>
@@ -1525,11 +1525,11 @@ export default function ProfilePage() {
 
       {/* Notifications Modal */}
       {isNotificationsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
             <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
               <h3 className="text-sm font-bold text-[#0E0E0E]">Push Notification Preferences</h3>
-              <button onClick={() => setIsNotificationsOpen(false)} className="text-[#707070]">
+              <button onClick={() => setIsNotificationsOpen(false)} className="text-[#707070] hover:text-[#0E0E0E] p-1">
                 <X size={18} />
               </button>
             </div>
@@ -1597,13 +1597,13 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
                   Weekly Review Schedule
                 </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Day of Week</label>
+                <div className="space-y-2 bg-white p-3 rounded-2xl border border-[#E5E7EB]">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Day of Week</label>
                     <select
                       value={reviewDayOfWeek}
                       onChange={(e) => setReviewDayOfWeek(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E]"
+                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] min-w-0 max-w-[135px] truncate"
                     >
                       <option value="Sunday">Sunday</option>
                       <option value="Monday">Monday</option>
@@ -1611,13 +1611,13 @@ export default function ProfilePage() {
                       <option value="Saturday">Saturday</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Time</label>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F3F4F6] min-w-0">
+                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Reminder Time</label>
                     <input
                       type="time"
                       value={reviewReminderTime}
                       onChange={(e) => setReviewReminderTime(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E]"
+                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center"
                     />
                   </div>
                 </div>
@@ -1638,28 +1638,28 @@ export default function ProfilePage() {
                     <CaretRight size={10} weight="bold" />
                   </Link>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Day of Month</label>
+                <div className="space-y-2 bg-white p-3 rounded-2xl border border-[#E5E7EB]">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Day of Month</label>
                     <select
                       value={monthReviewSchedule}
                       onChange={(e) => setMonthReviewSchedule(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E]"
+                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] min-w-0 max-w-[135px] truncate"
                     >
                       <option value="last_day">Last Day of Month</option>
                       <option value="first_day">1st of the Month</option>
-                      <option value="last_sunday">Last Sunday of Month</option>
+                      <option value="last_sunday">Last Sunday</option>
                       <option value="day_15">15th of the Month</option>
                       <option value="day_28">28th of the Month</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Reminder Time</label>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F3F4F6] min-w-0">
+                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Reminder Time</label>
                     <input
                       type="time"
                       value={monthReviewReminderTime}
                       onChange={(e) => setMonthReviewReminderTime(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E]"
+                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center"
                     />
                   </div>
                 </div>
