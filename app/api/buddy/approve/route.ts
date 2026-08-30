@@ -4,15 +4,34 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const body = await req.json().catch(() => ({}))
+
+    let user: { id: string } | null = null
+
+    const authHeader = req.headers.get('Authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim()
+      const { data: tokenUser } = await supabase.auth.getUser(token)
+      if (tokenUser?.user) {
+        user = tokenUser.user
+      }
+    }
+
+    if (!user) {
+      const { data: cookieUser } = await supabase.auth.getUser()
+      if (cookieUser?.user) {
+        user = cookieUser.user
+      }
+    }
+
+    if (!user && body.userId) {
+      user = { id: body.userId }
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized. Please log in.' }, { status: 401 })
     }
 
-    const body = await req.json()
     const connectionId = body.connectionId
 
     if (!connectionId) {

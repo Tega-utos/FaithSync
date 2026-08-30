@@ -86,11 +86,23 @@ export async function searchUserBySyncCode(
 export async function sendBuddyCodeConnect(
   code: string
 ): Promise<{ success: boolean; status?: 'pending' | 'accepted'; message?: string; error?: string }> {
+  const supabase = createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const userId = session?.user?.id
+
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+
     const res = await fetch('/api/buddy/connect', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
+      headers,
+      body: JSON.stringify({ code, userId }),
     })
     const data = await res.json()
     if (!res.ok) {
@@ -194,19 +206,27 @@ export async function approveBuddyRequest(
   connectionId: string,
   currentUserId: string
 ): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+
     const res = await fetch('/api/buddy/approve', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ connectionId }),
+      headers,
+      body: JSON.stringify({ connectionId, userId: currentUserId }),
     })
     const data = await res.json()
     if (res.ok && data.success) {
       return { success: true }
     }
   } catch {}
-
-  const supabase = createClient()
 
   // Fallback direct update
   const { data: updated, error } = await supabase
