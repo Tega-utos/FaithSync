@@ -81,6 +81,8 @@ export default function FindBuddyPage() {
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
   const [activeBuddyCount, setActiveBuddyCount] = useState(0)
   const [codeLookupError, setCodeLookupError] = useState<string | null>(null)
+  const [codeLookupSuccess, setCodeLookupSuccess] = useState<string | null>(null)
+  const [searchingDirectory, setSearchingDirectory] = useState(false)
 
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
@@ -145,39 +147,13 @@ export default function FindBuddyPage() {
           })
           setActiveBuddyCount(acceptedCount)
 
-          // Fetch all directory users (Name, Buddy Code, Church)
-          const { data: allProfiles } = await supabase
-            .from('profiles')
-            .select('id, display_name, avatar_url, church, buddy_code, preferences')
-            .limit(50)
-
-          if (allProfiles) {
-            const formatted: DirectoryUserItem[] = allProfiles.map((p: any) => {
-              const isSelf = p.id === user.id
-              const status = isSelf ? 'self' : statusMap[p.id] || 'none'
-              const name = p.display_name || 'Faithful Believer'
-
-              return {
-                id: p.id,
-                name,
-                initial: name.charAt(0).toUpperCase(),
-                avatarUrl: p.avatar_url,
-                church: p.church || 'Assembly of Christ',
-                buddyCode: p.buddy_code || '',
-                streakDays: 14,
-                activityLevel: 'Daily Active',
-                goalLength: '15m Daily',
-                connectionStatus: status,
-              }
-            })
-
-            setUsers(formatted)
-          }
-
-          if (!unsubscribe) {
-            unsubscribe = subscribeToBuddyUpdates(user.id, () => {
-              loadDirectoryData()
-            })
+          // Fetch directory users via search API
+          const res = await fetch('/api/buddy/search')
+          if (res.ok) {
+            const data = await res.json()
+            if (data.results) {
+              setUsers(data.results)
+            }
           }
         }
       } catch (err) {
@@ -200,6 +176,7 @@ export default function FindBuddyPage() {
     if (!codeQuery.trim()) return
 
     setCodeLookupError(null)
+    setCodeLookupSuccess(null)
 
     if (activeBuddyCount >= 3) {
       setCodeLookupError(
@@ -221,30 +198,44 @@ export default function FindBuddyPage() {
         return
       }
 
-      setCodeQuery('')
-      // Reload directory data
-      const supabase = createClient()
-      const { data: myBuddies } = await supabase
-        .from('buddies')
-        .select('user_id, buddy_id, status')
-        .or(`user_id.eq.${currentUser.id},buddy_id.eq.${currentUser.id}`)
-
-      const statusMap: Record<string, 'pending' | 'accepted'> = {}
-      let acceptedCount = 0
-      ;(myBuddies || []).forEach((b: any) => {
-        const otherId = b.user_id === currentUser.id ? b.buddy_id : b.user_id
-        statusMap[otherId] = b.status
-        if (b.status === 'accepted') acceptedCount++
-      })
-      setActiveBuddyCount(acceptedCount)
-      setUsers((prev) =>
-        prev.map((u) => (statusMap[u.id] ? { ...u, connectionStatus: statusMap[u.id] } : u))
+      setCodeLookupSuccess(
+        res.message ||
+          (res.status === 'accepted'
+            ? '✓ Connected! You and your buddy are now linked.'
+            : '✓ Buddy request sent! They will appear in your buddies as soon as they accept.')
       )
+      setCodeQuery('')
+
+      // Reload directory data
+      const searchRes = await fetch(`/api/buddy/search?q=${encodeURIComponent(searchQuery)}`)
+      if (searchRes.ok) {
+        const data = await searchRes.json()
+        if (data.results) setUsers(data.results)
+      }
     } catch (err: any) {
       console.error('Code lookup error:', err)
       setCodeLookupError(err?.message || 'Unable to complete lookup. Please try again.')
     } finally {
       setSearchingCode(false)
+    }
+  }
+
+  // Active Directory Search form handler (triggered on Enter or Search button)
+  const handleDirectorySearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSearchingDirectory(true)
+    try {
+      const res = await fetch(`/api/buddy/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.results) {
+          setUsers(data.results)
+        }
+      }
+    } catch (err) {
+      console.error('Search error:', err)
+    } finally {
+      setSearchingDirectory(false)
     }
   }
 
@@ -440,12 +431,25 @@ export default function FindBuddyPage() {
           </span>
 
           {codeLookupError && (
-            <div className="p-3 rounded-xl bg-[#EBF3EE] border border-[#234537]/20 text-[#234537] text-xs font-semibold flex items-center justify-between gap-2">
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center justify-between gap-2">
               <span>{codeLookupError}</span>
               <button
                 type="button"
                 onClick={() => setCodeLookupError(null)}
-                className="text-[#234537] hover:opacity-75"
+                className="text-red-700 hover:opacity-75"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {codeLookupSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between gap-2 animate-in fade-in">
+              <span>{codeLookupSuccess}</span>
+              <button
+                type="button"
+                onClick={() => setCodeLookupSuccess(null)}
+                className="text-emerald-800 hover:opacity-75"
               >
                 <X size={14} />
               </button>
@@ -456,16 +460,20 @@ export default function FindBuddyPage() {
             <input
               type="text"
               value={codeQuery}
-              onChange={(e) => setCodeQuery(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                setCodeQuery(e.target.value.toUpperCase())
+                setCodeLookupError(null)
+                setCodeLookupSuccess(null)
+              }}
               placeholder="e.g. SYNC26"
               className="flex-1 px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-xl font-mono font-bold text-xs uppercase tracking-widest text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
             />
             <button
               type="submit"
               disabled={!codeQuery.trim() || searchingCode}
-              className="bg-[#0E0E0E] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all disabled:opacity-40"
+              className="bg-[#0E0E0E] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
-              {searchingCode ? <CircleNotch size={16} className="animate-spin" /> : 'Add'}
+              {searchingCode ? <CircleNotch size={14} className="animate-spin" /> : 'Add'}
             </button>
           </form>
         </div>
@@ -497,16 +505,25 @@ export default function FindBuddyPage() {
             </button>
           </div>
 
-          <div className="relative">
-            <MagnifyingGlass size={16} className="text-[#9095A1] absolute left-3.5 top-3" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Name, Sync Code, or Church (e.g. Elevation, Hillsong)..."
-              className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-sm"
-            />
-          </div>
+          <form onSubmit={handleDirectorySearch} className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <MagnifyingGlass size={16} className="text-[#9095A1] absolute left-3.5 top-3" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by Name, Sync Code, or Church..."
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={searchingDirectory}
+              className="bg-[#0E0E0E] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all flex items-center gap-1 shrink-0"
+            >
+              {searchingDirectory ? <CircleNotch size={14} className="animate-spin" /> : 'Search'}
+            </button>
+          </form>
         </div>
       </div>
 
