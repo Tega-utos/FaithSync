@@ -41,6 +41,7 @@ import { playChime } from '@/components/audio/Chime'
 import { fetchBuddyMessages, sendBuddyMessage } from '@/features/buddies/services/buddyService'
 import { getLocalDateKey } from '@/lib/utils/date'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 const DASH_ARRAY = 565.48
 
@@ -143,13 +144,8 @@ export default function BuddyChatPage() {
         }
 
         // 2. Fetch Genuine Buddy Streak from Database
-        const { data: bStats } = await (supabase
-          .from('user_stats') as any)
-          .select('streak_days')
-          .eq('user_id', buddyId)
-          .maybeSingle()
-
-        setBuddyStreak(bStats?.streak_days || 0)
+        const realBuddyStreak = await calculateUserStreak(buddyId, supabase)
+        setBuddyStreak(realBuddyStreak)
 
         if (user) {
           // Check connection type (Square Connection vs True Buddy)
