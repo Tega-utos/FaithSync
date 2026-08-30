@@ -262,6 +262,17 @@ export default function GroupChatPage() {
     }
   }
 
+  // Delete message moderation action (Accessible by sender or group host)
+  const handleDeleteMessage = async (msgId: string) => {
+    setMessages((prev) => prev.filter((m) => m.id !== msgId))
+    try {
+      const supabase = createClient()
+      await (supabase.from('group_messages') as any).delete().eq('id', msgId)
+    } catch (err) {
+      console.error('Delete message error:', err)
+    }
+  }
+
   // Real-time Clock Ticker for Hostless Scheduled Sessions
   const [currentTimeTick, setCurrentTimeTick] = useState(Date.now())
   useEffect(() => {
@@ -760,7 +771,7 @@ export default function GroupChatPage() {
           return (
             <div
               key={msg.id}
-              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}
             >
               {!isMe && (
                 <div className="flex items-center gap-1.5 mb-1 px-1">
@@ -770,14 +781,36 @@ export default function GroupChatPage() {
                   <span className="text-[10px] font-bold text-[#707070]">{msg.sender_name}</span>
                 </div>
               )}
-              <div
-                className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
-                  isMe
-                    ? 'bg-[#0E0E0E] text-white rounded-br-xs'
-                    : 'bg-white text-[#0E0E0E] border border-[#E5E7EB] rounded-bl-xs'
-                }`}
-              >
-                <p className="whitespace-pre-line">{msg.content}</p>
+              <div className="flex items-center gap-1 max-w-[85%]">
+                {isMe && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMessage(msg.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                    title="Delete message"
+                  >
+                    <Trash size={12} />
+                  </button>
+                )}
+                <div
+                  className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
+                    isMe
+                      ? 'bg-[#0E0E0E] text-white rounded-br-xs'
+                      : 'bg-white text-[#0E0E0E] border border-[#E5E7EB] rounded-bl-xs'
+                  }`}
+                >
+                  <p className="whitespace-pre-line">{msg.content}</p>
+                </div>
+                {!isMe && isHostUser && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMessage(msg.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                    title="Moderate & delete message (Admin)"
+                  >
+                    <Trash size={12} />
+                  </button>
+                )}
               </div>
               <span className="text-[9px] text-[#9095A1] mt-0.5 px-1 font-mono-tabular">
                 {new Date(msg.created_at).toLocaleTimeString([], {
