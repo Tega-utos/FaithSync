@@ -128,10 +128,10 @@ export default function BuddyChatPage() {
         } = await supabase.auth.getUser()
         setCurrentUser(user)
 
-        // 1. Fetch Buddy Profile
+        // 1. Fetch Genuine Buddy Profile & Real Streak
         const { data: partnerProfile } = await supabase
           .from('profiles')
-          .select('display_name, church, preferences')
+          .select('display_name, church, preferences, avatar_url')
           .eq('id', buddyId)
           .single()
 
@@ -139,8 +139,17 @@ export default function BuddyChatPage() {
           const name = partnerProfile.display_name || 'Accountability Buddy'
           setBuddyName(name)
           setBuddyInitial(name.charAt(0).toUpperCase())
-          setBuddyChurch(partnerProfile.church || 'Assembly of Christ')
+          setBuddyChurch(partnerProfile.church || 'Local Assembly')
         }
+
+        // 2. Fetch Genuine Buddy Streak from Database
+        const { data: bStats } = await (supabase
+          .from('user_stats') as any)
+          .select('streak_days')
+          .eq('user_id', buddyId)
+          .maybeSingle()
+
+        setBuddyStreak(bStats?.streak_days || 0)
 
         if (user) {
           // Check connection type (Square Connection vs True Buddy)
@@ -471,13 +480,14 @@ export default function BuddyChatPage() {
     }
   }
 
-  // End Live Session & Log
+  // End Live Session & Log to Database
   const handleConfirmEndSession = async () => {
     setShowEndConfirm(false)
     setIsLiveOverlayOpen(false)
 
     try {
       const roomId = `buddy-${buddyId}`
+      // 1. Terminate Live Room Signal
       await fetch('/api/session/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -488,6 +498,20 @@ export default function BuddyChatPage() {
           elapsedSeconds: liveDurationSecs,
           targetMins: liveTargetMins,
           focusText: liveFocusText,
+        }),
+      })
+
+      // 2. Persist Completed Devotion Session to Database & User Stats
+      await fetch('/api/session/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: liveDiscipline,
+          durationSeconds: liveDurationSecs,
+          targetDurationSeconds: liveTargetMins * 60,
+          startedAt: new Date(Date.now() - liveDurationSecs * 1000).toISOString(),
+          focusText: liveFocusText || `Buddy Session with ${buddyName}`,
+          sharedToSquare: false,
         }),
       })
     } catch (err) {
