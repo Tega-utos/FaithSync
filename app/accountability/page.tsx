@@ -66,17 +66,21 @@ export default function AccountabilityPage() {
         }
 
         // 1. Fetch Connections
-        const { data: connections } = await supabase
+        const { data: connections, error: connErr } = await supabase
           .from('buddies')
           .select(`
             id,
             status,
             user_id,
             buddy_id,
-            user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, church),
-            buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, church)
+            user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url),
+            buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url)
           `)
           .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+
+        if (connErr) {
+          console.error('Error fetching accountability connections:', connErr)
+        }
 
         const pending: IncomingRequest[] = []
         const active: ExpandedBuddy[] = []
