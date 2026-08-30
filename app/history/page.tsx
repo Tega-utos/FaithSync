@@ -12,6 +12,9 @@ import {
   CalendarBlank,
   Sparkle,
   HandsPraying,
+  Printer,
+  FileText,
+  Check,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay } from '@/lib/utils/date'
@@ -22,6 +25,7 @@ interface DailySummary {
   isToday: boolean
   prayerMinutes: number
   studyMinutes: number
+  totalMinutes: number
   prayerTarget: number
   studyTarget: number
   isPrayerMet: boolean
@@ -36,6 +40,7 @@ export default function HistoryPage() {
   const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([])
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
+  const [userName, setUserName] = useState('Believer')
 
   useEffect(() => {
     async function loadHistory() {
@@ -50,12 +55,23 @@ export default function HistoryPage() {
           return
         }
 
+        // Fetch user display name
+        setUserName(
+          user.user_metadata?.display_name ||
+            user.user_metadata?.full_name ||
+            'Believer'
+        )
+
         // Fetch targets
         const { data: profile } = await supabase
           .from('profiles')
-          .select('preferences')
+          .select('display_name, preferences')
           .eq('id', user.id)
           .single()
+
+        if (profile?.display_name) {
+          setUserName(profile.display_name)
+        }
 
         const prefs = (profile?.preferences as any) || {}
         const pTarget = prefs.prayerTarget || prefs.targets?.prayer || 15
@@ -103,11 +119,13 @@ export default function HistoryPage() {
           const display = d.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
+            weekday: 'short',
           })
 
           const data = dayMap[key] || { prayerSecs: 0, studySecs: 0 }
           const pMins = Math.floor(data.prayerSecs / 60)
           const sMins = Math.floor(data.studySecs / 60)
+          const totalMins = pMins + sMins
 
           const isPrayerMet = pMins >= pTarget
           const isStudyMet = sMins >= sTarget
@@ -125,6 +143,7 @@ export default function HistoryPage() {
             isToday,
             prayerMinutes: pMins,
             studyMinutes: sMins,
+            totalMinutes: totalMins,
             prayerTarget: pTarget,
             studyTarget: sTarget,
             isPrayerMet,
@@ -144,37 +163,98 @@ export default function HistoryPage() {
     loadHistory()
   }, [])
 
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') {
+      window.print()
+    }
+  }
+
+  const completedDays = dailySummaries.filter((d) => d.status === 'Complete').length
+  const totalMinsMonth = dailySummaries.reduce((sum, d) => sum + d.totalMinutes, 0)
+
   return (
-    <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-5">
+    <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4 print:p-0 print:m-0 print:max-w-full">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB] print:hidden">
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+          className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
         >
           <CaretLeft size={18} />
           <span>Home</span>
         </button>
 
-        <h1 className="text-lg font-bold text-[#0E0E0E]">Devotion Ledger</h1>
-        <div className="w-8" />
+        <h1 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight">Devotion Ledger</h1>
+
+        <button
+          type="button"
+          onClick={handlePrint}
+          className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] text-white hover:bg-[#262626] transition-all flex items-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-95"
+          title="Print Devotion Ledger / Export PDF"
+        >
+          <Printer size={15} className="text-[#FBBF24]" weight="bold" />
+          <span>Print</span>
+        </button>
       </div>
 
-      {/* Hero Stats Card */}
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight text-[#0E0E0E]">
-          Past 30 Days Record
-        </h2>
-        <p className="text-xs text-[#707070] leading-relaxed">
-          A persistent chronological record of your daily prayer and scripture consistency.
+      {/* Print Document Header (Visible only when printing) */}
+      <div className="hidden print:block mb-6 text-center border-b pb-4">
+        <h1 className="text-2xl font-black tracking-tight text-black">FaithSync Devotion Ledger</h1>
+        <p className="text-sm text-gray-700 mt-1">
+          Spiritual Walk Record for <span className="font-bold">{userName}</span> • Past 30 Days
+        </p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Printed on {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </div>
 
-      {/* Ledger Stream or Loading */}
+      {/* Summary Stat Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 print:grid-cols-3">
+        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            Completed Days
+          </span>
+          <p className="text-lg font-black text-[#0E0E0E] font-mono-tabular">
+            {completedDays} <span className="text-xs font-normal text-[#707070]">/ 30 days</span>
+          </p>
+        </div>
+
+        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            Total Devotion Time
+          </span>
+          <p className="text-lg font-black text-[#0E0E0E] font-mono-tabular">
+            {Math.floor(totalMinsMonth / 60)}h {totalMinsMonth % 60}m
+          </p>
+        </div>
+
+        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            Daily Targets Set
+          </span>
+          <p className="text-xs font-bold text-[#0E0E0E] pt-1 flex items-center gap-2">
+            <span className="text-[#FBBF24]">🙏 {prayerTarget}m Prayer</span>
+            <span className="text-[#234537]">📖 {studyTarget}m Study</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Horizontal Scroll Hint (Mobile only) */}
+      <div className="flex items-center justify-between text-[11px] text-[#707070] px-1 print:hidden">
+        <span className="font-medium flex items-center gap-1">
+          <FileText size={14} className="text-[#FBBF24]" />
+          <span>Spreadsheet Ledger (Past 30 Days)</span>
+        </span>
+        <span className="text-[10px] text-[#9095A1] sm:hidden">
+          👉 Scroll horizontally
+        </span>
+      </div>
+
+      {/* Ledger Spreadsheet or Loading */}
       {loading ? (
         <div className="py-20 text-center text-xs text-[#707070]">
-          Loading devotion ledger...
+          Loading devotion spreadsheet...
         </div>
       ) : dailySummaries.length === 0 ? (
         <div className="faith-card p-8 text-center space-y-3">
@@ -195,176 +275,108 @@ export default function HistoryPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          {/* Mobile Card List (< 640px) */}
-          <div className="block sm:hidden space-y-2.5">
-            {dailySummaries.map((day) => (
-              <div
-                key={day.dateKey}
-                onClick={() => router.push(`/session-details/date/${day.dateKey}`)}
-                className="faith-card p-3.5 space-y-2.5 hover:border-[#FBBF24]/50 transition-all cursor-pointer active:scale-[0.99]"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-[#0E0E0E]">
-                    <CalendarBlank size={14} className="text-[#9095A1]" />
-                    <span>{day.dateDisplay}</span>
-                    {day.isToday && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] text-white font-semibold">
-                        Today
-                      </span>
-                    )}
-                  </div>
+        /* Unified Horizontal-Scroll Excel-Style Spreadsheet Table */
+        <div className="faith-card overflow-hidden shadow-sm bg-white border border-[#E5E7EB] print:border-black print:shadow-none">
+          <div className="overflow-x-auto max-w-full">
+            <table className="w-full text-left text-xs border-collapse min-w-[580px] print:min-w-full">
+              <thead>
+                <tr className="bg-[#FAF6EE] border-b border-[#E5E7EB] text-[10px] uppercase font-black tracking-wider text-[#707070] print:bg-gray-100 print:text-black">
+                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Date</th>
+                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Prayer Time</th>
+                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Study Time</th>
+                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70 text-center">Total</th>
+                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70 text-center">Daily Status</th>
+                  <th className="py-3 px-3 text-right print:hidden">Action</th>
+                </tr>
+              </thead>
 
-                  <div className="flex items-center gap-1.5">
-                    {day.status === 'Complete' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] text-[9px] font-extrabold shadow-2xs">
-                        Complete
-                      </span>
-                    ) : day.status === 'In Progress' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[9px] font-bold">
-                        In Progress
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[9px] font-bold">
-                        Missed
-                      </span>
-                    )}
-                    <CaretRight size={14} className="text-[#9095A1]" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#F3F4F6]">
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <span className="text-[#707070] text-[10px]">Prayer:</span>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                        day.isPrayerMet
-                          ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40'
-                          : day.prayerMinutes > 0
-                          ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                          : 'text-[#9095A1]'
-                      }`}
-                    >
-                      <HandsPraying size={11} weight="fill" />
-                      {day.prayerMinutes} / {day.prayerTarget}m
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <span className="text-[#707070] text-[10px]">Study:</span>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                        day.isStudyMet
-                          ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40'
-                          : day.studyMinutes > 0
-                          ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                          : 'text-[#9095A1]'
-                      }`}
-                    >
-                      <BookOpen size={11} />
-                      {day.studyMinutes} / {day.studyTarget}m
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop/Tablet Table (>= 640px) */}
-          <div className="hidden sm:block faith-card overflow-hidden shadow-sm">
-            <div className="overflow-x-auto max-w-full">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#FAF6EE] border-b border-[#E5E7EB] text-[10px] uppercase font-bold tracking-wider text-[#707070]">
-                    <th className="py-3 px-3.5">Date</th>
-                    <th className="py-3 px-3">Prayer</th>
-                    <th className="py-3 px-3">Study</th>
-                    <th className="py-3 px-3">Status</th>
-                    <th className="py-3 px-3.5 text-right">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[#F3F4F6] bg-white">
-                  {dailySummaries.map((day) => (
-                    <tr
-                      key={day.dateKey}
-                      onClick={() => router.push(`/session-details/date/${day.dateKey}`)}
-                      className="hover:bg-[#FAF6EE]/70 transition-colors cursor-pointer group"
-                    >
-                      {/* 1. Date */}
-                      <td className="py-3.5 px-3.5 whitespace-nowrap font-bold text-[#0E0E0E]">
-                        <div className="flex items-center gap-1.5">
-                          <CalendarBlank size={14} className="text-[#9095A1]" />
-                          <span>{day.dateDisplay}</span>
-                          {day.isToday && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] text-white font-semibold">
-                              Today
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 2. Prayer Status Pill */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                            day.isPrayerMet
-                              ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40'
-                              : day.prayerMinutes > 0
-                              ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                              : 'text-[#9095A1]'
-                          }`}
-                        >
-                          <HandsPraying size={12} weight="fill" />
-                          {day.prayerMinutes} / {day.prayerTarget}m
-                        </span>
-                      </td>
-
-                      {/* 3. Study Status Pill */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                            day.isStudyMet
-                              ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40'
-                              : day.studyMinutes > 0
-                              ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                              : 'text-[#9095A1]'
-                          }`}
-                        >
-                          <BookOpen size={12} />
-                          {day.studyMinutes} / {day.studyTarget}m
-                        </span>
-                      </td>
-
-                      {/* 4. Overall Status Badge */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        {day.status === 'Complete' ? (
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] text-[10px] font-extrabold inline-block shadow-sm">
-                            Complete
-                          </span>
-                        ) : day.status === 'In Progress' ? (
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[10px] font-bold inline-block">
-                            In Progress
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[10px] font-bold inline-block">
-                            Missed
+              <tbody className="divide-y divide-[#F3F4F6] bg-white print:divide-gray-300">
+                {dailySummaries.map((day, idx) => (
+                  <tr
+                    key={day.dateKey}
+                    onClick={() => router.push(`/session-details/date/${day.dateKey}`)}
+                    className={`hover:bg-[#FAF6EE]/80 transition-colors cursor-pointer group print:hover:bg-transparent ${
+                      idx % 2 === 1 ? 'bg-[#FAF6EE]/20' : 'bg-white'
+                    }`}
+                  >
+                    {/* 1. Date Cell */}
+                    <td className="py-3 px-3.5 whitespace-nowrap font-bold text-[#0E0E0E] border-r border-[#F3F4F6]">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarBlank size={14} className="text-[#9095A1] shrink-0" />
+                        <span>{day.dateDisplay}</span>
+                        {day.isToday && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] text-white font-bold shrink-0">
+                            Today
                           </span>
                         )}
-                      </td>
+                      </div>
+                    </td>
 
-                      {/* 5. Action */}
-                      <td className="py-3.5 px-3.5 whitespace-nowrap text-right">
-                        <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
-                          <span>View</span>
-                          <CaretRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                    {/* 2. Prayer Cell */}
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6]">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                          day.isPrayerMet
+                            ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40 font-black'
+                            : day.prayerMinutes > 0
+                            ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
+                            : 'text-[#9095A1]'
+                        }`}
+                      >
+                        <HandsPraying size={12} weight="fill" />
+                        <span>{day.prayerMinutes} / {day.prayerTarget}m</span>
+                      </span>
+                    </td>
+
+                    {/* 3. Study Cell */}
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6]">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                          day.isStudyMet
+                            ? 'bg-[#EBF3EE] text-[#234537] border border-[#234537]/30 font-black'
+                            : day.studyMinutes > 0
+                            ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
+                            : 'text-[#9095A1]'
+                        }`}
+                      >
+                        <BookOpen size={12} weight="fill" />
+                        <span>{day.studyMinutes} / {day.studyTarget}m</span>
+                      </span>
+                    </td>
+
+                    {/* 4. Total Minutes Cell */}
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6] text-center font-mono-tabular font-bold text-xs text-[#0E0E0E]">
+                      {day.totalMinutes > 0 ? `${day.totalMinutes}m` : '—'}
+                    </td>
+
+                    {/* 5. Daily Status Badge */}
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6] text-center">
+                      {day.status === 'Complete' ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] text-[10px] font-black inline-flex items-center gap-1 shadow-2xs">
+                          <Check size={11} weight="bold" /> Complete
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ) : day.status === 'In Progress' ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[10px] font-bold inline-block">
+                          In Progress
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[10px] font-bold inline-block opacity-75">
+                          Missed
+                        </span>
+                      )}
+                    </td>
+
+                    {/* 6. Action Cell */}
+                    <td className="py-3 px-3 whitespace-nowrap text-right print:hidden">
+                      <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
+                        <span>Details</span>
+                        <CaretRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
