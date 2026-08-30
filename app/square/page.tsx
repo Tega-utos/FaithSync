@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Globe,
   Plus,
@@ -38,7 +38,7 @@ import { ScripturePicker, ScriptureSelection } from '@/components/scripture/Scri
 import { ScriptureText } from '@/components/scripture/ScriptureText'
 
 type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
-type IntentType = 'prayer' | 'struggle' | 'testimony'
+type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
 
 export const FAITH_REACTIONS = [
   { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537]' },
@@ -96,7 +96,7 @@ interface SquarePostItem {
   commentCount: number
 }
 
-export default function SquarePage() {
+function SquarePageContent() {
   const router = useRouter()
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
@@ -121,6 +121,32 @@ export default function SquarePage() {
   const [connectMessage, setConnectMessage] = useState('')
   const [sendingConnectRequest, setSendingConnectRequest] = useState(false)
   const [connectSent, setConnectSent] = useState(false)
+
+  const searchParams = useSearchParams()
+
+  // Handle incoming share parameters from Homepage Verse of the Day
+  useEffect(() => {
+    if (!searchParams) return
+    const shouldCompose = searchParams.get('compose') === 'true'
+    const verseParam = searchParams.get('verse')
+    const refParam = searchParams.get('ref') || searchParams.get('reference')
+    const intentParam = searchParams.get('intent')
+
+    if (shouldCompose || verseParam) {
+      setIsComposeOpen(true)
+      if (intentParam && ['prayer', 'struggle', 'testimony', 'record'].includes(intentParam)) {
+        setSelectedIntent(intentParam as IntentType)
+      } else {
+        setSelectedIntent('record')
+      }
+      setComposeStep('draft')
+
+      if (verseParam) {
+        setPostTitle(refParam ? `Reflection on ${refParam}` : 'Verse of the Day Reflection')
+        setPostContent(`${verseParam}\n\nMy Reflection:\n`)
+      }
+    }
+  }, [searchParams])
 
   useEffect(() => {
     async function loadSquarePosts() {
@@ -581,7 +607,9 @@ export default function SquarePage() {
           ? 'prayer_request'
           : selectedIntent === 'struggle'
           ? 'struggle'
-          : 'testimony'
+          : selectedIntent === 'testimony'
+          ? 'testimony'
+          : 'record'
 
       let newPostId: string | null = null
 
@@ -1335,84 +1363,113 @@ export default function SquarePage() {
                           ? 'Prayer Request'
                           : selectedIntent === 'struggle'
                           ? 'Struggle'
-                          : 'Testimony'
+                          : selectedIntent === 'testimony'
+                          ? 'Testimony'
+                          : 'Scripture Reflection'
                       }`}
                 </p>
               </div>
-              <button onClick={() => setIsComposeOpen(false)} className="text-[#707070]">
+              <button onClick={() => setIsComposeOpen(false)} className="text-[#707070] hover:text-[#0E0E0E] p-1">
                 <X size={20} />
               </button>
             </div>
 
             {composeStep === 'intent' ? (
-              <div className="space-y-3 pt-1">
+              <div className="space-y-2.5 pt-1">
+                {/* 1. Request Prayer */}
                 <div
                   onClick={() => {
                     setSelectedIntent('prayer')
                     setComposeStep('draft')
                   }}
-                  className="faith-card p-4 flex items-center justify-between cursor-pointer hover:border-[#234537] transition-all group"
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] border border-[#234537]/30 text-[#234537] flex items-center justify-center font-bold">
-                      <HandsPraying size={22} weight="fill" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] border border-[#234537]/30 text-[#234537] flex items-center justify-center font-bold shrink-0">
+                      <HandsPraying size={20} weight="fill" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#234537] transition-colors">
                         Request Prayer
                       </p>
                       <p className="text-[10px] text-[#707070]">
-                        Invite the community to pray with you. (Expires in 30 days)
+                        Invite the community to pray with you.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform" />
+                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
 
+                {/* 2. Share a Struggle */}
                 <div
                   onClick={() => {
                     setSelectedIntent('struggle')
                     setComposeStep('draft')
                   }}
-                  className="faith-card p-4 flex items-center justify-between cursor-pointer hover:border-[#262626] transition-all group"
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#262626] transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#F3F4F6] text-[#262626] flex items-center justify-center font-bold">
-                      <ShieldWarning size={22} />
+                    <div className="w-10 h-10 rounded-2xl bg-[#F3F4F6] text-[#262626] flex items-center justify-center font-bold shrink-0">
+                      <ShieldWarning size={20} />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#262626] transition-colors">
                         Share a Struggle
                       </p>
                       <p className="text-[10px] text-[#707070]">
-                        Honest declaration of difficulty. (Expires in 30 days)
+                        Honest declaration of difficulty and spiritual battles.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform" />
+                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
 
+                {/* 3. Share a Testimony */}
                 <div
                   onClick={() => {
                     setSelectedIntent('testimony')
                     setComposeStep('draft')
                   }}
-                  className="faith-card p-4 flex items-center justify-between cursor-pointer hover:border-[#FBBF24] transition-all group"
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#FBBF24] transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#FBBF24] flex items-center justify-center font-bold">
-                      <Sparkle size={22} weight="fill" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#FBBF24] flex items-center justify-center font-bold shrink-0">
+                      <Sparkle size={20} weight="fill" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
                         Share a Testimony
                       </p>
                       <p className="text-[10px] text-[#707070]">
-                        Celebrate what God has done. (Permanent)
+                        Celebrate God&apos;s faithfulness and answered prayers.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform" />
+                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </div>
+
+                {/* 4. Devotion & Scripture Reflection */}
+                <div
+                  onClick={() => {
+                    setSelectedIntent('record')
+                    setComposeStep('draft')
+                  }}
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] border border-[#234537]/30 text-[#234537] flex items-center justify-center font-bold shrink-0">
+                      <BookOpen size={20} weight="bold" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#234537] transition-colors">
+                        Scripture & Devotion Reflection
+                      </p>
+                      <p className="text-[10px] text-[#707070]">
+                        Share an edifying verse reflection or study note.
+                      </p>
+                    </div>
+                  </div>
+                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
               </div>
             ) : (
@@ -1423,6 +1480,35 @@ export default function SquarePage() {
                     <span>{postError}</span>
                   </div>
                 )}
+
+                {/* 4-Category Pill Switcher */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#707070] block">Category</label>
+                  <div className="grid grid-cols-4 gap-1 p-1 bg-white border border-[#E5E7EB] rounded-2xl">
+                    {[
+                      { id: 'prayer', label: 'Prayer' },
+                      { id: 'struggle', label: 'Struggle' },
+                      { id: 'testimony', label: 'Testimony' },
+                      { id: 'record', label: 'Reflection' },
+                    ].map((cat) => {
+                      const isSel = selectedIntent === cat.id
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedIntent(cat.id as IntentType)}
+                          className={`py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all text-center ${
+                            isSel
+                              ? 'bg-[#0E0E0E] text-white shadow-xs'
+                              : 'text-[#707070] hover:text-[#0E0E0E] hover:bg-[#FAF6EE]'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
 
                 <div>
                   <label className="text-[11px] font-bold text-[#707070] block mb-1">
@@ -1627,5 +1713,19 @@ export default function SquarePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function SquarePage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAF6EE] flex items-center justify-center">
+          <CircleNotch size={32} className="animate-spin text-[#234537]" />
+        </div>
+      }
+    >
+      <SquarePageContent />
+    </React.Suspense>
   )
 }

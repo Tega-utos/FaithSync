@@ -14,6 +14,7 @@ import {
   Clock,
   HandsPraying,
   HandWaving,
+  ShareNetwork,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchDashboardData, DashboardData } from '@/features/dashboard/services/dashboardService'
@@ -273,11 +274,11 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/square"
+            href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
             className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
           >
-            <Users size={13} className="text-[#234537]" weight="bold" />
-            <span>Share</span>
+            <ShareNetwork size={13} className="text-[#234537]" weight="bold" />
+            <span>Share to Square</span>
           </Link>
         </div>
       </div>
