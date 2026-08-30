@@ -11,24 +11,41 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.session) {
+      const user = data.session.user
       let targetPath = next || '/onboarding'
 
-      if (!next || next === '/' || next === '/home') {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, preferences')
-            .eq('id', data.session.user.id)
-            .maybeSingle()
+      try {
+        // 1. Check or auto-provision profile from Google OAuth metadata
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, buddy_code, preferences')
+          .eq('id', user.id)
+          .maybeSingle()
 
-          if (!profile || !profile.preferences) {
-            targetPath = '/onboarding'
-          } else {
-            targetPath = '/home'
-          }
-        } catch {
+        if (!profile) {
+          const generatedCode = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+          const fullName =
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split('@')[0] ||
+            'Believer'
+          const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+
+          await supabase.from('profiles').insert({
+            id: user.id,
+            display_name: fullName,
+            avatar_url: avatarUrl,
+            buddy_code: generatedCode,
+            church: 'Local Assembly',
+          })
           targetPath = '/onboarding'
+        } else if (!profile.preferences) {
+          targetPath = '/onboarding'
+        } else {
+          targetPath = next && next !== '/' ? next : '/home'
         }
+      } catch (profileErr) {
+        console.error('Error auto-provisioning OAuth profile:', profileErr)
       }
 
       const forwardedHost = request.headers.get('x-forwarded-host')

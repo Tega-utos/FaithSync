@@ -124,7 +124,7 @@ export default function SignupPage() {
     try {
       const supabase = createClient()
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
-      const { error: gError } = await supabase.auth.signInWithOAuth({
+      const { data, error: gError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${origin}/auth/callback?next=/onboarding`,
@@ -135,6 +135,9 @@ export default function SignupPage() {
         },
       })
       if (gError) throw gError
+      if (data?.url) {
+        window.location.href = data.url
+      }
     } catch (err: any) {
       setErrorMessage(getAuthErrorMessage(err))
       setGoogleLoading(false)
