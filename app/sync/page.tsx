@@ -339,15 +339,20 @@ export default function SyncPage() {
                     key={req.id}
                     className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1]"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center">
+                    <Link
+                      href={`/profile/${req.senderId}`}
+                      className="flex items-center gap-3 flex-1 min-w-0 group hover:opacity-85 transition-all"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center shrink-0">
                         {req.senderInitial}
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#0E0E0E]">{req.senderName}</p>
-                        <p className="text-[10px] text-[#707070]">{req.senderChurch}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
+                          {req.senderName} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview Profile</span>
+                        </p>
+                        <p className="text-[10px] text-[#707070] truncate">{req.senderChurch}</p>
                       </div>
-                    </div>
+                    </Link>
 
                     <div className="flex items-center gap-2">
                       <button

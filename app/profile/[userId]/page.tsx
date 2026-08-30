@@ -25,7 +25,8 @@ export default function OtherUserProfilePage() {
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
-  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted'>('none')
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'incoming_pending' | 'accepted'>('none')
+  const [connectionId, setConnectionId] = useState<string | null>(null)
   const [sendingRequest, setSendingRequest] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
 
@@ -53,7 +54,7 @@ export default function OtherUserProfilePage() {
         // 1. Fetch Target Profile
         const { data: targetProfile, error: profErr } = await supabase
           .from('profiles')
-          .select('id, display_name, avatar_url, church, bio, buddy_code')
+          .select('id, display_name, avatar_url, bio, buddy_code')
           .eq('id', targetUserId)
           .maybeSingle()
 
@@ -70,20 +71,32 @@ export default function OtherUserProfilePage() {
           setPrayerActiveToday(true)
           setStudyActiveToday(false)
         } else {
-          setProfile(targetProfile)
+          setProfile({
+            ...targetProfile,
+            church: (targetProfile as any).church || 'Local Assembly',
+          })
 
           // 2. Check Connection Status
           if (user) {
             const { data: conn } = await supabase
               .from('buddies')
-              .select('id, status')
+              .select('id, user_id, buddy_id, status')
               .or(
                 `and(user_id.eq.${user.id},buddy_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},buddy_id.eq.${user.id})`
               )
               .maybeSingle()
 
             if (conn) {
-              setConnectionStatus(conn.status as any)
+              setConnectionId(conn.id)
+              if (conn.status === 'accepted') {
+                setConnectionStatus('accepted')
+              } else if (conn.status === 'pending') {
+                if (conn.user_id === targetUserId) {
+                  setConnectionStatus('incoming_pending')
+                } else {
+                  setConnectionStatus('pending')
+                }
+              }
             }
           }
 
@@ -121,24 +134,44 @@ export default function OtherUserProfilePage() {
 
     setSendingRequest(true)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('buddies')
-        .insert({
-          user_id: currentUser.id,
-          buddy_id: targetUserId,
-          status: 'pending',
-        })
-        .select()
-        .single()
-
-      if (!error && data) {
-        setConnectionStatus('pending')
+      const { sendBuddyRequest: sendReq } = await import('@/features/buddies/services/buddyService')
+      const res = await sendReq(targetUserId, currentUser.id)
+      if (res.success) {
+        setConnectionStatus(res.status)
       }
     } catch (err) {
       console.error('Failed to send buddy request:', err)
     } finally {
       setSendingRequest(false)
+    }
+  }
+
+  // Approve Incoming Request
+  const handleApproveIncoming = async () => {
+    if (!connectionId || !currentUser) return
+    setSendingRequest(true)
+    try {
+      const { approveBuddyRequest } = await import('@/features/buddies/services/buddyService')
+      const res = await approveBuddyRequest(connectionId, currentUser.id)
+      if (res.success) {
+        setConnectionStatus('accepted')
+      }
+    } catch (err) {
+      console.error('Approve error:', err)
+    } finally {
+      setSendingRequest(false)
+    }
+  }
+
+  // Ignore Request
+  const handleIgnoreIncoming = async () => {
+    if (!connectionId) return
+    try {
+      const { deleteBuddyConnection } = await import('@/features/buddies/services/buddyService')
+      await deleteBuddyConnection(connectionId)
+      setConnectionStatus('none')
+    } catch (err) {
+      console.error('Ignore error:', err)
     }
   }
 
@@ -251,6 +284,30 @@ export default function OtherUserProfilePage() {
                 <span>Open Buddy Chat</span>
               </button>
             </Link>
+          ) : connectionStatus === 'incoming_pending' ? (
+            <div className="p-4 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 space-y-2.5 animate-in fade-in">
+              <p className="text-xs font-bold text-[#0E0E0E]">
+                {displayName} sent you an accountability buddy request!
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleApproveIncoming}
+                  disabled={sendingRequest}
+                  className="flex-1 bg-[#0E0E0E] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Check size={14} weight="bold" className="text-[#FBBF24]" />
+                  <span>{sendingRequest ? 'Approving...' : 'Approve Request'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleIgnoreIncoming}
+                  className="px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#707070] rounded-xl font-bold text-xs hover:text-[#EA2C26] transition-all"
+                >
+                  Ignore
+                </button>
+              </div>
+            </div>
           ) : connectionStatus === 'pending' ? (
             <button
               type="button"
