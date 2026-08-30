@@ -157,12 +157,12 @@ export default function HomePage() {
         weekDots={dashboard.weekDots}
       />
 
-      {/* Today's Progress Rings */}
+      {/* Today's Momentum: Dual Concentric Progress Ring */}
       <div className="faith-card p-5 space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-[#0E0E0E] tracking-tight">Today&apos;s Momentum</h2>
-            <p className="text-[11px] text-[#707070]">Prayer & Scripture Study</p>
+            <p className="text-[11px] text-[#707070]">Daily Prayer & Scripture Targets</p>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] text-xs font-extrabold shadow-2xs">
@@ -171,63 +171,135 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Dual Animated Circular Rings */}
-        <div className="grid grid-cols-2 gap-4 py-2">
-          {/* 1. Prayer Ring */}
-          <div className="flex flex-col items-center text-center space-y-2 p-2">
-            <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" className="stroke-[#F3F4F6]" strokeWidth="7" fill="transparent" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  className="stroke-[#FBBF24] transition-all duration-700 ease-out"
-                  strokeWidth="7"
-                  strokeDasharray={DASH_ARRAY}
-                  strokeDashoffset={prayerOffset}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <HandsPraying size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-[#0E0E0E]">Prayer</span>
-              </div>
+        {/* Concentric Dual Rings Display */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+          {/* Dual Ring Visual */}
+          <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+              {/* Outer Track & Progress: Prayer (Gold) */}
+              <circle cx="60" cy="60" r="50" className="stroke-[#F3F4F6]" strokeWidth="8" fill="transparent" />
+              <circle
+                cx="60"
+                cy="60"
+                r="50"
+                className="stroke-[#FBBF24] transition-all duration-700 ease-out"
+                strokeWidth="8"
+                strokeDasharray={314.16}
+                strokeDashoffset={314.16 - Math.min(dashboard.prayerMinutes / (dashboard.prayerTarget || 15), 1) * 314.16}
+                strokeLinecap="round"
+                fill="transparent"
+              />
+
+              {/* Inner Track & Progress: Study (Emerald) */}
+              <circle cx="60" cy="60" r="38" className="stroke-[#F3F4F6]" strokeWidth="8" fill="transparent" />
+              <circle
+                cx="60"
+                cy="60"
+                r="38"
+                className="stroke-[#234537] transition-all duration-700 ease-out"
+                strokeWidth="8"
+                strokeDasharray={238.76}
+                strokeDashoffset={238.76 - Math.min(dashboard.studyMinutes / (dashboard.studyTarget || 15), 1) * 238.76}
+                strokeLinecap="round"
+                fill="transparent"
+              />
+            </svg>
+
+            {/* Center Percentage Display */}
+            <div className="absolute flex flex-col items-center justify-center text-center">
+              <span className="text-base font-black text-[#0E0E0E] tracking-tight">
+                {Math.round(
+                  ((Math.min(dashboard.prayerMinutes / (dashboard.prayerTarget || 15), 1) +
+                    Math.min(dashboard.studyMinutes / (dashboard.studyTarget || 15), 1)) /
+                    2) *
+                    100
+                )}%
+              </span>
+              <span className="text-[9px] font-bold text-[#707070] uppercase tracking-wider">Complete</span>
             </div>
-            <span className="text-xs font-mono font-bold text-[#374151] bg-[#FAF6EE] px-2.5 py-1 rounded-lg border border-[#E5E7EB] flex items-center gap-1.5 justify-center">
-              <Clock size={13} className="text-[#FBBF24]" />
-              <span>{dashboard.prayerMinutes} / {dashboard.prayerTarget} min</span>
-            </span>
           </div>
 
-          {/* 2. Study Ring */}
-          <div className="flex flex-col items-center text-center space-y-2 p-2">
-            <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" className="stroke-[#F3F4F6]" strokeWidth="7" fill="transparent" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  className="stroke-[#FBBF24] transition-all duration-700 ease-out"
-                  strokeWidth="7"
-                  strokeDasharray={DASH_ARRAY}
-                  strokeDashoffset={studyOffset}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <BookOpen size={18} className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-[#0E0E0E]">Study</span>
+          {/* Breakdown Badges */}
+          <div className="space-y-2.5 w-full sm:w-auto">
+            {/* Prayer Row */}
+            <div className="flex items-center justify-between sm:justify-start gap-4 p-2.5 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#FBBF24] shadow-xs" />
+                <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1">
+                  <HandsPraying size={14} className="text-[#FBBF24]" weight="fill" />
+                  Prayer
+                </span>
               </div>
+              <span className="text-xs font-mono font-bold text-[#374151]">
+                {dashboard.prayerMinutes} / {dashboard.prayerTarget}m
+              </span>
             </div>
-            <span className="text-xs font-mono font-bold text-[#374151] bg-[#FAF6EE] px-2.5 py-1 rounded-lg border border-[#E5E7EB] flex items-center gap-1.5 justify-center">
-              <BookOpen size={13} className="text-[#FBBF24]" />
-              <span>{dashboard.studyMinutes} / {dashboard.studyTarget} min</span>
+
+            {/* Study Row */}
+            <div className="flex items-center justify-between sm:justify-start gap-4 p-2.5 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB]">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#234537] shadow-xs" />
+                <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1">
+                  <BookOpen size={14} className="text-[#234537]" weight="fill" />
+                  Bible Study
+                </span>
+              </div>
+              <span className="text-xs font-mono font-bold text-[#374151]">
+                {dashboard.studyMinutes} / {dashboard.studyTarget}m
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Verse of the Day Card */}
+      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white border border-[#E5E7EB] shadow-xs relative overflow-hidden">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+              Verse of the Day
             </span>
           </div>
+          <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-md border border-[#FBBF24]/30">
+            Isaiah 40:31 • WEB
+          </span>
+        </div>
+
+        <blockquote className="space-y-1">
+          <p className="text-xs sm:text-sm font-semibold text-[#0E0E0E] leading-relaxed italic">
+            &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
+          </p>
+          <p className="text-[10px] text-[#707070] font-medium">
+            Spiritual Theme: Strength & Endurance in Daily Waiting
+          </p>
+        </blockquote>
+
+        {/* 1-Tap Verse Actions */}
+        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[#F3F4F6]">
+          <Link
+            href="/bible?book=Isaiah&chapter=40"
+            className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
+          >
+            <BookOpen size={13} className="text-[#FBBF24]" weight="bold" />
+            <span>Read Bible</span>
+          </Link>
+
+          <Link
+            href="/clock-in"
+            className="p-2 rounded-xl bg-[#0E0E0E] text-white hover:bg-[#262626] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs"
+          >
+            <Clock size={13} className="text-[#FBBF24]" weight="bold" />
+            <span>Clock In</span>
+          </Link>
+
+          <Link
+            href="/square"
+            className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
+          >
+            <Users size={13} className="text-[#234537]" weight="bold" />
+            <span>Share</span>
+          </Link>
         </div>
       </div>
 
