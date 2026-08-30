@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       focusText,
       timelineEvents,
       sharedToSquare,
+      isGroupSession,
     } = body
 
     const supabase = await createClient()
@@ -67,9 +68,9 @@ export async function POST(req: Request) {
       savedSessionId = data?.id
     }
 
-    // 2. Update user_stats daily prayer/study targets and total minutes
+    // 2. Personal Prayer & Study Targets (ONLY credited for Solo and 1-on-1 Buddy Clock-Ins, NOT Group Clock-Ins)
     const durationMins = Math.floor(finalDuration / 60)
-    if (durationMins > 0) {
+    if (durationMins > 0 && !isGroupSession) {
       try {
         const { data: currentStats } = await (supabase
           .from('user_stats') as any)
@@ -95,23 +96,25 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Recalculate Consecutive Streak ("All or Nothing" Dual Requirement)
+    // 3. Recalculate Consecutive Streak (Only for Solo & Buddy Clock-In)
     let updatedStreak = 0
-    try {
-      const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
-        p_user_id: user.id,
-      }))
-      if (typeof streakResult === 'number') {
-        updatedStreak = streakResult
+    if (!isGroupSession) {
+      try {
+        const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
+          p_user_id: user.id,
+        }))
+        if (typeof streakResult === 'number') {
+          updatedStreak = streakResult
+        }
+      } catch {
+        // Fallback streak query
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('streak_count')
+          .eq('id', user.id)
+          .maybeSingle()
+        updatedStreak = (profile as any)?.streak_count || 0
       }
-    } catch {
-      // Fallback streak query
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('streak_count')
-        .eq('id', user.id)
-        .maybeSingle()
-      updatedStreak = (profile as any)?.streak_count || 0
     }
 
     // 4. Share to Square if requested
