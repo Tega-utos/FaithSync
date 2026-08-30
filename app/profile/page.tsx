@@ -542,6 +542,87 @@ export default function ProfilePage() {
     }
   }
 
+  // Save Notification Preferences
+  const handleSaveNotifications = async () => {
+    setIsNotificationsOpen(false)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('preferences')
+        .eq('id', user.id)
+        .single()
+
+      const prevPrefs = (profile?.preferences as any) || {}
+      const newPrefs = {
+        ...prevPrefs,
+        notifDailyReminders,
+        notifBuddyNudges,
+        notifGroupActivity,
+        reviewDayOfWeek,
+        reviewReminderTime,
+      }
+
+      await supabase
+        .from('profiles')
+        .update({
+          preferences: newPrefs,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faithsync_user_notif_prefs', JSON.stringify(newPrefs))
+      }
+    } catch (err) {
+      console.error('Failed to save notification preferences:', err)
+    }
+  }
+
+  // Save Privacy Preferences
+  const handleSavePrivacy = async () => {
+    setIsPrivacyOpen(false)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('preferences')
+        .eq('id', user.id)
+        .single()
+
+      const prevPrefs = (profile?.preferences as any) || {}
+      const newPrefs = {
+        ...prevPrefs,
+        publicStreak,
+        publicMilestones,
+      }
+
+      await supabase
+        .from('profiles')
+        .update({
+          preferences: newPrefs,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faithsync_user_privacy_prefs', JSON.stringify(newPrefs))
+      }
+    } catch (err) {
+      console.error('Failed to save privacy settings:', err)
+    }
+  }
+
   // Nudge Buddy Action with Ripple Wave
   const handleNudgeWithWave = async (e: React.MouseEvent, buddy: BuddyPartner) => {
     e.stopPropagation()
@@ -1538,10 +1619,11 @@ export default function ProfilePage() {
 
             <button
               type="button"
-              onClick={() => setIsNotificationsOpen(false)}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
+              onClick={handleSaveNotifications}
+              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
             >
-              Done
+              <Check size={16} weight="bold" className="text-[#FBBF24]" />
+              <span>Save Notification Preferences</span>
             </button>
           </div>
         </div>
@@ -1604,10 +1686,11 @@ export default function ProfilePage() {
 
             <button
               type="button"
-              onClick={() => setIsPrivacyOpen(false)}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
+              onClick={handleSavePrivacy}
+              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
             >
-              Save Privacy Settings
+              <Check size={16} weight="bold" className="text-[#FBBF24]" />
+              <span>Save Privacy Settings</span>
             </button>
           </div>
         </div>
