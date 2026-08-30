@@ -390,27 +390,16 @@ export function subscribeToBuddyUpdates(
 export async function fetchBuddyMessages(buddyId: string, currentUserId: string): Promise<BuddyChatMessage[]> {
   const supabase = createClient()
 
-  const { data: connection } = await supabase
-    .from('buddies')
-    .select('id')
-    .or(`and(user_id.eq.${currentUserId},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${currentUserId})`)
-    .maybeSingle()
-
-  if (!connection) return []
-
-  const { data: chat } = await supabase
-    .from('buddy_chats')
-    .select('id')
-    .eq('buddy_connection_id', connection.id)
-    .maybeSingle()
-
-  if (!chat) return []
-
-  const { data: messages } = await supabase
+  // 1. Fetch messages matching sender/recipient pair
+  const { data: messages, error } = await supabase
     .from('messages')
     .select('*')
-    .eq('chat_id', chat.id)
+    .or(
+      `and(sender_id.eq.${currentUserId},recipient_id.eq.${buddyId}),and(sender_id.eq.${buddyId},recipient_id.eq.${currentUserId})`
+    )
     .order('created_at', { ascending: true })
+
+  if (error || !messages) return []
 
   return (messages || []).map((m: any) => ({
     id: m.id,
@@ -431,51 +420,11 @@ export async function sendBuddyMessage(
 ): Promise<BuddyChatMessage | null> {
   const supabase = createClient()
 
-  let { data: connection } = await supabase
-    .from('buddies')
-    .select('id')
-    .or(`and(user_id.eq.${currentUserId},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${currentUserId})`)
-    .maybeSingle()
-
-  if (!connection) {
-    const { data: newConn } = await supabase
-      .from('buddies')
-      .insert({
-        user_id: currentUserId,
-        buddy_id: buddyId,
-        status: 'accepted',
-      })
-      .select('id')
-      .single()
-    connection = newConn
-  }
-
-  if (!connection) return null
-
-  let { data: chat } = await supabase
-    .from('buddy_chats')
-    .select('id')
-    .eq('buddy_connection_id', connection.id)
-    .maybeSingle()
-
-  if (!chat) {
-    const { data: newChat } = await supabase
-      .from('buddy_chats')
-      .insert({
-        buddy_connection_id: connection.id,
-      })
-      .select('id')
-      .single()
-    chat = newChat
-  }
-
-  if (!chat) return null
-
   const { data: newMsg, error } = await supabase
     .from('messages')
     .insert({
-      chat_id: chat.id,
       sender_id: currentUserId,
+      recipient_id: buddyId,
       content,
       message_type: messageType,
       meta: meta || null,
@@ -483,7 +432,30 @@ export async function sendBuddyMessage(
     .select('*')
     .single()
 
-  if (error || !newMsg) return null
+  if (error || !newMsg) {
+    console.error('Failed to send buddy message:', error)
+    return null
+  }
+
+  // Dispatch in-app notification to buddy
+  try {
+    const { data: senderProf } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', currentUserId)
+      .single()
+
+    const sName = senderProf?.display_name || 'Accountability Buddy'
+    await (supabase.from('notifications') as any).insert({
+      user_id: buddyId,
+      sender_id: currentUserId,
+      type: messageType === 'nudge' ? 'nudge' : 'system',
+      title: sName,
+      text: content.trim().slice(0, 80),
+      route_url: `/buddy-chat/${currentUserId}`,
+      icon_type: messageType === 'nudge' ? 'hand_waving' : 'quotes',
+    })
+  } catch {}
 
   return {
     id: newMsg.id,
