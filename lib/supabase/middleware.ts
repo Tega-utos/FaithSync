@@ -9,11 +9,12 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // Skip static assets, internal Next.js files, and API endpoints
+  // Skip static assets, internal Next.js files, API endpoints, and OAuth callbacks
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/assets') ||
     pathname.startsWith('/api') ||
+    pathname.startsWith('/auth') ||
     pathname.includes('.') ||
     pathname === '/favicon.ico'
   ) {
@@ -60,7 +61,8 @@ export async function updateSession(request: NextRequest) {
     pathname === '/signup' ||
     pathname === '/register' ||
     pathname === '/forgot-password' ||
-    pathname === '/reset-password'
+    pathname === '/reset-password' ||
+    pathname.startsWith('/auth')
 
   // If user is already authenticated and visits login/signup, redirect to /home
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/register')) {
