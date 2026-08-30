@@ -167,15 +167,17 @@ export async function joinGroupByCode(rawCode: string): Promise<{ success: boole
       `GRP${cleanCore}`,
     ]
 
-    // Search by invite_code or code
+    // Exact & Prefix Lookups
     let { data: group } = await (supabase
       .from('groups') as any)
       .select('*')
-      .or(`invite_code.in.(${possibleCodes.join(',')}),code.in.(${possibleCodes.join(',')})`)
+      .or(
+        `invite_code.eq.${normalized},code.eq.${normalized},invite_code.eq.${cleanCore},code.eq.${cleanCore},invite_code.eq.SYNC-${cleanCore},code.eq.SYNC-${cleanCore}`
+      )
       .maybeSingle()
 
-    if (!group) {
-      // Fallback search with ilike
+    if (!group && cleanCore.length >= 4) {
+      // Fuzzy ilike fallback
       const { data: fallbackGroup } = await (supabase
         .from('groups') as any)
         .select('*')
