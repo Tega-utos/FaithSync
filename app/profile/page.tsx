@@ -148,6 +148,8 @@ export default function ProfilePage() {
   const [notifGroupActivity, setNotifGroupActivity] = useState(true)
   const [reviewDayOfWeek, setReviewDayOfWeek] = useState('Sunday')
   const [reviewReminderTime, setReviewReminderTime] = useState('18:00')
+  const [monthReviewSchedule, setMonthReviewSchedule] = useState('last_day')
+  const [monthReviewReminderTime, setMonthReviewReminderTime] = useState('19:00')
   const [publicStreak, setPublicStreak] = useState(true)
   const [publicMilestones, setPublicMilestones] = useState(true)
 
@@ -211,6 +213,8 @@ export default function ProfilePage() {
         setNotifGroupActivity(prefs.notifGroupActivity ?? true)
         setReviewDayOfWeek(prefs.reviewDayOfWeek || 'Sunday')
         setReviewReminderTime(prefs.reviewReminderTime || '18:00')
+        setMonthReviewSchedule(prefs.monthReviewSchedule || 'last_day')
+        setMonthReviewReminderTime(prefs.monthReviewReminderTime || '19:00')
         setPublicStreak(prefs.publicStreak ?? true)
         setPublicMilestones(prefs.publicMilestones ?? true)
 
@@ -566,6 +570,8 @@ export default function ProfilePage() {
         notifGroupActivity,
         reviewDayOfWeek,
         reviewReminderTime,
+        monthReviewSchedule,
+        monthReviewReminderTime,
       }
 
       await supabase
@@ -1586,6 +1592,7 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Weekly Review Schedule */}
               <div className="pt-2 border-t border-[#E5E7EB] space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
                   Weekly Review Schedule
@@ -1610,6 +1617,48 @@ export default function ProfilePage() {
                       type="time"
                       value={reviewReminderTime}
                       onChange={(e) => setReviewReminderTime(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Review Schedule */}
+              <div className="pt-2 border-t border-[#E5E7EB] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                    Monthly Review Schedule
+                  </span>
+                  <Link
+                    href="/monthly-reflection"
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="text-[10px] font-bold text-[#234537] hover:underline flex items-center gap-0.5"
+                  >
+                    <span>View Reflection</span>
+                    <CaretRight size={10} weight="bold" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Day of Month</label>
+                    <select
+                      value={monthReviewSchedule}
+                      onChange={(e) => setMonthReviewSchedule(e.target.value)}
+                      className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E]"
+                    >
+                      <option value="last_day">Last Day of Month</option>
+                      <option value="first_day">1st of the Month</option>
+                      <option value="last_sunday">Last Sunday of Month</option>
+                      <option value="day_15">15th of the Month</option>
+                      <option value="day_28">28th of the Month</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[#707070] block mb-1 font-bold">Reminder Time</label>
+                    <input
+                      type="time"
+                      value={monthReviewReminderTime}
+                      onChange={(e) => setMonthReviewReminderTime(e.target.value)}
                       className="w-full px-2.5 py-1.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E]"
                     />
                   </div>
