@@ -109,74 +109,45 @@ export async function createGroup(data: {
 
   if (!user) return null
 
-  // Generate unambiguous code from database RPC if available, or generate client fallback
-  let generatedCode = ''
-  try {
-    const { data: rpcCode } = await (supabase.rpc as any)('generate_unique_code', {
-      target_table: 'groups',
-      target_column: 'code',
-      code_length: 6,
-      code_prefix: 'SYNC-',
-    })
-    if (rpcCode) generatedCode = rpcCode
-  } catch {}
+  // Generate unambiguous 6-character group sync code
+  const randomSuffix = generateUnambiguousCode(6, '')
+  const generatedCode = `SYNC-${randomSuffix}`
 
-  if (!generatedCode) {
-    generatedCode = generateUnambiguousCode(6, 'SYNC-')
+  const insertPayload: any = {
+    name: data.name,
+    category: data.category,
+    church: data.church || 'Local Assembly',
+    code: generatedCode,
+    invite_code: generatedCode,
+    guidelines: data.guidelines || null,
+    is_private: data.is_private || false,
+    created_by: user.id,
   }
 
   const { data: newGroup, error } = await (supabase
     .from('groups') as any)
-    .insert({
-      name: data.name,
-      category: data.category,
-      church: data.church || null,
-      code: generatedCode,
-      guidelines: data.guidelines || null,
-      is_private: data.is_private || false,
-      created_by: user.id,
-    })
-    .select('id, code')
+    .insert(insertPayload)
+    .select('id, code, invite_code')
     .single()
 
   if (error || !newGroup) {
-    // If table doesn't have code column yet, insert without code
-    const { data: fallbackGroup } = await (supabase
-      .from('groups') as any)
-      .insert({
-        name: data.name,
-        category: data.category,
-        church: data.church || null,
-        guidelines: data.guidelines || null,
-        is_private: data.is_private || false,
-        created_by: user.id,
-      })
-      .select('id')
-      .single()
-
-    if (!fallbackGroup) return null
-
-    await (supabase.from('group_members') as any).insert({
-      group_id: fallbackGroup.id,
-      user_id: user.id,
-      role: 'owner',
-    })
-
-    return { id: fallbackGroup.id, code: generatedCode }
+    console.error('Group create error:', error)
+    return null
   }
 
+  // Add creator as owner
   await (supabase.from('group_members') as any).insert({
     group_id: newGroup.id,
     user_id: user.id,
     role: 'owner',
   })
 
-  return { id: newGroup.id, code: newGroup.code || generatedCode }
+  return { id: newGroup.id, code: newGroup.invite_code || newGroup.code || generatedCode }
 }
 
 export async function joinGroupByCode(rawCode: string): Promise<{ success: boolean; group?: GroupItem; error?: string }> {
   const normalized = normalizeCode(rawCode)
-  if (!normalized) return { success: false, error: 'Please enter a group code.' }
+  if (!normalized) return { success: false, error: 'Please enter a group sync code.' }
 
   const supabase = createClient()
   const {
@@ -186,26 +157,35 @@ export async function joinGroupByCode(rawCode: string): Promise<{ success: boole
   if (!user) return { success: false, error: 'Please sign in first.' }
 
   try {
-    // Search by code or formatted code or ID prefix
-    let { data: group } = await supabase
-      .from('groups')
+    const cleanCore = normalized.replace(/^(SYNC|GRP)[-_]?/, '')
+    const possibleCodes = [
+      normalized,
+      cleanCore,
+      `SYNC-${cleanCore}`,
+      `SYNC${cleanCore}`,
+      `GRP-${cleanCore}`,
+      `GRP${cleanCore}`,
+    ]
+
+    // Search by invite_code or code
+    let { data: group } = await (supabase
+      .from('groups') as any)
       .select('*')
-      .eq('code', normalized)
+      .or(`invite_code.in.(${possibleCodes.join(',')}),code.in.(${possibleCodes.join(',')})`)
       .maybeSingle()
 
     if (!group) {
-      // Try without SYNC- prefix or with SYNC- prefix
-      const altCode = normalized.startsWith('SYNC-') ? normalized.replace('SYNC-', '') : `SYNC-${normalized}`
-      const { data: altGroup } = await supabase
-        .from('groups')
+      // Fallback search with ilike
+      const { data: fallbackGroup } = await (supabase
+        .from('groups') as any)
         .select('*')
-        .eq('code', altCode)
+        .or(`invite_code.ilike.%${cleanCore}%,code.ilike.%${cleanCore}%`)
         .maybeSingle()
-      group = altGroup
+      group = fallbackGroup
     }
 
     if (!group) {
-      return { success: false, error: 'No group found matching this code.' }
+      return { success: false, error: 'No group found matching this Sync Code. Please verify the code.' }
     }
 
     // Join the group member table
@@ -225,14 +205,15 @@ export async function joinGroupByCode(rawCode: string): Promise<{ success: boole
         name: group.name,
         category: group.category,
         church: group.church || 'Local Assembly',
-        code: group.code || normalized,
+        code: group.invite_code || group.code,
         memberCount: 1,
         isLive: false,
         activeTimeToday: '0m',
       },
     }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Failed to join group.' }
+    console.error('joinGroupByCode fatal error:', err)
+    return { success: false, error: err?.message || 'Failed to join group.' }
   }
 }
 

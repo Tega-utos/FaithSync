@@ -528,29 +528,45 @@ export default function SyncPage() {
       {/* Group Tab */}
       {activeTab === 'group' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
-              My Groups ({groups.length})
-            </span>
+          {/* Group Action Buttons Bar */}
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => {
                 setCreateGroupStep('form')
                 setIsCreateGroupOpen(true)
               }}
-              className="text-xs font-bold text-[#FBBF24] hover:underline flex items-center gap-1"
+              className="p-3.5 rounded-2xl bg-[#0E0E0E] text-white flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] transition-all cursor-pointer"
             >
-              <Plus size={14} />
-              <span>+ New Group</span>
+              <Plus size={16} className="text-[#FBBF24]" weight="bold" />
+              <span>Create Group</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setIsJoinGroupOpen(true)}
+              className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] text-[#0E0E0E] flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] hover:bg-[#FAF6EE] transition-all cursor-pointer"
+            >
+              <Users size={16} className="text-[#FBBF24]" />
+              <span>Join with Code</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+              My Groups ({groups.length})
+            </span>
           </div>
 
           <div className="space-y-3">
             {groups.length === 0 ? (
-              <div className="faith-card p-6 text-center space-y-2">
-                <p className="text-xs font-bold text-[#0E0E0E]">No groups yet</p>
-                <p className="text-[11px] text-[#707070]">
-                  Create a new group or join one with an invite code.
+              <div className="faith-card p-6 text-center space-y-2.5 bg-[#FAF6EE] border border-[#E5E7EB]">
+                <div className="w-10 h-10 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
+                  <Users size={20} />
+                </div>
+                <p className="text-xs font-bold text-[#0E0E0E]">No groups joined yet</p>
+                <p className="text-[11px] text-[#707070] max-w-xs mx-auto">
+                  Start an accountability circle for your Bible study, youth group, or ministry!
                 </p>
               </div>
             ) : (
@@ -579,7 +595,7 @@ export default function SyncPage() {
                     </div>
 
                     <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-md border border-[#FBBF24]/35">
-                      {group.activeTimeToday} Active
+                      {group.code || 'SYNC GROUP'}
                     </span>
                   </div>
 
@@ -604,27 +620,6 @@ export default function SyncPage() {
                 </Link>
               ))
             )}
-          </div>
-
-          {/* Discover / Join with Code Card */}
-          <div className="faith-card p-4 flex items-center justify-between bg-[#FDF9F1] border-dashed border-2 border-[#FBBF24]/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center font-bold">
-                <Users size={20} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-[#0E0E0E]">Have an Invite Code?</p>
-                <p className="text-[10px] text-[#707070]">Join a study cohort or youth ministry</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsJoinGroupOpen(true)}
-              className="bg-[#0E0E0E] text-white py-2 px-3.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626]"
-            >
-              Join with Code
-            </button>
           </div>
         </div>
       )}
@@ -739,10 +734,10 @@ export default function SyncPage() {
 
       {/* Modal 2: Create Group Modal */}
       {isCreateGroupOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="fixed inset-0" onClick={() => setIsCreateGroupOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
+          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
               <h3 className="text-sm font-black text-[#0E0E0E]">
                 {createGroupStep === 'form' ? 'Create New Group' : 'Group Created! 🎉'}
@@ -944,8 +939,9 @@ export default function SyncPage() {
 
       {/* Modal 3: Join with Code Modal */}
       {isJoinGroupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="fixed inset-0" onClick={() => setIsJoinGroupOpen(false)} />
+          <div className="relative z-10 w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#0E0E0E]">Join Group with Code</h3>
               <button onClick={() => setIsJoinGroupOpen(false)} className="text-[#707070]">
