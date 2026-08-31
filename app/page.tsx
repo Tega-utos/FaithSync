@@ -54,11 +54,6 @@ export default function SplashPage() {
           Walk in Step
         </p>
       </div>
-
-      {/* Simulated Native iOS Home Swipe Indicator Pill */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-        <div className="w-[134px] h-[5px] bg-[#0E0E0E] rounded-full opacity-90 shadow-xs" />
-      </div>
     </div>
   )
 }
