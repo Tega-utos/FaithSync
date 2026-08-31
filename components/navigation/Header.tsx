@@ -69,7 +69,7 @@ export function Header() {
       <div className="max-w-[480px] mx-auto flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/home" className="flex items-center gap-2">
-          <Logo height={24} />
+          <Logo height={19} />
         </Link>
 
         {/* Center / Active Timer Pill */}
