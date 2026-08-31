@@ -9,15 +9,47 @@ import { shouldShowAppShell } from '@/lib/navigation/shellVisibility'
 export function BottomNav() {
   const pathname = usePathname()
   const { session, isSummaryOpen } = useTimer()
+  const [hasModalOpen, setHasModalOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkModals = () => {
+      if (typeof document === 'undefined') return
+      const modalEl = document.querySelector(
+        '[role="dialog"], [data-modal="true"], #session-summary-modal, .session-summary-active'
+      )
+      const isBodyModal =
+        document.body.classList.contains('modal-open') ||
+        document.documentElement.classList.contains('modal-open')
+      setHasModalOpen(Boolean(modalEl || isBodyModal))
+    }
+
+    checkModals()
+
+    const observer = new MutationObserver(() => {
+      checkModals()
+    })
+
+    if (typeof document !== 'undefined' && document.body) {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'data-modal', 'role', 'id'],
+      })
+    }
+
+    return () => observer.disconnect()
+  }, [])
 
   const isVisible = shouldShowAppShell(pathname)
 
-  // Hide BottomNav in Community Square (/square), Session Summary (/session-summary), or when Session Summary popup is open
+  // Hide BottomNav in Community Square (/square), Session Summary (/session-summary), when Session Summary popup is open, or when any modal is active
   if (
     !isVisible ||
     pathname?.startsWith('/square') ||
     pathname?.startsWith('/session-summary') ||
-    isSummaryOpen
+    isSummaryOpen ||
+    hasModalOpen
   ) {
     return null
   }
@@ -32,7 +64,10 @@ export function BottomNav() {
     pathname.startsWith('/accountability')
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] px-3 sm:px-4">
+    <nav
+      id="bottom-nav"
+      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-50 pointer-events-none flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] px-3 sm:px-4"
+    >
       <div className="w-full max-w-[min(420px,calc(100vw-24px))] pointer-events-auto bg-[#FFFFFF]/95 backdrop-blur-xl border border-[#E5E7EB] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-2 py-2 grid grid-cols-3 items-center">
         {/* ========================================================================= */}
         {/* 1. HOME (/home or /)                                                      */}

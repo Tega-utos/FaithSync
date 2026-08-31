@@ -337,3 +337,22 @@ input:-webkit-autofill:active {
   color: var(--text-muted);
   transition: color 0.2s ease, transform 0.2s ease;
 }
+
+/* Global Modal Navbar Removal */
+body:has([role="dialog"]) #bottom-nav,
+body:has([role="dialog"]) .faithsync-bottom-nav,
+body:has([data-modal="true"]) #bottom-nav,
+body:has([data-modal="true"]) .faithsync-bottom-nav,
+body:has(#session-summary-modal) #bottom-nav,
+body:has(#session-summary-modal) .faithsync-bottom-nav,
+body:has(.session-summary-active) #bottom-nav,
+body:has(.session-summary-active) .faithsync-bottom-nav,
+body.modal-open #bottom-nav,
+body.modal-open .faithsync-bottom-nav,
+html.modal-open #bottom-nav,
+html.modal-open .faithsync-bottom-nav {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

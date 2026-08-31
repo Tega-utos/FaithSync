@@ -48,8 +48,18 @@ export function SessionSummaryModal({
 
   useEffect(() => {
     setIsSummaryOpen(isOpen)
+    if (typeof document !== 'undefined') {
+      if (isOpen) {
+        document.body.classList.add('modal-open')
+      } else {
+        document.body.classList.remove('modal-open')
+      }
+    }
     return () => {
       setIsSummaryOpen(false)
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('modal-open')
+      }
     }
   }, [isOpen, setIsSummaryOpen])
 
@@ -240,7 +250,13 @@ export function SessionSummaryModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:pb-4">
+    <div
+      id="session-summary-modal"
+      role="dialog"
+      aria-modal="true"
+      data-modal="true"
+      className="session-summary-active fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:pb-4"
+    >
       <div className="fixed inset-0" onClick={onClose} />
 
       <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 pb-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[88vh] overflow-y-auto no-scrollbar">
