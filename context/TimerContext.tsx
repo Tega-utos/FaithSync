@@ -2,6 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { DisciplineType } from '@/types/database.types'
+import {
+  startSilentMediaLoop,
+  stopSilentMediaLoop,
+} from '@/components/audio/Chime'
+import {
+  requestScreenWakeLock,
+  releaseScreenWakeLock,
+} from '@/lib/sessionLockScreen'
 
 export type TimerMode = 'stopwatch' | 'countdown'
 export type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED'
@@ -26,6 +34,8 @@ export interface ActiveSession {
   isActive: boolean
   isPaused: boolean
   startedAt: string | null
+  lastResumeTimestamp: number | null
+  accumulatedSeconds: number
   focusType?: 'quick' | 'timeline'
   focusText?: string
   focusTimeline?: TimelineSegment[]
@@ -77,7 +87,7 @@ interface TimerContextValue {
   setIsSummaryOpen: (open: boolean) => void
 }
 
-const STORAGE_KEY = 'faithsync_active_timer_v1'
+const STORAGE_KEY = 'faithsync_active_timer_v2'
 
 const initialSession: ActiveSession = {
   discipline: 'prayer',
@@ -89,6 +99,8 @@ const initialSession: ActiveSession = {
   isActive: false,
   isPaused: false,
   startedAt: null,
+  lastResumeTimestamp: null,
+  accumulatedSeconds: 0,
   focusType: 'quick',
   focusText: '',
   focusTimeline: [],
@@ -102,21 +114,28 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // 1. Restore timer from localStorage on client mount
+  // 1. Restore timer from localStorage on client mount with absolute timestamp sync
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed: ActiveSession = JSON.parse(saved)
-        if (parsed.isActive && !parsed.isPaused && parsed.startedAt) {
-          const elapsed = Math.floor((Date.now() - new Date(parsed.startedAt).getTime()) / 1000)
-          parsed.durationSeconds = Math.max(0, elapsed)
-          parsed.secondsElapsed = parsed.durationSeconds
+        if (parsed.isActive) {
+          if (!parsed.isPaused && parsed.lastResumeTimestamp) {
+            const runningSecs = Math.max(0, Math.floor((Date.now() - parsed.lastResumeTimestamp) / 1000))
+            const exactTotal = (parsed.accumulatedSeconds || 0) + runningSecs
+            parsed.durationSeconds = exactTotal
+            parsed.secondsElapsed = exactTotal
+          } else {
+            const exactTotal = parsed.accumulatedSeconds ?? parsed.durationSeconds ?? 0
+            parsed.durationSeconds = exactTotal
+            parsed.secondsElapsed = exactTotal
+          }
         }
         setSession(parsed)
       }
     } catch (e) {
-      console.error('Failed to parse timer session:', e)
+      console.error('Failed to restore timer session:', e)
     }
   }, [])
 
@@ -133,32 +152,125 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session])
 
-  // 3. Ticking interval logic
+  // 3. Absolute Timestamp-Based Sync Interval & Event Listeners for Background Recovery
   useEffect(() => {
-    if (session.isActive && !session.isPaused) {
-      intervalRef.current = setInterval(() => {
-        setSession((prev) => {
-          const newSecs = prev.durationSeconds + 1
-          return {
-            ...prev,
-            durationSeconds: newSecs,
-            secondsElapsed: newSecs,
-          }
-        })
-      }, 1000)
-    } else {
+    if (!session.isActive || session.isPaused) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
+      return
     }
+
+    const syncElapsed = () => {
+      setSession((prev) => {
+        if (!prev.isActive || prev.isPaused || !prev.lastResumeTimestamp) return prev
+        const currentRunSecs = Math.max(0, Math.floor((Date.now() - prev.lastResumeTimestamp) / 1000))
+        const exactTotalSecs = (prev.accumulatedSeconds || 0) + currentRunSecs
+        if (exactTotalSecs === prev.durationSeconds) return prev
+        return {
+          ...prev,
+          durationSeconds: exactTotalSecs,
+          secondsElapsed: exactTotalSecs,
+        }
+      })
+    }
+
+    // High frequency interval (500ms) for smooth second updates
+    intervalRef.current = setInterval(syncElapsed, 500)
+
+    // Immediate re-sync when screen unlocks, app is focused, or page becomes visible
+    const handleWake = () => {
+      syncElapsed()
+      if (document.visibilityState === 'visible') {
+        requestScreenWakeLock()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleWake)
+    window.addEventListener('focus', handleWake)
+    window.addEventListener('pageshow', handleWake)
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
+      document.removeEventListener('visibilitychange', handleWake)
+      window.removeEventListener('focus', handleWake)
+      window.removeEventListener('pageshow', handleWake)
     }
   }, [session.isActive, session.isPaused])
+
+  const pauseTimer = useCallback(() => {
+    setSession((prev) => {
+      if (!prev.isActive || prev.isPaused) return prev
+      const runSecs = prev.lastResumeTimestamp
+        ? Math.max(0, Math.floor((Date.now() - prev.lastResumeTimestamp) / 1000))
+        : 0
+      const newAccumulated = (prev.accumulatedSeconds || 0) + runSecs
+      return {
+        ...prev,
+        isPaused: true,
+        lastResumeTimestamp: null,
+        accumulatedSeconds: newAccumulated,
+        durationSeconds: newAccumulated,
+        secondsElapsed: newAccumulated,
+      }
+    })
+  }, [])
+
+  const resumeTimer = useCallback(() => {
+    setSession((prev) => {
+      if (!prev.isActive || !prev.isPaused) return prev
+      return {
+        ...prev,
+        isPaused: false,
+        lastResumeTimestamp: Date.now(),
+      }
+    })
+  }, [])
+
+  // 4. Mobile Lock Screen & MediaSession Keep-Alive Presence
+  useEffect(() => {
+    if (session.isActive && !session.isPaused) {
+      startSilentMediaLoop()
+      requestScreenWakeLock()
+
+      if (typeof window !== 'undefined' && 'mediaSession' in navigator) {
+        try {
+          const disc = session.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+          const title = session.focusText ? `${disc}: ${session.focusText}` : `${disc} Clock-In`
+          const mins = Math.floor(session.durationSeconds / 60)
+          const secs = session.durationSeconds % 60
+          const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+
+          navigator.mediaSession.metadata = new (window as any).MediaMetadata({
+            title: `${title} (${timeStr})`,
+            artist: 'FaithSync Clock-In • Running in Background',
+            album: 'FaithSync',
+            artwork: [
+              { src: '/assets/welcome-hero.png', sizes: '512x512', type: 'image/png' },
+            ],
+          })
+
+          navigator.mediaSession.setActionHandler('play', () => {
+            resumeTimer()
+          })
+          navigator.mediaSession.setActionHandler('pause', () => {
+            pauseTimer()
+          })
+        } catch (e) {
+          console.warn('MediaSession error:', e)
+        }
+      }
+    } else {
+      if (!session.isActive) {
+        stopSilentMediaLoop()
+        releaseScreenWakeLock()
+      }
+    }
+  }, [session.isActive, session.isPaused, session.discipline, session.focusText, session.durationSeconds, resumeTimer, pauseTimer])
 
   const startTimer = useCallback(
     (
@@ -170,6 +282,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       focusType: 'quick' | 'timeline' = 'quick',
       focusTimeline: TimelineSegment[] = []
     ) => {
+      const now = Date.now()
       const targetSecs = targetMinutes * 60
       setSession({
         discipline,
@@ -180,35 +293,38 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         targetSeconds: targetSecs,
         isActive: true,
         isPaused: false,
-        startedAt: new Date().toISOString(),
+        startedAt: new Date(now).toISOString(),
+        lastResumeTimestamp: now,
+        accumulatedSeconds: 0,
         focusType,
         focusText,
         focusTimeline,
         sessionMood,
       })
+      startSilentMediaLoop()
+      requestScreenWakeLock()
     },
     []
   )
 
-  const pauseTimer = useCallback(() => {
-    setSession((prev) => ({ ...prev, isPaused: true }))
-  }, [])
-
-  const resumeTimer = useCallback(() => {
-    setSession((prev) => ({ ...prev, isPaused: false }))
-  }, [])
-
   const stopTimer = useCallback((): TimerSessionData => {
-    const endedAt = new Date().toISOString()
+    const now = Date.now()
+    const runSecs =
+      session.lastResumeTimestamp && !session.isPaused
+        ? Math.max(0, Math.floor((now - session.lastResumeTimestamp) / 1000))
+        : 0
+    const totalElapsed = (session.accumulatedSeconds || 0) + runSecs
+    const endedAt = new Date(now).toISOString()
+
     const result: TimerSessionData = {
       discipline: session.discipline,
-      secondsElapsed: session.durationSeconds,
+      secondsElapsed: totalElapsed,
       targetSeconds: session.targetDurationSeconds,
-      durationSeconds: session.durationSeconds,
+      durationSeconds: totalElapsed,
       targetDurationSeconds: session.targetDurationSeconds,
       startedAt: session.startedAt || endedAt,
       endedAt,
-      isComplete: session.durationSeconds >= (session.targetDurationSeconds || 0),
+      isComplete: totalElapsed >= (session.targetDurationSeconds || 0),
       focusType: session.focusType,
       focusText: session.focusText,
       focusTimeline: session.focusTimeline,
@@ -219,6 +335,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       ...initialSession,
       discipline: session.discipline,
     })
+    stopSilentMediaLoop()
+    releaseScreenWakeLock()
     localStorage.removeItem(STORAGE_KEY)
 
     return result
@@ -229,6 +347,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       ...initialSession,
       discipline: prev.discipline,
     }))
+    stopSilentMediaLoop()
+    releaseScreenWakeLock()
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
