@@ -8,12 +8,17 @@ import { shouldShowAppShell } from '@/lib/navigation/shellVisibility'
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { session } = useTimer()
+  const { session, isSummaryOpen } = useTimer()
 
   const isVisible = shouldShowAppShell(pathname)
 
-  // Hide BottomNav in Community Square (/square) as navigation is via Back to SynC
-  if (!isVisible || pathname?.startsWith('/square')) {
+  // Hide BottomNav in Community Square (/square), Session Summary (/session-summary), or when Session Summary popup is open
+  if (
+    !isVisible ||
+    pathname?.startsWith('/square') ||
+    pathname?.startsWith('/session-summary') ||
+    isSummaryOpen
+  ) {
     return null
   }
 

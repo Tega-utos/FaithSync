@@ -16,7 +16,7 @@ import {
   HandWaving,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
-import { TimerSessionData } from '@/context/TimerContext'
+import { useTimer, TimerSessionData } from '@/context/TimerContext'
 
 export interface SessionSummaryModalProps {
   isOpen: boolean
@@ -32,6 +32,7 @@ export function SessionSummaryModal({
   onSaved,
 }: SessionSummaryModalProps) {
   const router = useRouter()
+  const { setIsSummaryOpen } = useTimer()
 
   const [reflection, setReflection] = useState('')
   const [shareToSquare, setShareToSquare] = useState(false)
@@ -44,6 +45,13 @@ export function SessionSummaryModal({
   const [studyTarget, setStudyTarget] = useState(15)
   const [primaryBuddy, setPrimaryBuddy] = useState<{ id: string; connectionId: string; name: string } | null>(null)
   const [nudged, setNudged] = useState(false)
+
+  useEffect(() => {
+    setIsSummaryOpen(isOpen)
+    return () => {
+      setIsSummaryOpen(false)
+    }
+  }, [isOpen, setIsSummaryOpen])
 
   useEffect(() => {
     if (!isOpen) return
@@ -232,10 +240,10 @@ export function SessionSummaryModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:pb-4">
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[92vh] overflow-y-auto">
+      <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 pb-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[88vh] overflow-y-auto no-scrollbar">
         <div className="flex flex-col items-center space-y-1 text-center">
           <div className="w-10 h-1.5 bg-[#D1CBC0] rounded-full mb-1 sm:hidden" />
           <h2 className="text-lg font-extrabold text-[#0E0E0E] tracking-tight">Session Summary</h2>

@@ -73,6 +73,8 @@ interface TimerContextValue {
   formattedTime: string
   progressPercentage: number
   lapNumber: number
+  isSummaryOpen: boolean
+  setIsSummaryOpen: (open: boolean) => void
 }
 
 const STORAGE_KEY = 'faithsync_active_timer_v1'
@@ -97,6 +99,7 @@ const TimerContext = createContext<TimerContextValue | null>(null)
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<ActiveSession>(initialSession)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // 1. Restore timer from localStorage on client mount
@@ -281,6 +284,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         formattedTime,
         progressPercentage,
         lapNumber,
+        isSummaryOpen,
+        setIsSummaryOpen,
       }}
     >
       {children}
