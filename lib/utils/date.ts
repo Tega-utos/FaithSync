@@ -5,8 +5,7 @@
  */
 
 export function getLocalDateKey(input?: Date | string | number | null): string {
-  if (!input) return ''
-  const d = new Date(input)
+  const d = input ? new Date(input) : new Date()
   if (isNaN(d.getTime())) return ''
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')

@@ -134,8 +134,15 @@ export default function HomePage() {
     }))
   }
 
-  const prayerOffset = DASH_ARRAY - Math.min(dashboard.prayerMinutes / (dashboard.prayerTarget || 15), 1) * DASH_ARRAY
-  const studyOffset = DASH_ARRAY - Math.min(dashboard.studyMinutes / (dashboard.studyTarget || 15), 1) * DASH_ARRAY
+  const prayerTarget = Math.max(dashboard.prayerTarget || 15, 1)
+  const studyTarget = Math.max(dashboard.studyTarget || 15, 1)
+  const prayerProgress = Math.min(Math.max((dashboard.prayerMinutes || 0) / prayerTarget, 0), 1)
+  const studyProgress = Math.min(Math.max((dashboard.studyMinutes || 0) / studyTarget, 0), 1)
+  
+  // Circumference for r=42 is 2 * PI * 42 = 263.89
+  const RING_CIRCUMFERENCE = 263.89
+  const prayerOffset = RING_CIRCUMFERENCE * (1 - prayerProgress)
+  const studyOffset = RING_CIRCUMFERENCE * (1 - studyProgress)
 
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
@@ -177,18 +184,28 @@ export default function HomePage() {
           {/* 1. Prayer Ring */}
           <div className="flex flex-col items-center text-center space-y-2 p-2">
             <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" className="stroke-[#F3F4F6]" strokeWidth="7" fill="transparent" />
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
                   cy="50"
-                  r="45"
-                  className="stroke-[#FBBF24] transition-all duration-700 ease-out"
-                  strokeWidth="7"
-                  strokeDasharray={DASH_ARRAY}
+                  r="42"
+                  stroke="#F3F4F6"
+                  strokeWidth="8"
+                  fill="none"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke="#FBBF24"
+                  strokeWidth="8"
+                  strokeDasharray={RING_CIRCUMFERENCE}
                   strokeDashoffset={prayerOffset}
                   strokeLinecap="round"
-                  fill="transparent"
+                  fill="none"
+                  style={{
+                    transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
@@ -205,18 +222,28 @@ export default function HomePage() {
           {/* 2. Study Ring */}
           <div className="flex flex-col items-center text-center space-y-2 p-2">
             <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" className="stroke-[#F3F4F6]" strokeWidth="7" fill="transparent" />
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
                   cy="50"
-                  r="45"
-                  className="stroke-[#FBBF24] transition-all duration-700 ease-out"
-                  strokeWidth="7"
-                  strokeDasharray={DASH_ARRAY}
+                  r="42"
+                  stroke="#F3F4F6"
+                  strokeWidth="8"
+                  fill="none"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke="#FBBF24"
+                  strokeWidth="8"
+                  strokeDasharray={RING_CIRCUMFERENCE}
                   strokeDashoffset={studyOffset}
                   strokeLinecap="round"
-                  fill="transparent"
+                  fill="none"
+                  style={{
+                    transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
                 />
               </svg>
               <div className="absolute flex flex-col items-center">

@@ -58,8 +58,21 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   const rawName = profile?.display_name || user.user_metadata?.full_name || 'Believer'
   const firstName = rawName.split(' ')[0]
   const prefs = (profile?.preferences as any) || {}
-  const prayerTarget = prefs.prayerTarget || prefs.targets?.prayer || 15
-  const studyTarget = prefs.studyTarget || prefs.wordTarget || prefs.targets?.study || 15
+  const prayerTarget = Number(
+    prefs.prayerTarget ||
+    prefs.targets?.prayer ||
+    user.user_metadata?.prayerTarget ||
+    user.user_metadata?.targets?.prayer ||
+    15
+  )
+  const studyTarget = Number(
+    prefs.studyTarget ||
+    prefs.wordTarget ||
+    prefs.targets?.study ||
+    user.user_metadata?.studyTarget ||
+    user.user_metadata?.targets?.study ||
+    15
+  )
 
   // 2. Strict Consecutive Streak Determination (The "All or Nothing" Rule)
   // Query all lifetime sessions to aggregate prayer and study minutes by local day

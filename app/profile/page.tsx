@@ -37,6 +37,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { shareOrCopyCode } from '@/lib/utils/syncCodes'
 import { calculateUserStreak } from '@/lib/utils/streak'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 
 interface BuddyPartner {
   id: string
@@ -496,7 +497,10 @@ export default function ProfilePage() {
     setToastMessage('Goals & reminders updated ✓')
     setTimeout(() => setToastMessage(null), 3000)
 
-    // Cross-screen reactive cache
+    // Clear stale client caches across the entire app
+    invalidateMemoryCache()
+
+    // Cross-screen reactive storage
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem(
@@ -504,6 +508,12 @@ export default function ProfilePage() {
           JSON.stringify({
             prayerTarget: finalPrayer,
             studyTarget: finalStudy,
+            wordTarget: finalStudy,
+            targets: {
+              prayer: finalPrayer,
+              study: finalStudy,
+              word: finalStudy,
+            },
             prayerReminderTime,
             studyReminderTime,
           })
@@ -531,6 +541,12 @@ export default function ProfilePage() {
         ...prevPrefs,
         prayerTarget: finalPrayer,
         studyTarget: finalStudy,
+        wordTarget: finalStudy,
+        targets: {
+          prayer: finalPrayer,
+          study: finalStudy,
+          word: finalStudy,
+        },
         prayerReminderTime,
         studyReminderTime,
       }
@@ -542,6 +558,19 @@ export default function ProfilePage() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
+
+      await supabase.auth.updateUser({
+        data: {
+          prayerTarget: finalPrayer,
+          studyTarget: finalStudy,
+          wordTarget: finalStudy,
+          targets: {
+            prayer: finalPrayer,
+            study: finalStudy,
+            word: finalStudy,
+          },
+        },
+      })
     } catch (err) {
       console.error('Targets update error:', err)
       // Rollback on error
