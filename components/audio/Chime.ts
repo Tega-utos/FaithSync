@@ -93,14 +93,18 @@ export function startSilentMediaLoop() {
       silentAudioEl = new Audio(silentWav)
       silentAudioEl.loop = true
     }
-    silentAudioEl.play().catch(() => {})
+    if (silentAudioEl.paused) {
+      silentAudioEl.play().catch(() => {})
+    }
   } catch {}
 }
 
 export function stopSilentMediaLoop() {
   if (silentAudioEl) {
     try {
-      silentAudioEl.pause()
+      if (!silentAudioEl.paused) {
+        silentAudioEl.pause()
+      }
       silentAudioEl.currentTime = 0
     } catch {}
   }

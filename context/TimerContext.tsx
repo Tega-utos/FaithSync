@@ -231,7 +231,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  // 4. Mobile Lock Screen & MediaSession Keep-Alive Presence
+  // 4. Background Audio & Screen Wake Lock Lifecycle (Runs ONLY on state change, NOT every second)
   useEffect(() => {
     if (session.isActive && !session.isPaused) {
       startSilentMediaLoop()
@@ -239,21 +239,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
       if (typeof window !== 'undefined' && 'mediaSession' in navigator) {
         try {
-          const disc = session.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'
-          const title = session.focusText ? `${disc}: ${session.focusText}` : `${disc} Clock-In`
-          const mins = Math.floor(session.durationSeconds / 60)
-          const secs = session.durationSeconds % 60
-          const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-
-          navigator.mediaSession.metadata = new (window as any).MediaMetadata({
-            title: `${title} (${timeStr})`,
-            artist: 'FaithSync Clock-In • Running in Background',
-            album: 'FaithSync',
-            artwork: [
-              { src: '/assets/welcome-hero.png', sizes: '512x512', type: 'image/png' },
-            ],
-          })
-
+          navigator.mediaSession.playbackState = 'playing'
           navigator.mediaSession.setActionHandler('play', () => {
             resumeTimer()
           })
@@ -261,16 +247,49 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             pauseTimer()
           })
         } catch (e) {
-          console.warn('MediaSession error:', e)
+          console.warn('MediaSession handler error:', e)
         }
       }
+    } else if (session.isPaused) {
+      releaseScreenWakeLock()
+      if (typeof window !== 'undefined' && 'mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.playbackState = 'paused'
+        } catch {}
+      }
     } else {
-      if (!session.isActive) {
-        stopSilentMediaLoop()
-        releaseScreenWakeLock()
+      stopSilentMediaLoop()
+      releaseScreenWakeLock()
+      if (typeof window !== 'undefined' && 'mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.playbackState = 'none'
+        } catch {}
       }
     }
-  }, [session.isActive, session.isPaused, session.discipline, session.focusText, session.durationSeconds, resumeTimer, pauseTimer])
+  }, [session.isActive, session.isPaused, resumeTimer, pauseTimer])
+
+  // 5. Periodic MediaSession Metadata Title Sync (Without re-starting audio or resetting handlers)
+  useEffect(() => {
+    if (!session.isActive || session.isPaused) return
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
+
+    try {
+      const disc = session.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+      const title = session.focusText ? `${disc}: ${session.focusText}` : `${disc} Clock-In`
+      const mins = Math.floor(session.durationSeconds / 60)
+      const secs = session.durationSeconds % 60
+      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+
+      navigator.mediaSession.metadata = new (window as any).MediaMetadata({
+        title: `${title} (${timeStr})`,
+        artist: 'FaithSync Clock-In • Active',
+        album: 'FaithSync',
+        artwork: [
+          { src: '/assets/welcome-hero.png', sizes: '512x512', type: 'image/png' },
+        ],
+      })
+    } catch (_) {}
+  }, [session.durationSeconds, session.isActive, session.isPaused, session.discipline, session.focusText])
 
   const startTimer = useCallback(
     (
