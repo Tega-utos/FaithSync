@@ -72,15 +72,37 @@ export async function POST(req: Request) {
 
     if (msgError) throw msgError
 
-    // 3. Dispatch Notification to Recipient
+    // 3. Dispatch In-App Notification to Recipient
+    let notifType = messageType === 'nudge' ? 'nudge' : 'general'
+    let notifTitle = user.user_metadata?.full_name || 'Accountability Buddy'
+    let notifIcon = 'quotes'
+
+    if (messageType === 'nudge') {
+      notifType = 'nudge'
+      notifTitle = `${user.user_metadata?.full_name || 'Buddy'} nudged you!`
+      notifIcon = 'hand_waving'
+    } else if (messageType === 'clockin_invite') {
+      if (meta?.isScheduled) {
+        notifType = 'buddy_scheduled_clockin'
+        notifTitle = `Clock-In Scheduled with ${user.user_metadata?.full_name || 'Buddy'}`
+        notifIcon = 'clock'
+      } else {
+        notifType = 'buddy_clockin_started'
+        notifTitle = `${user.user_metadata?.full_name || 'Buddy'} invited you to Clock-In!`
+        notifIcon = 'timer'
+      }
+    }
+
     await (supabase.from('notifications') as any).insert({
       user_id: recipientId,
       sender_id: user.id,
-      type: messageType === 'nudge' ? 'nudge' : 'system',
-      title: user.user_metadata?.full_name || 'Accountability Buddy',
-      text: content.trim().slice(0, 80),
+      type: notifType,
+      title: notifTitle,
+      text: content.trim().slice(0, 100),
       route_url: `/buddy-chat/${user.id}`,
-      icon_type: messageType === 'nudge' ? 'hand_waving' : 'quotes',
+      icon_type: notifIcon,
+      is_read: false,
+      created_at: new Date().toISOString(),
     })
 
     return NextResponse.json({

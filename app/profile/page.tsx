@@ -145,6 +145,8 @@ export default function ProfilePage() {
   // Settings
   const [notifDailyReminders, setNotifDailyReminders] = useState(true)
   const [notifBuddyNudges, setNotifBuddyNudges] = useState(true)
+  const [notifBuddyClockins, setNotifBuddyClockins] = useState(true)
+  const [notifBuddyScheduled, setNotifBuddyScheduled] = useState(true)
   const [notifGroupActivity, setNotifGroupActivity] = useState(true)
   const [reviewDayOfWeek, setReviewDayOfWeek] = useState('Sunday')
   const [reviewReminderTime, setReviewReminderTime] = useState('18:00')
@@ -210,6 +212,8 @@ export default function ProfilePage() {
         setStudyReminderTime(prefs.studyReminderTime || '21:00')
         setNotifDailyReminders(prefs.notifDailyReminders ?? true)
         setNotifBuddyNudges(prefs.notifBuddyNudges ?? true)
+        setNotifBuddyClockins(prefs.notifBuddyClockins ?? true)
+        setNotifBuddyScheduled(prefs.notifBuddyScheduled ?? true)
         setNotifGroupActivity(prefs.notifGroupActivity ?? true)
         setReviewDayOfWeek(prefs.reviewDayOfWeek || 'Sunday')
         setReviewReminderTime(prefs.reviewReminderTime || '18:00')
@@ -567,6 +571,8 @@ export default function ProfilePage() {
         ...prevPrefs,
         notifDailyReminders,
         notifBuddyNudges,
+        notifBuddyClockins,
+        notifBuddyScheduled,
         notifGroupActivity,
         reviewDayOfWeek,
         reviewReminderTime,
@@ -1555,13 +1561,16 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[#0E0E0E]">Buddy Nudge Alerts</span>
+                <div>
+                  <span className="font-bold text-[#0E0E0E] block">Buddy Nudge Alerts</span>
+                  <span className="text-[10px] text-[#707070]">Push alerts when your partner nudges you</span>
+                </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={notifBuddyNudges}
                   onClick={() => setNotifBuddyNudges(!notifBuddyNudges)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
                     notifBuddyNudges ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
                   }`}
                 >
@@ -1573,14 +1582,63 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Notify on Buddy Clock-In Toggle */}
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[#0E0E0E]">Group Activity & Live Sessions</span>
+                <div>
+                  <span className="font-bold text-[#0E0E0E] block">Notify on Buddy Clock-In</span>
+                  <span className="text-[10px] text-[#707070]">Send push alert when buddy completes a session</span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifBuddyClockins}
+                  onClick={() => setNotifBuddyClockins(!notifBuddyClockins)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                    notifBuddyClockins ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      notifBuddyClockins ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Scheduled Buddy Clock-Ins Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#0E0E0E] block">Buddy Scheduled Clock-Ins</span>
+                  <span className="text-[10px] text-[#707070]">Alerts when buddy schedules a session & when it starts</span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifBuddyScheduled}
+                  onClick={() => setNotifBuddyScheduled(!notifBuddyScheduled)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                    notifBuddyScheduled ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      notifBuddyScheduled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#0E0E0E] block">Group Activity & Live Sessions</span>
+                  <span className="text-[10px] text-[#707070]">Cohort live waves and community updates</span>
+                </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={notifGroupActivity}
                   onClick={() => setNotifGroupActivity(!notifGroupActivity)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
                     notifGroupActivity ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
                   }`}
                 >

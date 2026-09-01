@@ -128,6 +128,63 @@ export async function POST(req: Request) {
       })
     }
 
+    // 5. Notify Accountability Buddies on Clock-In (In-app notification + Push alert)
+    if (!isGroupSession && isComplete) {
+      try {
+        const { data: senderProfile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        const senderName = senderProfile?.display_name || user.user_metadata?.full_name || 'Your Buddy'
+        const disciplineLabel = type === 'prayer' ? 'Prayer' : 'Scripture Study'
+
+        const { data: buddyRows } = await (supabase
+          .from('buddies') as any)
+          .select('user_id, buddy_id')
+          .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+          .eq('status', 'accepted')
+
+        if (buddyRows && buddyRows.length > 0) {
+          const partnerIds = buddyRows.map((b: any) =>
+            b.user_id === user.id ? b.buddy_id : b.user_id
+          )
+
+          const { data: partnerProfiles } = await (supabase
+            .from('profiles') as any)
+            .select('id, preferences')
+            .in('id', partnerIds)
+
+          const allowedPartnerIds: string[] = []
+          ;(partnerProfiles || []).forEach((p: any) => {
+            const prefs = p?.preferences || {}
+            if (prefs.notifBuddyClockins !== false) {
+              allowedPartnerIds.push(p.id)
+            }
+          })
+
+          if (allowedPartnerIds.length > 0) {
+            const notifs = allowedPartnerIds.map((pId) => ({
+              user_id: pId,
+              sender_id: user.id,
+              type: 'buddy_clockin_completed',
+              title: `${senderName} Clocked In!`,
+              text: `${senderName} completed ${durationMins}m of ${disciplineLabel}.`,
+              route_url: `/history`,
+              icon_type: 'fire',
+              is_read: false,
+              created_at: new Date().toISOString(),
+            }))
+
+            await (supabase.from('notifications') as any).insert(notifs)
+          }
+        }
+      } catch (notifErr) {
+        console.error('Buddy clock-in notification error:', notifErr)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       sessionId: savedSessionId,
