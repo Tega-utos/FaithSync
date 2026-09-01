@@ -19,6 +19,7 @@ import {
   HandsPraying,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 
 export default function SessionSummaryPage() {
   const params = useParams()
@@ -98,12 +99,10 @@ export default function SessionSummaryPage() {
         }),
       })
 
-      if (res.ok) {
-        router.push('/square')
-      } else {
-        router.push('/square')
-      }
+      invalidateMemoryCache('square_feed_posts')
+      router.push('/square')
     } catch {
+      invalidateMemoryCache('square_feed_posts')
       router.push('/square')
     } finally {
       setSharing(false)

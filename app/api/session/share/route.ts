@@ -59,10 +59,11 @@ export async function POST(req: NextRequest) {
     const prayerMinutes = discipline === 'prayer' ? minutes : 0
     const studyMinutes = discipline === 'study' || discipline === 'word' ? minutes : 0
 
-    // 4. Construct Content: Reflection is ONLY included if user explicitly toggled includeReflection = true
+    // 4. Construct Content: Reflection if toggled, or standardized proof text
+    const defaultProofText = `Completed ${minutes}m of ${discipline === 'prayer' ? 'Prayer' : 'Scripture Study'} 🙏`
     const finalContent = includeReflection
-      ? (customReflection?.trim() || sessionData?.reflection?.trim() || '')
-      : ''
+      ? (customReflection?.trim() || sessionData?.reflection?.trim() || defaultProofText)
+      : defaultProofText
 
     // 5. Publish to square_posts as RECORD post
     const { data: newPost, error: postErr } = await supabase
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
         session_id: sessionData?.id || null,
         content: finalContent,
         verse_reference: includeReflection ? (sessionData?.verse_reference || null) : null,
+        scripture_reference: includeReflection ? (sessionData?.verse_reference || null) : null,
         post_type: 'record',
       })
       .select()

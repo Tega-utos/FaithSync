@@ -17,6 +17,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { useTimer, TimerSessionData } from '@/context/TimerContext'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 
 export interface SessionSummaryModalProps {
   isOpen: boolean
@@ -207,7 +208,7 @@ export function SessionSummaryModal({
           verse_reference: sessionData.verseReference || null,
           focus_type: sessionData.focusType || 'quick',
           focus_timeline: (sessionData.focusTimeline as any) || null,
-          shared_to_square: shareToSquare && isBothComplete,
+          shared_to_square: Boolean(shareToSquare),
           started_at: sessionData.startedAt,
           ended_at: new Date().toISOString(),
         })
@@ -216,26 +217,22 @@ export function SessionSummaryModal({
 
       if (sessionErr) throw sessionErr
 
-      if (shareToSquare && isBothComplete && reflection.trim()) {
-        // Query all-time unique session days ever recorded
-        const { data: userAllSessions } = await supabase
-          .from('sessions')
-          .select('started_at, created_at')
-          .eq('user_id', user.id)
-
-        const uniqueDaysSet = new Set<string>()
-        ;(userAllSessions || []).forEach((s: any) => {
-          const dStr = new Date(s.started_at || s.created_at).toISOString().split('T')[0]
-          if (dStr) uniqueDaysSet.add(dStr)
-        })
-        const allTimeDaysCount = Math.max(1, uniqueDaysSet.size)
+      if (shareToSquare) {
+        const postText =
+          reflection.trim() ||
+          `Completed ${durationMins}m of ${sessionData.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'} 🙏`
 
         await supabase.from('square_posts').insert({
           user_id: user.id,
           session_id: sessionRecord?.id || null,
-          content: reflection.trim(),
+          content: postText,
           post_type: 'record',
+          verse_reference: sessionData.verseReference || null,
+          scripture_reference: sessionData.verseReference || null,
         })
+
+        // Invalidate cache so the new post appears immediately in Square
+        invalidateMemoryCache('square_feed_posts')
       }
 
       setSaving(false)
@@ -423,31 +420,19 @@ export function SessionSummaryModal({
               <button
                 type="button"
                 role="switch"
-                disabled={!isBothComplete}
-                aria-checked={shareToSquare && isBothComplete}
-                onClick={() => isBothComplete && setShareToSquare(!shareToSquare)}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                  !isBothComplete
-                    ? 'opacity-40 cursor-not-allowed bg-[#E5E7EB]'
-                    : shareToSquare
-                    ? 'bg-[#0E0E0E] cursor-pointer'
-                    : 'bg-[#E5E7EB] cursor-pointer'
+                aria-checked={shareToSquare}
+                onClick={() => setShareToSquare(!shareToSquare)}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                  shareToSquare ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
                 }`}
               >
                 <div
                   className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                    shareToSquare && isBothComplete ? 'translate-x-5' : 'translate-x-0'
+                    shareToSquare ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
             </div>
-
-            {!isBothComplete && (
-              <div className="p-2 rounded-xl bg-[#F3F4F6]/50 border border-[#E5E7EB] flex items-center gap-2 text-[10px] text-[#707070] font-medium">
-                <Lock size={14} className="text-[#9095A1] shrink-0" />
-                <span>Complete both daily targets to unlock sharing</span>
-              </div>
-            )}
           </div>
         </div>
 
