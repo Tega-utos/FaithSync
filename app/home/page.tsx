@@ -256,21 +256,13 @@ export default function HomePage() {
         </blockquote>
 
         {/* 1-Tap Verse Actions */}
-        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[#F3F4F6]">
+        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#F3F4F6]">
           <Link
             href="/bible?book=Isaiah&chapter=40"
             className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
           >
             <BookOpen size={13} className="text-[#FBBF24]" weight="bold" />
             <span>Read Bible</span>
-          </Link>
-
-          <Link
-            href="/clock-in"
-            className="p-2 rounded-xl bg-[#0E0E0E] text-white hover:bg-[#262626] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs"
-          >
-            <Clock size={13} className="text-[#FBBF24]" weight="bold" />
-            <span>Clock In</span>
           </Link>
 
           <Link
