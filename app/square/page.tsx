@@ -96,12 +96,18 @@ interface SquarePostItem {
   commentCount: number
 }
 
+import { getMemoryCache, setMemoryCache } from '@/lib/cache/clientCache'
+
 function SquarePageContent() {
   const router = useRouter()
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
-  const [posts, setPosts] = useState<SquarePostItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState<SquarePostItem[]>(() => {
+    return getMemoryCache<SquarePostItem[]>('square_feed_posts') || []
+  })
+  const [loading, setLoading] = useState(() => {
+    return !getMemoryCache<SquarePostItem[]>('square_feed_posts')
+  })
   const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Compose Modal State
@@ -290,6 +296,7 @@ function SquarePageContent() {
           })
 
           setPosts(formatted)
+          setMemoryCache('square_feed_posts', formatted)
         } else {
           setPosts([])
         }

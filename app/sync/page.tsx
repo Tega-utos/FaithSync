@@ -71,11 +71,13 @@ import {
   subscribeToBuddyUpdates,
 } from '@/features/buddies/services/buddyService'
 
+import { getMemoryCache } from '@/lib/cache/clientCache'
+
 export default function SyncPage() {
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<'personal' | 'group' | 'square'>('personal')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Personal Tab States
@@ -84,7 +86,7 @@ export default function SyncPage() {
   const [squareActivities, setSquareActivities] = useState<SquareActivityItem[]>([])
 
   // Group Tab States
-  const [groups, setGroups] = useState<GroupItem[]>([])
+  const [groups, setGroups] = useState<GroupItem[]>(() => getMemoryCache<GroupItem[]>('public_groups_list') || [])
 
   // Modals
   const [isAddBuddyOpen, setIsAddBuddyOpen] = useState(false)

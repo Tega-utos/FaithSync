@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { normalizeCode, generateUnambiguousCode } from '@/lib/utils/syncCodes'
+import { getMemoryCache, setMemoryCache } from '@/lib/cache/clientCache'
 
 export interface GroupItem {
   id: string
@@ -31,7 +32,13 @@ export interface GroupChatMessage {
   }
 }
 
-export async function fetchGroups(): Promise<GroupItem[]> {
+export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
+  const cacheKey = 'public_groups_list'
+  if (!forceFresh) {
+    const cached = getMemoryCache<GroupItem[]>(cacheKey, 90_000)
+    if (cached) return cached
+  }
+
   const supabase = createClient()
   const { data: groups, error } = await supabase
     .from('groups')
@@ -50,7 +57,7 @@ export async function fetchGroups(): Promise<GroupItem[]> {
 
   if (error || !groups) return []
 
-  return groups.map((g: any) => ({
+  const result = groups.map((g: any) => ({
     id: g.id,
     name: g.name,
     category: g.category,
@@ -61,6 +68,9 @@ export async function fetchGroups(): Promise<GroupItem[]> {
     isLive: false,
     activeTimeToday: '30m',
   }))
+
+  setMemoryCache(cacheKey, result)
+  return result
 }
 
 export async function fetchGroupById(groupId: string): Promise<GroupItem | null> {

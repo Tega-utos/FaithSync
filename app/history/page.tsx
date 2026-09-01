@@ -18,6 +18,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay } from '@/lib/utils/date'
+import { getMemoryCache, setMemoryCache } from '@/lib/cache/clientCache'
 
 interface DailySummary {
   dateKey: string // YYYY-MM-DD
@@ -36,8 +37,12 @@ interface DailySummary {
 export default function HistoryPage() {
   const router = useRouter()
 
-  const [loading, setLoading] = useState(true)
-  const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([])
+  const [dailySummaries, setDailySummaries] = useState<DailySummary[]>(() => {
+    return getMemoryCache<DailySummary[]>('history_summaries') || []
+  })
+  const [loading, setLoading] = useState(() => {
+    return !getMemoryCache<DailySummary[]>('history_summaries')
+  })
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
   const [userName, setUserName] = useState('Believer')
@@ -153,6 +158,7 @@ export default function HistoryPage() {
         }
 
         setDailySummaries(summaries)
+        setMemoryCache('history_summaries', summaries)
       } catch (err) {
         console.error('History load error:', err)
       } finally {

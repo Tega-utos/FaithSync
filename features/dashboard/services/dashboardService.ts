@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay } from '@/lib/utils/date'
+import { getMemoryCache, setMemoryCache } from '@/lib/cache/clientCache'
 
 export interface DashboardData {
   firstName: string
@@ -33,13 +34,19 @@ export interface DashboardData {
   }>
 }
 
-export async function fetchDashboardData(): Promise<DashboardData | null> {
+export async function fetchDashboardData(forceFresh = false): Promise<DashboardData | null> {
   const supabase = createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) return null
+
+  const cacheKey = `dashboard_data_${user.id}`
+  if (!forceFresh) {
+    const cached = getMemoryCache<DashboardData>(cacheKey, 90_000)
+    if (cached) return cached
+  }
 
   // 1. Profile & Goal Preferences
   const { data: profile } = await supabase
@@ -277,7 +284,7 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
     }
   }
 
-  return {
+  const result: DashboardData = {
     firstName,
     streakDays,
     prayerMinutes,
@@ -291,4 +298,7 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
     globalCount,
     activeCommunityUsers,
   }
+
+  setMemoryCache(cacheKey, result)
+  return result
 }

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { normalizeCode } from '@/lib/utils/syncCodes'
+import { getMemoryCache, setMemoryCache, invalidateMemoryCache } from '@/lib/cache/clientCache'
 
 export interface BuddyProfile {
   id: string
@@ -285,14 +286,21 @@ export async function deleteBuddyConnection(
   return { success: true }
 }
 
-/**
- * Stage 6: Get all buddy relationships (both incoming pending & accepted active)
- */
-export async function getMyBuddies(currentUserId: string): Promise<{
+export async function getMyBuddies(currentUserId: string, forceFresh = false): Promise<{
   active: BuddyConnectionItem[]
   pendingIncoming: BuddyConnectionItem[]
   pendingOutgoing: BuddyConnectionItem[]
 }> {
+  const cacheKey = `buddies_list_${currentUserId}`
+  if (!forceFresh) {
+    const cached = getMemoryCache<{
+      active: BuddyConnectionItem[]
+      pendingIncoming: BuddyConnectionItem[]
+      pendingOutgoing: BuddyConnectionItem[]
+    }>(cacheKey, 90_000)
+    if (cached) return cached
+  }
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -350,7 +358,9 @@ export async function getMyBuddies(currentUserId: string): Promise<{
     }
   })
 
-  return { active, pendingIncoming, pendingOutgoing }
+  const result = { active, pendingIncoming, pendingOutgoing }
+  setMemoryCache(cacheKey, result)
+  return result
 }
 
 /**
