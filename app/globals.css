@@ -356,3 +356,31 @@ html.modal-open .faithsync-bottom-nav {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* Mobile Modal Stability & Input Zoom Suppression */
+@media screen and (max-width: 768px) {
+  /* Prevent iOS Safari auto-zoom when tapping inputs inside modals */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Fixed Modal Isolation & Smooth Scroll Containment */
+[role="dialog"],
+[data-modal="true"] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.modal-open {
+  overflow: hidden;
+  touch-action: pan-y;
+}
