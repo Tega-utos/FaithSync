@@ -36,6 +36,8 @@ import {
   Quotes,
   CalendarCheck,
   CalendarBlank,
+  Camera,
+  Image as ImageIcon,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { useTimer } from '@/context/TimerContext'
@@ -100,8 +102,14 @@ export default function GroupChatPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotifSheetOpen, setIsNotifSheetOpen] = useState(false)
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false)
-  const [pushNotifsEnabled, setPushNotifsEnabled] = useState(true)
+  const [groupNotifClockIn, setGroupNotifClockIn] = useState(true)
+  const [groupNotifNudges, setGroupNotifNudges] = useState(true)
+  const [groupNotifChat, setGroupNotifChat] = useState(true)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  // Image Messaging State
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Clock-in Setup Modal & Scheduling
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -181,6 +189,17 @@ export default function GroupChatPage() {
         // 3. Fetch real messages
         const realMsgs = await fetchGroupMessages(groupId)
         setMessages(realMsgs as any)
+
+        // 4. Restore group-specific notification preferences from localStorage
+        try {
+          const saved = localStorage.getItem(`faithsync_grp_notif_${groupId}`)
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (typeof parsed.clockIn === 'boolean') setGroupNotifClockIn(parsed.clockIn)
+            if (typeof parsed.nudges === 'boolean') setGroupNotifNudges(parsed.nudges)
+            if (typeof parsed.chat === 'boolean') setGroupNotifChat(parsed.chat)
+          }
+        } catch (_) {}
       } catch (err) {
         console.error('Group chat error:', err)
       } finally {
@@ -190,6 +209,34 @@ export default function GroupChatPage() {
 
     loadGroupChat()
   }, [groupId])
+
+  // Handle saving group notification preferences
+  const handleToggleGroupNotif = (type: 'clockIn' | 'nudges' | 'chat', value: boolean) => {
+    let nextClockIn = groupNotifClockIn
+    let nextNudges = groupNotifNudges
+    let nextChat = groupNotifChat
+
+    if (type === 'clockIn') {
+      nextClockIn = value
+      setGroupNotifClockIn(value)
+    } else if (type === 'nudges') {
+      nextNudges = value
+      setGroupNotifNudges(value)
+    } else if (type === 'chat') {
+      nextChat = value
+      setGroupNotifChat(value)
+    }
+
+    try {
+      localStorage.setItem(
+        `faithsync_grp_notif_${groupId}`,
+        JSON.stringify({ clockIn: nextClockIn, nudges: nextNudges, chat: nextChat })
+      )
+    } catch (_) {}
+
+    setToastMessage('Group notification settings updated ✓')
+    setTimeout(() => setToastMessage(null), 2500)
+  }
 
   // Realtime subscription for group messages
   useEffect(() => {
@@ -254,11 +301,91 @@ export default function GroupChatPage() {
       if (sent) {
         setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
       }
+
+      // Dispatch Web Push Notification to Group Members
+      fetch('/api/notifications/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          groupId,
+          type: 'chat_message',
+          title: groupName,
+          message: `${currentUser.user_metadata?.full_name || 'Member'}: ${content}`,
+          url: `/group-chat/${groupId}`,
+        }),
+      }).catch(() => {})
     } catch (err) {
       console.error('Send message error:', err)
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       setToastMessage('Failed to send message. Please check connection.')
       setTimeout(() => setToastMessage(null), 3000)
+    }
+  }
+
+  // Handle Image File Selection (PNG, JPG, WebP)
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setToastMessage('Please select an image file')
+      setTimeout(() => setToastMessage(null), 3000)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setSelectedImage(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  // Send Picture via Group Chat
+  const handleSendImage = async () => {
+    if (!selectedImage || !currentUser) return
+    setIsUploadingImage(true)
+    const imgData = selectedImage
+    setSelectedImage(null)
+
+    const tempId = `temp-img-${Date.now()}`
+    const optMsg: any = {
+      id: tempId,
+      sender_id: currentUser.id,
+      content: '📷 Image',
+      message_type: 'image',
+      meta: { imageUrl: imgData },
+      created_at: new Date().toISOString(),
+      sender_name: currentUser.user_metadata?.full_name || 'Me',
+      sender_initial: (currentUser.user_metadata?.full_name || 'M').charAt(0).toUpperCase(),
+    }
+    setMessages((prev) => [...prev, optMsg])
+
+    try {
+      const sent = await sendGroupMessage(groupId, '📷 Image', 'image' as any, { imageUrl: imgData })
+      if (sent) {
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
+      }
+
+      // Dispatch Web Push Notification for Image
+      fetch('/api/notifications/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          groupId,
+          type: 'chat_message',
+          title: groupName,
+          message: `${currentUser.user_metadata?.full_name || 'Member'} sent a picture 📷`,
+          url: `/group-chat/${groupId}`,
+        }),
+      }).catch(() => {})
+    } catch (err) {
+      console.error('Send image error:', err)
+      setToastMessage('Failed to send image')
+      setTimeout(() => setToastMessage(null), 3000)
+    } finally {
+      setIsUploadingImage(false)
     }
   }
 
@@ -544,18 +671,32 @@ export default function GroupChatPage() {
                 {/* 1. Send Nudge */}
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     setIsMenuOpen(false)
-                    const nudgeMsg: GroupChatMessage = {
-                      id: `gmsg-${Date.now()}`,
-                      sender_id: 'system',
-                      sender_name: 'System',
-                      sender_initial: 'FS',
-                      content: 'You sent a nudge to the group: Keep showing up 👋',
-                      message_type: 'system',
-                      created_at: new Date().toISOString(),
+                    const myName = currentUser?.user_metadata?.full_name || 'A member'
+                    const nudgeText = `${myName} sent a nudge to the group: Keep showing up 👋`
+                    const sent = await sendGroupMessage(groupId, nudgeText, 'system')
+                    if (sent) {
+                      setMessages((prev) => [...prev, sent as any])
                     }
-                    setMessages((prev) => [...prev, nudgeMsg])
+                    try {
+                      await fetch('/api/notifications/push', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          action: 'send',
+                          groupId,
+                          type: 'group_nudge',
+                          title: `${groupName} Nudge`,
+                          message: `${myName} nudged the group: "Keep showing up!" 👋`,
+                          url: `/group-chat/${groupId}`,
+                        }),
+                      })
+                    } catch (err) {
+                      console.error('Group nudge push error:', err)
+                    }
+                    setToastMessage('Group nudge sent! 👋')
+                    setTimeout(() => setToastMessage(null), 3000)
                   }}
                   className="w-full text-left p-2.5 rounded-xl hover:bg-[#FDF9F1] flex items-center gap-2.5"
                 >
@@ -767,6 +908,73 @@ export default function GroupChatPage() {
             )
           }
 
+          // Type 3: Image / Picture Messages
+          if (msg.message_type === 'image' || (msg as any).meta?.imageUrl) {
+            const imgUrl = (msg as any).meta?.imageUrl || msg.content
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}
+              >
+                {!isMe && (
+                  <div className="flex items-center gap-1.5 mb-1 px-1">
+                    <div className="w-5 h-5 rounded-full bg-[#0E0E0E] text-white text-[9px] font-bold flex items-center justify-center">
+                      {msg.sender_initial}
+                    </div>
+                    <span className="text-[10px] font-bold text-[#707070]">{msg.sender_name}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 max-w-[85%]">
+                  {isMe && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                      title="Delete message"
+                    >
+                      <Trash size={12} />
+                    </button>
+                  )}
+                  <div
+                    className={`rounded-2xl overflow-hidden border shadow-xs ${
+                      isMe
+                        ? 'border-[#0E0E0E] bg-[#0E0E0E] text-white rounded-br-xs'
+                        : 'border-[#E5E7EB] bg-white text-[#0E0E0E] rounded-bl-xs'
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imgUrl}
+                      alt="Shared picture"
+                      className="w-full max-h-72 object-cover rounded-2xl cursor-pointer hover:opacity-95 transition-opacity"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.open(imgUrl, '_blank')
+                        }
+                      }}
+                    />
+                  </div>
+                  {!isMe && isHostUser && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                      title="Moderate & delete message (Admin)"
+                    >
+                      <Trash size={12} />
+                    </button>
+                  )}
+                </div>
+                <span className="text-[9px] text-[#9095A1] mt-0.5 px-1 font-mono-tabular">
+                  {new Date(msg.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            )
+          }
+
           // Type 1: Standard Texts with Sender Avatar & Name above bubble
           return (
             <div
@@ -838,35 +1046,88 @@ export default function GroupChatPage() {
           className="flex-1 px-3.5 py-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-white transition-all shadow-xs"
         />
 
-        {/* Attachment (Paperclip) Icon */}
+        {/* Picture / Image Picker Input & Button */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
         <button
           type="button"
-          onClick={() => alert('Attachment upload ready')}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0"
-          title="Attach file"
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0 cursor-pointer"
+          title="Send a picture"
         >
-          <Paperclip size={18} />
-        </button>
-
-        {/* Voice-Note (Microphone) Icon */}
-        <button
-          type="button"
-          onClick={() => alert('Hold to record voice note')}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0"
-          title="Record voice note"
-        >
-          <Microphone size={18} />
+          <Camera size={20} weight="bold" />
         </button>
 
         {/* Send Button */}
         <button
           type="submit"
           disabled={!inputContent.trim()}
-          className="p-2.5 rounded-2xl bg-[#0E0E0E] text-white hover:bg-[#262626] disabled:opacity-30 transition-all shrink-0"
+          className="p-2.5 rounded-2xl bg-[#0E0E0E] text-white hover:bg-[#262626] disabled:opacity-30 transition-all shrink-0 cursor-pointer"
         >
           <PaperPlaneTilt size={16} weight="fill" />
         </button>
       </form>
+
+      {/* Picture Preview Confirmation Modal */}
+      {selectedImage && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in"
+        >
+          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+              <h3 className="text-sm font-extrabold text-[#0E0E0E]">Send Picture to Group</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedImage(null)}
+                className="text-[#707070] hover:text-[#0E0E0E] p-1 rounded-xl hover:bg-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rounded-2xl overflow-hidden max-h-64 border border-[#E5E7EB] bg-black/5 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={selectedImage} alt="Preview" className="max-h-64 object-contain w-full" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setSelectedImage(null)}
+                className="py-3 px-4 rounded-2xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] hover:text-[#0E0E0E]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isUploadingImage}
+                onClick={handleSendImage}
+                className="py-3 px-4 rounded-2xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5"
+              >
+                {isUploadingImage ? (
+                  <>
+                    <CircleNotch size={14} className="animate-spin text-[#FBBF24]" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <PaperPlaneTilt size={14} weight="fill" className="text-[#FBBF24]" />
+                    <span>Send Picture</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. MODAL: TIMER SETUP MODAL (SLIDER, GOAL & SCHEDULE CONFIGURATION)        */}
@@ -1346,9 +1607,140 @@ export default function GroupChatPage() {
             <button
               type="button"
               onClick={() => setIsSessionCompleteScreen(false)}
-              className="w-full py-3.5 px-4 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl hover:bg-[#262626] transition-all"
+              className="w-full py-3.5 px-4 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl hover:bg-[#262626] transition-all cursor-pointer"
             >
               Return to Group Chat
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 7. MANAGE GROUP NOTIFICATIONS MODAL                                       */}
+      {/* ========================================================================= */}
+      {isNotifSheetOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in"
+        >
+          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+              <div>
+                <h3 className="text-sm font-extrabold text-[#0E0E0E]">Manage Group Notifications</h3>
+                <p className="text-[11px] text-[#707070] font-medium">{groupName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNotifSheetOpen(false)}
+                className="text-[#707070] hover:text-[#0E0E0E] p-1.5 rounded-xl hover:bg-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {/* 1. Ongoing Group Clock-In Alerts */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#FBBF24] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                    <Clock size={16} weight="fill" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-[#0E0E0E]">Ongoing Group Clock-Ins</p>
+                    <p className="text-[10px] text-[#707070] leading-tight">
+                      Alerts when a group prayer or study session is ongoing or starts
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={groupNotifClockIn}
+                  onClick={() => handleToggleGroupNotif('clockIn', !groupNotifClockIn)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                    groupNotifClockIn ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      groupNotifClockIn ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* 2. Group Nudge Alerts */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#234537] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                    <HandWaving size={16} weight="fill" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-[#0E0E0E]">Group Nudge Alerts</p>
+                    <p className="text-[10px] text-[#707070] leading-tight">
+                      Receive encouragement nudges sent to the group
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={groupNotifNudges}
+                  onClick={() => handleToggleGroupNotif('nudges', !groupNotifNudges)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                    groupNotifNudges ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      groupNotifNudges ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* 3. Group Chat Messages */}
+              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#707070] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                    <Quotes size={16} weight="bold" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-[#0E0E0E]">Group Chat Messages</p>
+                    <p className="text-[10px] text-[#707070] leading-tight">
+                      Alerts for new messages in this group
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={groupNotifChat}
+                  onClick={() => handleToggleGroupNotif('chat', !groupNotifChat)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                    groupNotifChat ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      groupNotifChat ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsNotifSheetOpen(false)}
+              className="w-full py-3.5 px-4 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl hover:bg-[#262626] transition-all cursor-pointer"
+            >
+              Done
             </button>
           </div>
         </div>
