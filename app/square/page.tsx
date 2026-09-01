@@ -1012,23 +1012,28 @@ function SquarePageContent() {
                 {isRecord ? (
                   <div className="space-y-3">
                     <div className="p-4 rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] space-y-3 shadow-inner">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#707070] block">
-                        Daily Clock-In Proof
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#707070]">
+                          Daily Clock-In Proof
+                        </span>
+                        <span className="text-[10px] font-bold text-[#234537] bg-[#EBF3EE] px-2 py-0.5 rounded-full border border-[#234537]/20">
+                          Verified Altar ✓
+                        </span>
+                      </div>
 
                       {/* 2x2 Grid */}
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] space-y-0.5">
                           <span className="text-[9px] font-bold uppercase text-[#707070] block">Prayer</span>
                           <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
-                            {post.prayerMins || 30} mins
+                            {post.prayerMins || 15} mins
                           </span>
                         </div>
 
                         <div className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] space-y-0.5">
                           <span className="text-[9px] font-bold uppercase text-[#707070] block">Study</span>
                           <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
-                            {post.studyMins || 20} mins
+                            {post.studyMins || 15} mins
                           </span>
                         </div>
                       </div>
@@ -1041,27 +1046,44 @@ function SquarePageContent() {
                         <div className="flex items-center gap-1">
                           <Fire size={16} weight="fill" className="text-[#234537]" />
                           <span className="text-base font-black font-mono text-[#234537]">
-                            {post.authorStreak || 42} Days &amp; Counting
+                            {post.authorStreak || 1} Days &amp; Counting
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Reflection with Solid Burnham Vertical Line on Left */}
+                    {/* Dynamic Contextual Reflection Title & Quote */}
                     {post.content && post.content.trim().length > 0 && (() => {
                       const { title, body } = parsePostContent(post.content)
-                      return (
-                        <div className="border-l-4 border-[#234537] pl-3 py-1 space-y-1">
-                          {title && (
-                            <h2 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight not-italic">
-                              {title}
-                            </h2>
-                          )}
-                          {body && (
-                            <p className="text-xs text-[#0E0E0E] italic leading-relaxed whitespace-pre-line">
-                              &ldquo;{body}&rdquo;
+                      const isAutoProofText = post.content.startsWith('Completed daily devotion goals') || post.content.startsWith('Completed')
+                      
+                      if (isAutoProofText && !title) {
+                        return (
+                          <div className="pt-1">
+                            <p className="text-xs font-bold text-[#0E0E0E]">
+                              Daily Devotion Completed
                             </p>
-                          )}
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[10px] font-bold text-[#707070] uppercase tracking-wider block">
+                            Daily Devotion Reflection
+                          </span>
+                          <div className="border-l-4 border-[#234537] pl-3 py-1 space-y-1 bg-[#FAF6EE]/40 rounded-r-xl">
+                            {title && (
+                              <h2 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight not-italic">
+                                {title}
+                              </h2>
+                            )}
+                            {body && (
+                              <p className="text-xs text-[#0E0E0E] italic leading-relaxed whitespace-pre-line">
+                                &ldquo;{body}&rdquo;
+                              </p>
+                            )}
+                          </div>
                         </div>
                       )
                     })()}
@@ -1093,7 +1115,7 @@ function SquarePageContent() {
                   />
                 )}
 
-                {/* Footer: Discord-Style Reactions & Comments */}
+                {/* Footer: Discord-Style Reactions (Comments disabled on Record posts) */}
                 <div className="pt-2 border-t border-[#F3F4F6] space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {/* Discord Reaction Pills */}
@@ -1167,9 +1189,9 @@ function SquarePageContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Connect Button: Present on every post EXCEPT record posts, anonymous posts, or own posts */}
+                      {/* Connect Button: Present on non-record, non-anonymous posts */}
                       {!post.is_anonymous &&
-                        post.post_type !== 'record' &&
+                        !isRecord &&
                         currentUser &&
                         post.author_id !== currentUser.id &&
                         post.user_id !== currentUser.id && (
@@ -1188,30 +1210,32 @@ function SquarePageContent() {
                           </button>
                         )}
 
-                      {/* Comments Toggle Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleComments(post.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
-                          openCommentsPostId === post.id
-                            ? 'bg-[#0E0E0E] text-white'
-                            : 'bg-[#FAF6EE] text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]'
-                        }`}
-                      >
-                        <ChatCircle size={15} weight="bold" />
-                        <span>
-                          {post.commentCount > 0
-                            ? `${post.commentCount} ${
-                                post.commentCount === 1 ? 'Comment' : 'Comments'
-                              }`
-                            : 'Comment'}
-                        </span>
-                      </button>
+                      {/* Comments Toggle Button (Hidden for Record Posts) */}
+                      {!isRecord && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleComments(post.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
+                            openCommentsPostId === post.id
+                              ? 'bg-[#0E0E0E] text-white'
+                              : 'bg-[#FAF6EE] text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]'
+                          }`}
+                        >
+                          <ChatCircle size={15} weight="bold" />
+                          <span>
+                            {post.commentCount > 0
+                              ? `${post.commentCount} ${
+                                  post.commentCount === 1 ? 'Comment' : 'Comments'
+                                }`
+                              : 'Comment'}
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Expandable Comments Section */}
-                  {openCommentsPostId === post.id && (
+                  {/* Expandable Comments Section (Only for Non-Record Posts) */}
+                  {!isRecord && openCommentsPostId === post.id && (
                     <div className="pt-3 border-t border-[#E5E7EB]/70 space-y-3 animate-in fade-in">
                       {/* Comments List */}
                       {loadingComments[post.id] ? (

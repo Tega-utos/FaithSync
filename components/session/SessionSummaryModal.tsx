@@ -208,7 +208,7 @@ export function SessionSummaryModal({
           verse_reference: sessionData.verseReference || null,
           focus_type: sessionData.focusType || 'quick',
           focus_timeline: (sessionData.focusTimeline as any) || null,
-          shared_to_square: Boolean(shareToSquare),
+          shared_to_square: Boolean(shareToSquare && isBothComplete),
           started_at: sessionData.startedAt,
           ended_at: new Date().toISOString(),
         })
@@ -217,10 +217,10 @@ export function SessionSummaryModal({
 
       if (sessionErr) throw sessionErr
 
-      if (shareToSquare) {
+      if (shareToSquare && isBothComplete) {
         const postText =
           reflection.trim() ||
-          `Completed ${durationMins}m of ${sessionData.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'} 🙏`
+          `Completed daily devotion goals: ${todayPrayerMins}m Prayer & ${todayStudyMins}m Scripture Study 🙏`
 
         await supabase.from('square_posts').insert({
           user_id: user.id,
@@ -420,19 +420,31 @@ export function SessionSummaryModal({
               <button
                 type="button"
                 role="switch"
-                aria-checked={shareToSquare}
-                onClick={() => setShareToSquare(!shareToSquare)}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
-                  shareToSquare ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                disabled={!isBothComplete}
+                aria-checked={shareToSquare && isBothComplete}
+                onClick={() => isBothComplete && setShareToSquare(!shareToSquare)}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                  !isBothComplete
+                    ? 'opacity-40 cursor-not-allowed bg-[#E5E7EB]'
+                    : shareToSquare
+                    ? 'bg-[#0E0E0E] cursor-pointer'
+                    : 'bg-[#E5E7EB] cursor-pointer'
                 }`}
               >
                 <div
                   className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                    shareToSquare ? 'translate-x-5' : 'translate-x-0'
+                    shareToSquare && isBothComplete ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
             </div>
+
+            {!isBothComplete && (
+              <div className="p-2 rounded-xl bg-[#F3F4F6]/50 border border-[#E5E7EB] flex items-center gap-2 text-[10px] text-[#707070] font-medium">
+                <Lock size={14} className="text-[#9095A1] shrink-0" />
+                <span>Complete both daily targets to unlock sharing</span>
+              </div>
+            )}
           </div>
         </div>
 
