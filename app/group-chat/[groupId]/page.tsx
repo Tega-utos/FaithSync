@@ -1063,16 +1063,6 @@ export default function GroupChatPage() {
           <Camera size={20} weight="bold" />
         </button>
 
-        {/* Group Clock-In / Schedule Modal Trigger */}
-        <button
-          type="button"
-          onClick={() => setIsInviteModalOpen(true)}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0 cursor-pointer"
-          title="Schedule or Start Group Clock-In"
-        >
-          <Clock size={20} weight="bold" className="text-[#FBBF24]" />
-        </button>
-
         {/* Send Button */}
         <button
           type="submit"
