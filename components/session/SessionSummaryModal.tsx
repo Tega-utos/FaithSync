@@ -222,14 +222,34 @@ export function SessionSummaryModal({
           reflection.trim() ||
           `Completed daily devotion goals: ${todayPrayerMins}m Prayer & ${todayStudyMins}m Scripture Study 🙏`
 
-        await supabase.from('square_posts').insert({
-          user_id: user.id,
-          session_id: sessionRecord?.id || null,
-          content: postText,
-          post_type: 'record',
-          verse_reference: sessionData.verseReference || null,
-          scripture_reference: sessionData.verseReference || null,
-        })
+        try {
+          const { error: pErr1 } = await (supabase.from('square_posts') as any).insert({
+            user_id: user.id,
+            session_id: sessionRecord?.id || null,
+            content: postText,
+            post_type: 'record',
+            verse_reference: sessionData.verseReference || null,
+            scripture_reference: sessionData.verseReference || null,
+          })
+
+          if (pErr1) {
+            const { error: pErr2 } = await (supabase.from('square_posts') as any).insert({
+              user_id: user.id,
+              content: postText,
+              post_type: 'reflection',
+              verse_reference: sessionData.verseReference || null,
+            })
+
+            if (pErr2) {
+              await (supabase.from('square_posts') as any).insert({
+                user_id: user.id,
+                content: postText,
+              })
+            }
+          }
+        } catch (postEx) {
+          console.warn('Square post insert note:', postEx)
+        }
 
         // Invalidate cache so the new post appears immediately in Square
         invalidateMemoryCache('square_feed_posts')

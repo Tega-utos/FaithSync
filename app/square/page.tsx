@@ -784,7 +784,13 @@ function SquarePageContent() {
     if (activeFilter === 'prayers') return p.post_type === 'prayer' || p.post_type === 'prayer_request'
     if (activeFilter === 'struggles') return p.post_type === 'struggle'
     if (activeFilter === 'testimonies') return p.post_type === 'testimony'
-    if (activeFilter === 'records') return p.post_type === 'reflection' || p.post_type === 'record'
+    if (activeFilter === 'records')
+      return (
+        p.post_type === 'reflection' ||
+        p.post_type === 'record' ||
+        p.content.startsWith('Completed') ||
+        p.content.includes('Daily Devotion')
+      )
     return true
   })
 
@@ -878,7 +884,11 @@ function SquarePageContent() {
             const isPrayer = post.post_type === 'prayer' || post.post_type === 'prayer_request'
             const isStruggle = post.post_type === 'struggle'
             const isTestimony = post.post_type === 'testimony'
-            const isRecord = post.post_type === 'reflection' || post.post_type === 'record'
+            const isRecord =
+              post.post_type === 'reflection' ||
+              post.post_type === 'record' ||
+              post.content.startsWith('Completed') ||
+              post.content.includes('Daily Devotion')
 
             const timeStr = new Date(post.created_at).toLocaleDateString([], {
               month: 'short',

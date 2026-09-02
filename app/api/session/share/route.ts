@@ -65,9 +65,11 @@ export async function POST(req: NextRequest) {
       ? (customReflection?.trim() || sessionData?.reflection?.trim() || defaultProofText)
       : defaultProofText
 
-    // 5. Publish to square_posts as RECORD post
-    const { data: newPost, error: postErr } = await supabase
-      .from('square_posts')
+    // 5. Publish to square_posts with resilient multi-tier fallbacks
+    let createdPost: any = null
+
+    // Tier 1: Full insert with all columns
+    const { data: t1Post, error: t1Err } = await (supabase.from('square_posts') as any)
       .insert({
         user_id: user.id,
         session_id: sessionData?.id || null,
@@ -77,10 +79,55 @@ export async function POST(req: NextRequest) {
         post_type: 'record',
       })
       .select()
-      .single()
+      .maybeSingle()
 
-    if (postErr) {
-      console.error('Error inserting square post:', postErr)
+    if (t1Err) {
+      console.warn('Share Tier 1 note, attempting Tier 2:', t1Err.message)
+      // Tier 2: Without session_id or scripture_reference
+      const { data: t2Post, error: t2Err } = await (supabase.from('square_posts') as any)
+        .insert({
+          user_id: user.id,
+          content: finalContent,
+          verse_reference: includeReflection ? (sessionData?.verse_reference || null) : null,
+          post_type: 'record',
+        })
+        .select()
+        .maybeSingle()
+
+      if (t2Err) {
+        console.warn('Share Tier 2 note, attempting Tier 3 (reflection post_type):', t2Err.message)
+        // Tier 3: With reflection post_type (if check constraint rejects 'record')
+        const { data: t3Post, error: t3Err } = await (supabase.from('square_posts') as any)
+          .insert({
+            user_id: user.id,
+            content: finalContent,
+            verse_reference: includeReflection ? (sessionData?.verse_reference || null) : null,
+            post_type: 'reflection',
+          })
+          .select()
+          .maybeSingle()
+
+        if (t3Err) {
+          console.warn('Share Tier 3 note, attempting Tier 4 minimal:', t3Err.message)
+          // Tier 4: Minimal
+          const { data: t4Post, error: t4Err } = await (supabase.from('square_posts') as any)
+            .insert({
+              user_id: user.id,
+              content: finalContent,
+            })
+            .select()
+            .maybeSingle()
+
+          if (t4Err) throw t4Err
+          createdPost = t4Post
+        } else {
+          createdPost = t3Post
+        }
+      } else {
+        createdPost = t2Post
+      }
+    } else {
+      createdPost = t1Post
     }
 
     return NextResponse.json({
