@@ -476,13 +476,45 @@ export default function GroupChatPage() {
       startedAt: isScheduleEnabled ? scheduledAtISO : new Date().toISOString(),
     }
 
-    const sent = await sendGroupMessage(groupId, contentText, 'clockin_invite', metaObj)
-    if (sent) {
-      setMessages((prev) => [...prev, sent as any])
+    // 1. Optimistic message in chat
+    const tempId = `temp-grp-invite-${Date.now()}`
+    const optMsg: any = {
+      id: tempId,
+      sender_id: currentUser.id,
+      content: contentText,
+      message_type: 'clockin_invite',
+      meta: metaObj,
+      created_at: new Date().toISOString(),
+      sender_name: myName,
+      sender_initial: myName.charAt(0).toUpperCase(),
+    }
+    setMessages((prev) => [...prev, optMsg])
+
+    // 2. If instant live devotion, open live room overlay immediately for creator
+    if (!isScheduleEnabled) {
+      setLiveDiscipline(inviteDiscipline)
+      setLiveTargetMins(inviteDuration)
+      setLiveFocusText(inviteFocus.trim() || 'Hebrews 11 - Faith & Endurance')
+      setLiveDurationSecs(0)
+      setIsLiveOverlayOpen(true)
+      playChime()
     }
 
-    setToastMessage(isScheduleEnabled ? `Cohort scheduled for ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} ⏱️` : `Group clock-in invite posted! ⏱️`)
+    setToastMessage(
+      isScheduleEnabled
+        ? `Cohort scheduled for ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} ⏱️`
+        : `Live group clock-in session started! ⏱️`
+    )
     setTimeout(() => setToastMessage(null), 3000)
+
+    try {
+      const sent = await sendGroupMessage(groupId, contentText, 'clockin_invite', metaObj)
+      if (sent) {
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
+      }
+    } catch (err) {
+      console.log('Send group invite note:', err)
+    }
 
     try {
       await fetch('/api/session/live', {
@@ -1130,15 +1162,27 @@ export default function GroupChatPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* 4. MODAL: TIMER SETUP MODAL (SLIDER, GOAL & SCHEDULE CONFIGURATION)        */}
+      {/* 4. MODAL: GROUP TIMER SETUP MODAL (SPACIOUS & UNCLUSTERED)                */}
       {/* ========================================================================= */}
       {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Group Clock-In Setup</h3>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-[#707070]">
-                <X size={18} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div>
+                <h3 className="text-base font-black text-[#0E0E0E] tracking-tight">
+                  Start Group Devotion
+                </h3>
+                <p className="text-xs text-[#707070]">
+                  Host a shared devotion with {groupName}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInviteModalOpen(false)}
+                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+              >
+                <X size={20} />
               </button>
             </div>
 
@@ -1149,75 +1193,81 @@ export default function GroupChatPage() {
               }}
               className="space-y-4"
             >
-              <div>
-                <label className="text-[11px] font-bold text-[#707070] block mb-1.5">Mode</label>
+              {/* 1. Discipline Mode Tabs */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
+                  Discipline
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setInviteDiscipline('study')}
-                    className={`py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                    className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'study'
-                        ? 'bg-[#0E0E0E] text-white shadow-xs'
-                        : 'bg-white border border-[#E5E7EB] text-[#707070]'
+                        ? 'bg-[#0E0E0E] text-white shadow-md'
+                        : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                     }`}
                   >
-                    <BookOpen size={15} />
-                    <span>Study</span>
+                    <BookOpen size={16} weight="bold" className={inviteDiscipline === 'study' ? 'text-[#FBBF24]' : ''} />
+                    <span>Scripture Study</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setInviteDiscipline('prayer')}
-                    className={`py-2.5 px-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                    className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'prayer'
-                        ? 'bg-[#0E0E0E] text-white shadow-xs'
-                        : 'bg-white border border-[#E5E7EB] text-[#707070]'
+                        ? 'bg-[#0E0E0E] text-white shadow-md'
+                        : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                     }`}
                   >
-                    <HandsPraying size={15} weight="fill" />
+                    <HandsPraying size={16} weight="fill" className={inviteDiscipline === 'prayer' ? 'text-[#FBBF24]' : ''} />
                     <span>Prayer</span>
                   </button>
                 </div>
               </div>
 
-              {/* Duration Slider & Clickable Direct Input */}
-              <div className="space-y-1.5">
+              {/* 2. Duration Preset Chips & Range Slider */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-[#707070]">Duration</label>
-                  <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-xl px-2.5 py-0.5 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-1 focus-within:ring-[#FBBF24]">
-                    <input
-                      type="number"
-                      min={1}
-                      max={300}
-                      value={inviteDuration || ''}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10)
-                        setInviteDuration(isNaN(val) ? 1 : Math.max(1, Math.min(300, val)))
-                      }}
-                      className="w-10 text-xs font-black font-mono-tabular text-[#0E0E0E] text-center focus:outline-none bg-transparent"
-                    />
-                    <span className="text-[10px] font-bold text-[#707070]">min</span>
-                  </div>
+                  <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                    Cohort Duration
+                  </label>
+                  <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
+                    {inviteDuration} mins
+                  </span>
                 </div>
+
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[15, 30, 45, 60].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setInviteDuration(mins)}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        inviteDuration === mins
+                          ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
+                          : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+
                 <input
                   type="range"
-                  min={1}
+                  min={5}
                   max={120}
-                  step={1}
-                  value={Math.min(120, inviteDuration)}
+                  step={5}
+                  value={inviteDuration}
                   onChange={(e) => setInviteDuration(Number(e.target.value))}
                   className="w-full accent-[#FBBF24] cursor-pointer"
                 />
-                <div className="flex justify-between text-[9px] text-[#9095A1] font-mono-tabular">
-                  <span>1m</span>
-                  <span>30m</span>
-                  <span>60m</span>
-                  <span>120m</span>
-                </div>
               </div>
 
-              {/* Focus Scripture / Intention */}
-              <div>
-                <label className="text-[11px] font-bold text-[#707070] block mb-1">
+              {/* 3. Focus Scripture / Intention */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
                   Focus Scripture / Intention
                 </label>
                 <input
@@ -1225,32 +1275,32 @@ export default function GroupChatPage() {
                   value={inviteFocus}
                   onChange={(e) => setInviteFocus(e.target.value)}
                   placeholder="e.g. Hebrews 11 - Faith & Endurance"
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                  className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs"
                 />
               </div>
 
-              {/* Automated Schedule Option (Hostless Sync) */}
+              {/* 4. Automated Schedule Accordion */}
               <div className="pt-2 border-t border-[#E5E7EB] space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
-                      <CalendarCheck size={14} className="text-[#FBBF24]" weight="bold" />
+                      <CalendarCheck size={15} className="text-[#FBBF24]" weight="bold" />
                       <span>Schedule for Later</span>
                     </label>
                     <p className="text-[10px] text-[#707070]">
-                      Hostless Sync: Starts automatically at set time
+                      Synchronizes start time for all members
                     </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setIsScheduleEnabled((s) => !s)}
-                    className={`w-10 h-5 rounded-full transition-colors relative p-0.5 ${
+                    className={`w-11 h-6 rounded-full transition-colors relative p-1 cursor-pointer ${
                       isScheduleEnabled ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                      className={`w-4 h-4 rounded-full bg-white shadow-md transition-transform ${
                         isScheduleEnabled ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -1258,61 +1308,58 @@ export default function GroupChatPage() {
                 </div>
 
                 {isScheduleEnabled && (
-                  <div className="space-y-2 animate-in fade-in-50">
-                    <label className="text-[10px] font-bold text-[#707070] block">
-                      Target Start Time
-                    </label>
-                    <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <div className="space-y-2 pt-1 animate-in fade-in">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
                       <button
                         type="button"
                         onClick={() => setSchedulePreset('tomorrow_6am')}
-                        className={`p-2 rounded-xl text-left border transition-all ${
+                        className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_6am'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold'
-                            : 'bg-white border-[#E5E7EB] text-[#707070]'
+                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Tomorrow</p>
-                        <p className="font-mono-tabular font-bold">6:00 AM</p>
+                        <p className="font-mono-tabular font-black">6:00 AM</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setSchedulePreset('tomorrow_7am')}
-                        className={`p-2 rounded-xl text-left border transition-all ${
+                        className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_7am'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold'
-                            : 'bg-white border-[#E5E7EB] text-[#707070]'
+                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Tomorrow</p>
-                        <p className="font-mono-tabular font-bold">7:00 AM</p>
+                        <p className="font-mono-tabular font-black">7:00 AM</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setSchedulePreset('today_8pm')}
-                        className={`p-2 rounded-xl text-left border transition-all ${
+                        className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'today_8pm'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold'
-                            : 'bg-white border-[#E5E7EB] text-[#707070]'
+                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Today</p>
-                        <p className="font-mono-tabular font-bold">8:00 PM</p>
+                        <p className="font-mono-tabular font-black">8:00 PM</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setSchedulePreset('custom')}
-                        className={`p-2 rounded-xl text-left border transition-all ${
+                        className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'custom'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold'
-                            : 'bg-white border-[#E5E7EB] text-[#707070]'
+                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Custom</p>
-                        <p className="font-mono-tabular font-bold">Specific Time</p>
+                        <p className="font-mono-tabular font-black">Specific Time</p>
                       </button>
                     </div>
 
@@ -1321,24 +1368,28 @@ export default function GroupChatPage() {
                         type="time"
                         value={customScheduledTime}
                         onChange={(e) => setCustomScheduledTime(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-xl text-xs font-mono-tabular"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs font-mono-tabular focus:outline-none focus:border-[#FBBF24]"
                       />
                     )}
                   </div>
                 )}
               </div>
 
+              {/* Submit CTA */}
               <button
                 type="submit"
-                className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#0E0E0E] text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/15 hover:bg-[#262626] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isScheduleEnabled ? (
                   <>
-                    <CalendarCheck size={16} className="text-[#FBBF24]" weight="bold" />
-                    <span>Schedule Group Clock-In</span>
+                    <CalendarCheck size={18} className="text-[#FBBF24]" weight="bold" />
+                    <span>Schedule Cohort Clock-In</span>
                   </>
                 ) : (
-                  <span>Send Group Clock-In Invite</span>
+                  <>
+                    <Play size={18} weight="fill" className="text-[#FBBF24]" />
+                    <span>Start Live Cohort Room</span>
+                  </>
                 )}
               </button>
             </form>
