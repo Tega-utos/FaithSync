@@ -23,6 +23,7 @@ import {
   Microphone,
   MicrophoneSlash,
   SpeakerHigh,
+  SpeakerSlash,
   Lightning,
   HandWaving,
   ThumbsUp,
@@ -38,10 +39,19 @@ import {
   CalendarBlank,
   Camera,
   Image as ImageIcon,
+  ListNumbers,
+  BookmarkSimple,
+  Sliders,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { useTimer } from '@/context/TimerContext'
-import { playChime } from '@/components/audio/Chime'
+import { playChime, playSegmentChime } from '@/components/audio/Chime'
+import { ambientSound } from '@/components/audio/AmbientSound'
+import { LiveSessionBibleReader } from '@/components/bible/LiveSessionBibleReader'
+import {
+  PrayerFocusTimelineBuilder,
+  TimelineSegment,
+} from '@/components/timer/PrayerFocusTimelineBuilder'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
 
 const DASH_ARRAY = 565.48
@@ -114,8 +124,32 @@ export default function GroupChatPage() {
   // Clock-in Setup Modal & Scheduling
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [inviteDiscipline, setInviteDiscipline] = useState<'prayer' | 'study'>('study')
+  const [prayerFocusMode, setPrayerFocusMode] = useState<'plain' | 'timeline'>('plain')
   const [inviteDuration, setInviteDuration] = useState(30)
-  const [inviteFocus, setInviteFocus] = useState('Hebrews 11 - Faith & Endurance')
+  const [inviteFocus, setInviteFocus] = useState('Praying for unity, revival and community')
+  const [studyPassage, setStudyPassage] = useState('Hebrews 11 - Faith & Endurance')
+  const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([
+    {
+      id: 'seg-1',
+      type: 'scripture',
+      durationMinutes: 5,
+      reference: 'Psalm 100:1-5',
+      versionId: 'web',
+    },
+    {
+      id: 'seg-2',
+      type: 'reflection',
+      durationMinutes: 15,
+      prompt: 'Intercession for our community, families, and city revival.',
+    },
+    {
+      id: 'seg-3',
+      type: 'reflection',
+      durationMinutes: 10,
+      prompt: 'Quiet stillness: Listening for the Holy Spirit in reverent silence.',
+    },
+  ])
+  const [isTimelineBuilderOpen, setIsTimelineBuilderOpen] = useState(false)
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(false)
   const [schedulePreset, setSchedulePreset] = useState<'tomorrow_6am' | 'tomorrow_7am' | 'today_8pm' | 'custom'>('tomorrow_6am')
   const [customScheduledTime, setCustomScheduledTime] = useState('')
@@ -127,15 +161,51 @@ export default function GroupChatPage() {
   const [liveDurationSecs, setLiveDurationSecs] = useState(0)
   const [liveTargetMins, setLiveTargetMins] = useState(30)
   const [liveFocusText, setLiveFocusText] = useState('Hebrews 11 - Faith & Endurance')
+  const [liveTimelineSegments, setLiveTimelineSegments] = useState<TimelineSegment[]>([])
   // Auto-Mute (Group Mode): Participants are muted by default to prevent chaotic audio feedback
   const [isMicMuted, setIsMicMuted] = useState(true)
 
+  // In-App Bible Reader & Ambient Sound in Live Session
+  const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false)
+  const [isAmbientMuted, setIsAmbientMuted] = useState(false)
+  const lastActiveSegRef = useRef<number>(-1)
+
+  // Ambient sound lifecycle during live session
+  useEffect(() => {
+    if (isLiveOverlayOpen) {
+      ambientSound.start(liveDiscipline, isAmbientMuted)
+    } else {
+      ambientSound.stop()
+      lastActiveSegRef.current = -1
+    }
+    return () => {
+      ambientSound.stop()
+    }
+  }, [isLiveOverlayOpen, liveDiscipline])
+
+  // Segment chime trigger on timeline progression
+  useEffect(() => {
+    if (!isLiveOverlayOpen || liveTimelineSegments.length === 0) return
+
+    let accum = 0
+    let currIdx = 0
+    for (let i = 0; i < liveTimelineSegments.length; i++) {
+      const segSecs = (liveTimelineSegments[i].durationMinutes || 1) * 60
+      if (liveDurationSecs < accum + segSecs) {
+        currIdx = i
+        break
+      }
+      accum += segSecs
+    }
+
+    if (lastActiveSegRef.current !== -1 && lastActiveSegRef.current !== currIdx) {
+      playSegmentChime(isAmbientMuted)
+    }
+    lastActiveSegRef.current = currIdx
+  }, [liveDurationSecs, isLiveOverlayOpen, liveTimelineSegments, isAmbientMuted])
+
   // Participants in Grid
   const [participants, setParticipants] = useState<Participant[]>([])
-
-  // Real-time Floating Nudges
-  const [floatingNudges, setFloatingNudges] = useState<FloatingNudge[]>([])
-  const [totalNudgesCount, setTotalNudgesCount] = useState(0)
 
   // End Session Summary Screen
   const [isSessionCompleteScreen, setIsSessionCompleteScreen] = useState(false)
@@ -414,6 +484,7 @@ export default function GroupChatPage() {
     const discipline = msg.meta?.discipline || 'study'
     const duration = msg.meta?.durationMins || 30
     const focus = msg.meta?.focusText || 'Hebrews 11 - Faith & Endurance'
+    const segments = (msg.meta as any)?.timelineSegments || []
 
     const targetStartTime = msg.meta?.scheduledAt
       ? new Date(msg.meta.scheduledAt).getTime()
@@ -432,6 +503,7 @@ export default function GroupChatPage() {
     setLiveDiscipline(discipline)
     setLiveTargetMins(duration)
     setLiveFocusText(focus)
+    setLiveTimelineSegments(segments)
     setLiveDurationSecs(elapsedSeconds)
     setIsLiveOverlayOpen(true)
     playChime()
@@ -460,20 +532,32 @@ export default function GroupChatPage() {
       scheduledAtISO = targetDate.toISOString()
     }
 
+    const isTimelinePrayer = inviteDiscipline === 'prayer' && prayerFocusMode === 'timeline'
+    const totalDuration = isTimelinePrayer
+      ? timelineSegments.reduce((sum, s) => sum + (s.durationMinutes || 1), 0)
+      : inviteDuration
+
     const roomId = `group-${groupId}-${Date.now()}`
     const myName = currentUser?.user_metadata?.full_name || 'A Leader'
 
     const contentText = isScheduleEnabled
-      ? `Scheduled a group ${inviteDuration} min ${inviteDiscipline} session for ${new Date(scheduledAtISO).toLocaleDateString([], { weekday: 'short' })} at ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
-      : `Group Clock-In Invite: ${inviteDuration} min ${inviteDiscipline}`
+      ? `Scheduled a group ${totalDuration} min ${inviteDiscipline} session for ${new Date(scheduledAtISO).toLocaleDateString([], { weekday: 'short' })} at ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      : `Group Clock-In Invite: ${totalDuration} min ${
+          inviteDiscipline === 'prayer'
+            ? isTimelinePrayer
+              ? `Guided Prayer (${timelineSegments.length} Segments)`
+              : 'Prayer'
+            : 'Scripture Study'
+        }`
 
     const metaObj = {
       discipline: inviteDiscipline,
-      durationMins: inviteDuration,
-      focusText: inviteFocus.trim() || 'Hebrews 11 - Faith & Endurance',
+      durationMins: totalDuration,
+      focusText: inviteDiscipline === 'study' ? (studyPassage.trim() || 'Hebrews 11') : (inviteFocus.trim() || ''),
       isScheduled: isScheduleEnabled,
       scheduledAt: isScheduleEnabled ? scheduledAtISO : undefined,
       startedAt: isScheduleEnabled ? scheduledAtISO : new Date().toISOString(),
+      timelineSegments: isTimelinePrayer ? timelineSegments : [],
     }
 
     // 1. Optimistic message in chat
@@ -493,8 +577,9 @@ export default function GroupChatPage() {
     // 2. If instant live devotion, open live room overlay immediately for creator
     if (!isScheduleEnabled) {
       setLiveDiscipline(inviteDiscipline)
-      setLiveTargetMins(inviteDuration)
-      setLiveFocusText(inviteFocus.trim() || 'Hebrews 11 - Faith & Endurance')
+      setLiveTargetMins(totalDuration)
+      setLiveFocusText(metaObj.focusText)
+      setLiveTimelineSegments(metaObj.timelineSegments)
       setLiveDurationSecs(0)
       setIsLiveOverlayOpen(true)
       playChime()
@@ -1166,7 +1251,7 @@ export default function GroupChatPage() {
       {/* ========================================================================= */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
               <div>
@@ -1180,7 +1265,7 @@ export default function GroupChatPage() {
               <button
                 type="button"
                 onClick={() => setIsInviteModalOpen(false)}
-                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -1226,60 +1311,164 @@ export default function GroupChatPage() {
                 </div>
               </div>
 
-              {/* 2. Duration Preset Chips & Range Slider */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
-                    Cohort Duration
-                  </label>
-                  <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
-                    {inviteDuration} mins
-                  </span>
+              {/* 2. Prayer Mode Options: Plain Focus vs. Timeline */}
+              {inviteDiscipline === 'prayer' && (
+                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                      Prayer Structure
+                    </span>
+                    <div className="flex items-center bg-[#FAF6EE] p-0.5 rounded-xl border border-[#E5E7EB]">
+                      <button
+                        type="button"
+                        onClick={() => setPrayerFocusMode('plain')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          prayerFocusMode === 'plain'
+                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            : 'text-[#707070]'
+                        }`}
+                      >
+                        Plain Focus
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPrayerFocusMode('timeline')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          prayerFocusMode === 'timeline'
+                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            : 'text-[#707070]'
+                        }`}
+                      >
+                        <ListNumbers size={13} weight="bold" />
+                        <span>Timeline</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {prayerFocusMode === 'timeline' ? (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#707070]">Guided Segments:</span>
+                        <span className="font-bold text-[#0E0E0E]">
+                          {timelineSegments.length} Phases • {timelineSegments.reduce((s, x) => s + (x.durationMinutes || 1), 0)} mins total
+                        </span>
+                      </div>
+                      <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                        {timelineSegments.map((seg, idx) => (
+                          <div
+                            key={seg.id || idx}
+                            className="p-2 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] text-[11px] flex items-center justify-between"
+                          >
+                            <span className="font-medium text-[#0E0E0E] truncate max-w-[200px]">
+                              {idx + 1}. {seg.type === 'scripture' ? seg.reference : seg.prompt}
+                            </span>
+                            <span className="font-mono-tabular font-bold text-[#FBBF24] bg-[#0E0E0E] px-1.5 py-0.5 rounded text-[10px]">
+                              {seg.durationMinutes}m
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsTimelineBuilderOpen(true)}
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Sliders size={14} weight="bold" className="text-[#FBBF24]" />
+                        <span>Customize Guided Timeline</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1 pt-1">
+                      <label className="text-[10px] font-bold text-[#707070] block">
+                        Focus Theme (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={inviteFocus}
+                        onChange={(e) => setInviteFocus(e.target.value)}
+                        placeholder="e.g. Praying for unity, revival and community"
+                        className="w-full px-3.5 py-2 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                      />
+                    </div>
+                  )}
                 </div>
+              )}
 
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[15, 30, 45, 60].map((mins) => (
-                    <button
-                      key={mins}
-                      type="button"
-                      onClick={() => setInviteDuration(mins)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        inviteDuration === mins
-                          ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
-                          : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
-                      }`}
-                    >
-                      {mins}m
-                    </button>
-                  ))}
+              {/* 3. Study Mode Passage Input & Preset Chips */}
+              {inviteDiscipline === 'study' && (
+                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
+                      Scripture Study Passage
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      In-App Bible Ready
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={studyPassage}
+                    onChange={(e) => setStudyPassage(e.target.value)}
+                    placeholder="e.g. Hebrews 11 - Faith & Endurance"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] font-medium"
+                  />
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    {['Hebrews 11', 'Romans 8', 'Psalm 23', 'John 15', 'Ephesians 6'].map((ref) => (
+                      <button
+                        key={ref}
+                        type="button"
+                        onClick={() => setStudyPassage(ref)}
+                        className="px-2 py-0.5 rounded-lg bg-[#FAF6EE] hover:bg-[#F3F4F6] border border-[#E5E7EB] text-[10px] font-bold text-[#707070] hover:text-[#0E0E0E] whitespace-nowrap cursor-pointer"
+                      >
+                        {ref}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              )}
 
-                <input
-                  type="range"
-                  min={5}
-                  max={120}
-                  step={5}
-                  value={inviteDuration}
-                  onChange={(e) => setInviteDuration(Number(e.target.value))}
-                  className="w-full accent-[#FBBF24] cursor-pointer"
-                />
-              </div>
+              {/* 4. Target Duration (Shown if not in custom timeline mode) */}
+              {(inviteDiscipline === 'study' || prayerFocusMode === 'plain') && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                      Cohort Duration
+                    </label>
+                    <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
+                      {inviteDuration} mins
+                    </span>
+                  </div>
 
-              {/* 3. Focus Scripture / Intention */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
-                  Focus Scripture / Intention
-                </label>
-                <input
-                  type="text"
-                  value={inviteFocus}
-                  onChange={(e) => setInviteFocus(e.target.value)}
-                  placeholder="e.g. Hebrews 11 - Faith & Endurance"
-                  className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs"
-                />
-              </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[15, 30, 45, 60].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setInviteDuration(mins)}
+                        className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          inviteDuration === mins
+                            ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
+                            : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
 
-              {/* 4. Automated Schedule Accordion */}
+                  <input
+                    type="range"
+                    min={5}
+                    max={120}
+                    step={5}
+                    value={inviteDuration}
+                    onChange={(e) => setInviteDuration(Number(e.target.value))}
+                    className="w-full accent-[#FBBF24] cursor-pointer"
+                  />
+                </div>
+              )}
+
+              {/* 5. Automated Schedule Accordion */}
               <div className="pt-2 border-t border-[#E5E7EB] space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1397,9 +1586,7 @@ export default function GroupChatPage() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 5. NOTIFICATIONS SETTINGS SHEET                                           */}
-      {/* ========================================================================= */}
+      {/* Notifications Settings Sheet */}
       {isNotifSheetOpen && (
         <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="fixed inset-0" onClick={() => setIsNotifSheetOpen(false)} />
@@ -1407,7 +1594,7 @@ export default function GroupChatPage() {
           <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
               <h3 className="text-sm font-bold text-[#0E0E0E]">Group Notifications</h3>
-              <button onClick={() => setIsNotifSheetOpen(false)} className="text-[#707070]">
+              <button onClick={() => setIsNotifSheetOpen(false)} className="text-[#707070] cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -1417,20 +1604,20 @@ export default function GroupChatPage() {
                 <div className="flex items-center gap-2.5">
                   <Bell size={18} className="text-[#FBBF24]" />
                   <div>
-                    <p className="font-bold text-[#0E0E0E]">Push Notifications</p>
-                    <p className="text-[10px] text-[#707070]">Receive live group session waves</p>
+                    <p className="font-bold text-[#0E0E0E]">Cohort Clock-In Alerts</p>
+                    <p className="text-[10px] text-[#707070]">Receive live group devotion alerts</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setPushNotifsEnabled((p) => !p)}
-                  className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                    pushNotifsEnabled ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                  onClick={() => setGroupNotifClockIn((p) => !p)}
+                  className={`w-11 h-6 rounded-full transition-colors relative p-0.5 cursor-pointer ${
+                    groupNotifClockIn ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
                   }`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                      pushNotifsEnabled ? 'translate-x-5' : 'translate-x-0'
+                      groupNotifClockIn ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>
@@ -1439,7 +1626,7 @@ export default function GroupChatPage() {
               <button
                 type="button"
                 onClick={() => setIsNotifSheetOpen(false)}
-                className="w-full py-3.5 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl shadow-md mt-2"
+                className="w-full py-3.5 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl shadow-md mt-2 cursor-pointer"
               >
                 Done
               </button>
@@ -1460,7 +1647,7 @@ export default function GroupChatPage() {
               <button
                 type="button"
                 onClick={() => setIsLeaveModalOpen(false)}
-                className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070]"
+                className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] cursor-pointer"
               >
                 Cancel
               </button>
@@ -1470,7 +1657,7 @@ export default function GroupChatPage() {
                   setIsLeaveModalOpen(false)
                   router.push('/sync')
                 }}
-                className="py-2.5 px-3 rounded-xl bg-rose-600 text-white text-xs font-bold"
+                className="py-2.5 px-3 rounded-xl bg-rose-600 text-white text-xs font-bold cursor-pointer"
               >
                 Leave
               </button>
@@ -1479,134 +1666,205 @@ export default function GroupChatPage() {
         </div>
       )}
 
+      {/* Embedded Prayer Timeline Builder Sub-Modal */}
+      <PrayerFocusTimelineBuilder
+        isOpen={isTimelineBuilderOpen}
+        onClose={() => setIsTimelineBuilderOpen(false)}
+        initialSegments={timelineSegments}
+        onApplyTimeline={(newSegs, totalMins) => {
+          setTimelineSegments(newSegs)
+          setInviteDuration(totalMins)
+          setIsTimelineBuilderOpen(false)
+        }}
+      />
+
+      {/* Embedded Live Session In-App Bible Reader */}
+      <LiveSessionBibleReader
+        isOpen={isBibleReaderOpen}
+        onClose={() => setIsBibleReaderOpen(false)}
+        initialReference={studyPassage || liveFocusText || 'Hebrews 11'}
+      />
+
       {/* ========================================================================= */}
       {/* 5. THE LIVE GROUP CLOCK-IN OVERLAY (PARTICIPANT GRID & WEBRTC VOICE)       */}
       {/* ========================================================================= */}
-      {isLiveOverlayOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                LIVE COHORT
-              </span>
-              <span className="text-xs text-slate-400 font-mono-tabular">
-                {participants.length} Active
-              </span>
-            </div>
+      {isLiveOverlayOpen && (() => {
+        // Active timeline segment computation
+        let accumulatedSecs = 0
+        let activeSegIndex = 0
+        let activeSeg: TimelineSegment | null = null
+        let activeSegSecsLeft = 0
 
-            <button
-              type="button"
-              onClick={handleEndLiveSession}
-              className="py-1.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1 shadow-md transition-all"
-            >
-              <Square size={14} weight="fill" />
-              <span>{isHostUser ? 'End For All' : 'Leave Early'}</span>
-            </button>
-          </div>
+        if (liveTimelineSegments && liveTimelineSegments.length > 0) {
+          for (let i = 0; i < liveTimelineSegments.length; i++) {
+            const segDurationSecs = (liveTimelineSegments[i].durationMinutes || 1) * 60
+            if (liveDurationSecs < accumulatedSecs + segDurationSecs) {
+              activeSegIndex = i
+              activeSeg = liveTimelineSegments[i]
+              activeSegSecsLeft = Math.max(0, accumulatedSecs + segDurationSecs - liveDurationSecs)
+              break
+            }
+            accumulatedSecs += segDurationSecs
+          }
+          if (!activeSeg && liveTimelineSegments.length > 0) {
+            activeSeg = liveTimelineSegments[liveTimelineSegments.length - 1]
+          }
+        }
 
-          {/* Floating Live Reactions */}
-          <div className="absolute right-4 top-20 z-40 pointer-events-none space-y-2">
-            {floatingNudges.map((nudge) => (
-              <div
-                key={nudge.id}
-                className="px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl animate-in slide-in-from-bottom duration-500"
-              >
-                <span>{nudge.emoji}</span>
-                <span>{nudge.text}</span>
-              </div>
-            ))}
-          </div>
+        return (
+          <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
+            {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>LIVE COHORT</span>
+                </span>
 
-          {/* Center: The Participant Grid & Active Speaker Highlights */}
-          <div className="space-y-4 my-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
-              {participants.map((p) => (
-                <div
-                  key={p.id}
-                  className={`p-3 rounded-2xl bg-white/10 backdrop-blur-md border transition-all flex flex-col items-center text-center space-y-1.5 relative ${
-                    p.isSpeaking
-                      ? 'border-[#FBBF24] ring-2 ring-[#FBBF24]/60 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
-                      : 'border-white/10'
+                {/* Ambient Sound Mute/Unmute Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextMuted = ambientSound.toggleMute()
+                    setIsAmbientMuted(nextMuted)
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !isAmbientMuted
+                      ? 'bg-[#FBBF24]/20 border-[#FBBF24]/40 text-[#FBBF24]'
+                      : 'bg-white/10 border-white/20 text-white/50 hover:text-white'
                   }`}
+                  title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
                 >
-                  {p.isHost && (
-                    <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md bg-[#FBBF24] text-[#0E0E0E] text-[8px] font-black uppercase flex items-center gap-0.5">
-                      <Crown size={9} weight="fill" /> Host
-                    </span>
-                  )}
+                  {!isAmbientMuted ? <SpeakerHigh size={15} weight="bold" /> : <SpeakerSlash size={15} />}
+                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambient: On' : 'Ambient: Muted'}</span>
+                </button>
+              </div>
 
+              {/* Present Avatars & Exit */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center -space-x-2">
                   <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center text-base font-black border-2 transition-transform ${
-                      p.id === 'me'
-                        ? 'bg-[#FBBF24] text-[#0E0E0E] border-white'
-                        : 'bg-white text-[#0E0E0E] border-white/80'
-                    } ${p.isSpeaking ? 'scale-105 animate-pulse' : ''}`}
+                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    title="You (Present)"
                   >
-                    <span>{p.initial}</span>
+                    Me
                   </div>
-
-                  <div className="truncate w-full">
-                    <p className="text-xs font-bold text-white truncate">{p.name}</p>
-                    <span className="text-[9px] text-slate-300 font-medium">
-                      {p.isSpeaking ? 'Speaking...' : p.isMuted ? 'Muted' : 'Listening'}
-                    </span>
-                  </div>
+                  {participants
+                    .filter((p) => p.id !== 'me')
+                    .slice(0, 3)
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="w-8 h-8 rounded-full bg-white text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                        title={`${p.name} (Present)`}
+                      >
+                        {p.initial}
+                      </div>
+                    ))}
+                  {participants.length > 4 && (
+                    <div className="w-8 h-8 rounded-full bg-[#262626] text-white font-black text-[10px] flex items-center justify-center border-2 border-[#0E0E0E]">
+                      +{participants.length - 4}
+                    </div>
+                  )}
                 </div>
-              ))}
+
+                <button
+                  type="button"
+                  onClick={handleEndLiveSession}
+                  className="py-1.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1 shadow-md transition-all cursor-pointer"
+                >
+                  <Square size={14} weight="fill" />
+                  <span>{isHostUser ? 'End For All' : 'Leave Early'}</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center pt-2">
-              <span className="text-4xl font-extrabold font-mono-tabular tracking-tight">
-                {liveFormatted}
-              </span>
-              <span className="text-xs font-black uppercase tracking-widest text-[#FBBF24] mt-0.5">
-                {liveDiscipline} • Target {liveTargetMins}m
-              </span>
-              {liveFocusText && (
-                <p className="text-xs italic text-slate-300 mt-2 max-w-xs text-center">
-                  &ldquo;{liveFocusText}&rdquo;
-                </p>
+            {/* Middle Section: Circular Stopwatch & Contextual Study / Prayer Phase Card */}
+            <div className="flex flex-col items-center justify-center space-y-4 my-auto">
+              <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    stroke="#FBBF24"
+                    className="transition-all duration-1000"
+                    strokeWidth="8"
+                    strokeDasharray={DASH_ARRAY}
+                    strokeDashoffset={
+                      DASH_ARRAY - ((liveDurationSecs % (liveTargetMins * 60)) / (liveTargetMins * 60)) * DASH_ARRAY
+                    }
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                </svg>
+
+                <div className="absolute flex flex-col items-center text-center">
+                  <span className="text-3xl sm:text-4xl font-extrabold font-mono-tabular tracking-tight">
+                    {liveFormatted}
+                  </span>
+                  <span className="text-xs font-black uppercase tracking-widest text-[#FBBF24] mt-1 capitalize">
+                    {liveDiscipline}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono-tabular">
+                    Target: {liveTargetMins}m
+                  </span>
+                </div>
+              </div>
+
+              {/* Study Mode: In-App Bible Reader Action Bar */}
+              {liveDiscipline === 'study' && (
+                <div className="flex flex-col items-center space-y-2 max-w-sm w-full">
+                  <button
+                    type="button"
+                    onClick={() => setIsBibleReaderOpen(true)}
+                    className="w-full py-3 px-4 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] hover:bg-[#f5b81b] active:scale-95 transition-all font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20 cursor-pointer"
+                  >
+                    <BookOpen size={18} weight="bold" />
+                    <span>Open In-App Bible Reader</span>
+                  </button>
+                  <p className="text-[11px] text-slate-400 text-center">
+                    Reading: <span className="font-bold text-white">{studyPassage || liveFocusText || 'Hebrews 11'}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Prayer Mode: Guided Timeline Phase Card or Plain Focus */}
+              {liveDiscipline === 'prayer' && (
+                liveTimelineSegments.length > 0 && activeSeg ? (
+                  <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 text-center max-w-sm w-full space-y-2 shadow-xl animate-in fade-in">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-[#FBBF24] uppercase tracking-wider">
+                      <span>Phase {activeSegIndex + 1} of {liveTimelineSegments.length}</span>
+                      <span className="font-mono-tabular">
+                        {Math.floor(activeSegSecsLeft / 60)}:{(activeSegSecsLeft % 60).toString().padStart(2, '0')} left
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-white leading-snug">
+                      {activeSeg.type === 'scripture' ? `📖 ${activeSeg.reference}` : activeSeg.prompt}
+                    </p>
+                  </div>
+                ) : liveFocusText ? (
+                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs italic text-slate-200 max-w-xs text-center shadow-lg">
+                    &ldquo;{liveFocusText}&rdquo;
+                  </div>
+                ) : null
               )}
             </div>
-          </div>
 
-          {/* Bottom Controls & Live Nudges Action Bar */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleSendLiveNudge('🔥', 'Fervent Prayer!')}
-                className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
-              >
-                <span>🔥</span>
-                <span>Fire</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSendLiveNudge('🙏', 'Amen & Agree!')}
-                className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
-              >
-                <span>🙏</span>
-                <span>Amen</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSendLiveNudge('⚡', 'Keep Going!')}
-                className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all"
-              >
-                <span>⚡</span>
-                <span>Nudge</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-center">
+            {/* Bottom Bar: Microphone Control */}
+            <div className="flex items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => setIsMicMuted((m) => !m)}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-xl ${
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-xl cursor-pointer ${
                   isMicMuted ? 'bg-rose-600 text-white' : 'bg-white text-[#0E0E0E] hover:bg-slate-200'
                 }`}
                 title={isMicMuted ? 'Unmute' : 'Mute'}
@@ -1615,8 +1873,8 @@ export default function GroupChatPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ========================================================================= */}
       {/* 6. SESSION COMPLETE SUMMARY SCREEN (AFTER HOST ENDS SESSION)               */}

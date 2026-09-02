@@ -19,6 +19,7 @@ import {
   Flag,
   User,
   SpeakerHigh,
+  SpeakerSlash,
   Check,
   X,
   HandsPraying,
@@ -36,10 +37,18 @@ import {
   Globe,
   Camera,
   Image as ImageIcon,
+  ListNumbers,
+  BookmarkSimple,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { useTimer } from '@/context/TimerContext'
-import { playChime } from '@/components/audio/Chime'
+import { playChime, playSegmentChime } from '@/components/audio/Chime'
+import { ambientSound } from '@/components/audio/AmbientSound'
+import { LiveSessionBibleReader } from '@/components/bible/LiveSessionBibleReader'
+import {
+  PrayerFocusTimelineBuilder,
+  TimelineSegment,
+} from '@/components/timer/PrayerFocusTimelineBuilder'
 import { fetchBuddyMessages, sendBuddyMessage } from '@/features/buddies/services/buddyService'
 import { getLocalDateKey } from '@/lib/utils/date'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
@@ -107,22 +116,85 @@ export default function BuddyChatPage() {
   // Clock-in Setup Modal State & Scheduling
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [inviteDiscipline, setInviteDiscipline] = useState<'prayer' | 'study'>('prayer')
+  const [prayerFocusMode, setPrayerFocusMode] = useState<'plain' | 'timeline'>('plain')
   const [inviteDuration, setInviteDuration] = useState(15)
   const [inviteFocus, setInviteFocus] = useState('Praying for family, work and spiritual growth')
+  const [studyPassage, setStudyPassage] = useState('Hebrews 11 - Faith & Endurance')
+  const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([
+    {
+      id: 'seg-1',
+      type: 'scripture',
+      durationMinutes: 3,
+      reference: 'Psalm 23:1-3',
+      versionId: 'web',
+    },
+    {
+      id: 'seg-2',
+      type: 'reflection',
+      durationMinutes: 7,
+      prompt: 'Surrender one specific anxiety or burden to Jesus right now.',
+    },
+    {
+      id: 'seg-3',
+      type: 'reflection',
+      durationMinutes: 5,
+      prompt: 'Intercede for your family, accountability partner, and community.',
+    },
+  ])
+  const [isTimelineBuilderOpen, setIsTimelineBuilderOpen] = useState(false)
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(false)
   const [schedulePreset, setSchedulePreset] = useState<'tomorrow_6am' | 'tomorrow_7am' | 'today_8pm' | 'custom'>('tomorrow_6am')
   const [customScheduledTime, setCustomScheduledTime] = useState('')
 
   // Live Devotion Room (WebRTC + Realtime Synced Stopwatch)
-  // Auto-Unmute (Buddy Mode): Microphone is unmuted by default in 1-on-1 sessions
   const [isLiveOverlayOpen, setIsLiveOverlayOpen] = useState(false)
   const [liveDiscipline, setLiveDiscipline] = useState<'prayer' | 'study'>('prayer')
   const [liveDurationSecs, setLiveDurationSecs] = useState(0)
   const [liveTargetMins, setLiveTargetMins] = useState(15)
   const [liveFocusText, setLiveFocusText] = useState('')
+  const [liveTimelineSegments, setLiveTimelineSegments] = useState<TimelineSegment[]>([])
   const [isMicMuted, setIsMicMuted] = useState(false)
   const [isBuddySpeaking, setIsBuddySpeaking] = useState(false)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
+
+  // In-App Bible Reader & Ambient Sound in Live Session
+  const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false)
+  const [isAmbientMuted, setIsAmbientMuted] = useState(false)
+  const lastActiveSegRef = useRef<number>(-1)
+
+  // Ambient sound lifecycle during live session
+  useEffect(() => {
+    if (isLiveOverlayOpen) {
+      ambientSound.start(liveDiscipline, isAmbientMuted)
+    } else {
+      ambientSound.stop()
+      lastActiveSegRef.current = -1
+    }
+    return () => {
+      ambientSound.stop()
+    }
+  }, [isLiveOverlayOpen, liveDiscipline])
+
+  // Segment chime trigger on timeline progression
+  useEffect(() => {
+    if (!isLiveOverlayOpen || liveTimelineSegments.length === 0) return
+
+    let accum = 0
+    let currIdx = 0
+    for (let i = 0; i < liveTimelineSegments.length; i++) {
+      const segSecs = (liveTimelineSegments[i].durationMinutes || 1) * 60
+      if (liveDurationSecs < accum + segSecs) {
+        currIdx = i
+        break
+      }
+      accum += segSecs
+    }
+
+    if (lastActiveSegRef.current !== -1 && lastActiveSegRef.current !== currIdx) {
+      playSegmentChime(isAmbientMuted)
+    }
+    lastActiveSegRef.current = currIdx
+  }, [liveDurationSecs, isLiveOverlayOpen, liveTimelineSegments, isAmbientMuted])
 
   useEffect(() => {
     async function loadChatContext() {
@@ -375,19 +447,29 @@ export default function BuddyChatPage() {
       scheduledAtISO = targetDate.toISOString()
     }
 
+    const isTimelinePrayer = inviteDiscipline === 'prayer' && prayerFocusMode === 'timeline'
+    const totalDuration = isTimelinePrayer
+      ? timelineSegments.reduce((sum, s) => sum + (s.durationMinutes || 1), 0)
+      : inviteDuration
+
     const contentText = isScheduleEnabled
-      ? `Scheduled a ${inviteDuration} min ${inviteDiscipline} session for ${new Date(scheduledAtISO).toLocaleDateString([], { weekday: 'short' })} at ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
-      : `Sent an invitation for a ${inviteDuration} min ${
-          inviteDiscipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+      ? `Scheduled a ${totalDuration} min ${inviteDiscipline} session for ${new Date(scheduledAtISO).toLocaleDateString([], { weekday: 'short' })} at ${new Date(scheduledAtISO).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      : `Sent an invitation for a ${totalDuration} min ${
+          inviteDiscipline === 'prayer'
+            ? isTimelinePrayer
+              ? `Guided Prayer (${timelineSegments.length} Segments)`
+              : 'Prayer'
+            : 'Scripture Study'
         } session!`
 
     const metaObj = {
       discipline: inviteDiscipline,
-      durationMins: inviteDuration,
-      focusText: inviteFocus.trim() || '',
+      durationMins: totalDuration,
+      focusText: inviteDiscipline === 'study' ? (studyPassage.trim() || 'Hebrews 11') : (inviteFocus.trim() || ''),
       isScheduled: isScheduleEnabled,
       scheduledAt: isScheduleEnabled ? scheduledAtISO : undefined,
       startedAt: isScheduleEnabled ? scheduledAtISO : new Date().toISOString(),
+      timelineSegments: isTimelinePrayer ? timelineSegments : [],
     }
 
     // 1. Optimistic in-chat bubble for instant creator visibility
@@ -405,8 +487,9 @@ export default function BuddyChatPage() {
     // 2. If instant live devotion, open live room overlay immediately for creator
     if (!isScheduleEnabled) {
       setLiveDiscipline(inviteDiscipline)
-      setLiveTargetMins(inviteDuration)
-      setLiveFocusText(inviteFocus.trim() || '')
+      setLiveTargetMins(totalDuration)
+      setLiveFocusText(metaObj.focusText)
+      setLiveTimelineSegments(metaObj.timelineSegments)
       setLiveDurationSecs(0)
       setIsLiveOverlayOpen(true)
       playChime()
@@ -434,7 +517,7 @@ export default function BuddyChatPage() {
           targetUserId: buddyId,
           type: 'clockin_invite',
           title: `Clock-In ${isScheduleEnabled ? 'Scheduled' : 'Invite'} from ${currentUser?.user_metadata?.full_name || 'Your Buddy'}`,
-          message: `${isScheduleEnabled ? 'Scheduled for tomorrow 6:00 AM' : 'Join now'}: ${inviteDuration} min ${inviteDiscipline}`,
+          message: `${isScheduleEnabled ? 'Scheduled for tomorrow 6:00 AM' : 'Join now'}: ${totalDuration} min ${inviteDiscipline}`,
           url: `/buddy-chat/${currentUser?.id || 'partner'}`,
         }),
       }).catch(() => {})
@@ -453,6 +536,7 @@ export default function BuddyChatPage() {
       durationMins: 15,
       focusText: 'Daily accountability prayer together',
       startedAt: new Date().toISOString(),
+      timelineSegments: [],
     }
 
     const sent = await sendBuddyMessage(buddyId, currentUser.id, contentText, 'clockin_invite', metaObj)
@@ -484,25 +568,28 @@ export default function BuddyChatPage() {
     const discipline = msg.meta?.discipline || 'prayer'
     const duration = msg.meta?.durationMins || 15
     const focus = msg.meta?.focusText || ''
+    const segments = (msg.meta as any)?.timelineSegments || []
 
     const targetStartTime = msg.meta?.scheduledAt
       ? new Date(msg.meta.scheduledAt).getTime()
       : msg.meta?.startedAt
       ? new Date(msg.meta.startedAt).getTime()
+      : msg.created_at
+      ? new Date(msg.created_at).getTime()
       : Date.now()
 
     const elapsedSeconds = Math.max(0, Math.floor((Date.now() - targetStartTime) / 1000))
     const totalDurationSecs = duration * 60
 
     if (elapsedSeconds >= totalDurationSecs) {
-      setToastMessage('This session has already ended.')
-      setTimeout(() => setToastMessage(null), 3000)
+      alert('This clock-in session has already ended.')
       return
     }
 
     setLiveDiscipline(discipline)
     setLiveTargetMins(duration)
     setLiveFocusText(focus)
+    setLiveTimelineSegments(segments)
     setLiveDurationSecs(elapsedSeconds)
     setIsLiveOverlayOpen(true)
     playChime()
@@ -1175,7 +1262,7 @@ export default function BuddyChatPage() {
       {/* ========================================================================= */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
               <div>
@@ -1189,7 +1276,7 @@ export default function BuddyChatPage() {
               <button
                 type="button"
                 onClick={() => setIsInviteModalOpen(false)}
-                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -1235,60 +1322,164 @@ export default function BuddyChatPage() {
                 </div>
               </div>
 
-              {/* 2. Duration Preset Chips & Range Slider */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
-                    Target Duration
-                  </label>
-                  <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
-                    {inviteDuration} mins
-                  </span>
+              {/* 2. Prayer Mode Options: Plain Focus vs. Timeline */}
+              {inviteDiscipline === 'prayer' && (
+                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                      Prayer Structure
+                    </span>
+                    <div className="flex items-center bg-[#FAF6EE] p-0.5 rounded-xl border border-[#E5E7EB]">
+                      <button
+                        type="button"
+                        onClick={() => setPrayerFocusMode('plain')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          prayerFocusMode === 'plain'
+                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            : 'text-[#707070]'
+                        }`}
+                      >
+                        Plain Focus
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPrayerFocusMode('timeline')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          prayerFocusMode === 'timeline'
+                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            : 'text-[#707070]'
+                        }`}
+                      >
+                        <ListNumbers size={13} weight="bold" />
+                        <span>Timeline</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {prayerFocusMode === 'timeline' ? (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#707070]">Guided Segments:</span>
+                        <span className="font-bold text-[#0E0E0E]">
+                          {timelineSegments.length} Phases • {timelineSegments.reduce((s, x) => s + (x.durationMinutes || 1), 0)} mins total
+                        </span>
+                      </div>
+                      <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                        {timelineSegments.map((seg, idx) => (
+                          <div
+                            key={seg.id || idx}
+                            className="p-2 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] text-[11px] flex items-center justify-between"
+                          >
+                            <span className="font-medium text-[#0E0E0E] truncate max-w-[200px]">
+                              {idx + 1}. {seg.type === 'scripture' ? seg.reference : seg.prompt}
+                            </span>
+                            <span className="font-mono-tabular font-bold text-[#FBBF24] bg-[#0E0E0E] px-1.5 py-0.5 rounded text-[10px]">
+                              {seg.durationMinutes}m
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsTimelineBuilderOpen(true)}
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Sliders size={14} weight="bold" className="text-[#FBBF24]" />
+                        <span>Customize Guided Timeline</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1 pt-1">
+                      <label className="text-[10px] font-bold text-[#707070] block">
+                        Focus Theme (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={inviteFocus}
+                        onChange={(e) => setInviteFocus(e.target.value)}
+                        placeholder="e.g. Surrender & Divine Peace"
+                        className="w-full px-3.5 py-2 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                      />
+                    </div>
+                  )}
                 </div>
+              )}
 
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[15, 30, 45, 60].map((mins) => (
-                    <button
-                      key={mins}
-                      type="button"
-                      onClick={() => setInviteDuration(mins)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        inviteDuration === mins
-                          ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
-                          : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
-                      }`}
-                    >
-                      {mins}m
-                    </button>
-                  ))}
+              {/* 3. Study Mode Passage Input & Preset Chips */}
+              {inviteDiscipline === 'study' && (
+                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
+                      Scripture Study Passage
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      In-App Bible Ready
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={studyPassage}
+                    onChange={(e) => setStudyPassage(e.target.value)}
+                    placeholder="e.g. Hebrews 11 - Faith & Endurance"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] font-medium"
+                  />
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    {['Hebrews 11', 'Romans 8', 'Psalm 23', 'John 15', 'Ephesians 6'].map((ref) => (
+                      <button
+                        key={ref}
+                        type="button"
+                        onClick={() => setStudyPassage(ref)}
+                        className="px-2 py-0.5 rounded-lg bg-[#FAF6EE] hover:bg-[#F3F4F6] border border-[#E5E7EB] text-[10px] font-bold text-[#707070] hover:text-[#0E0E0E] whitespace-nowrap cursor-pointer"
+                      >
+                        {ref}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              )}
 
-                <input
-                  type="range"
-                  min={5}
-                  max={120}
-                  step={5}
-                  value={inviteDuration}
-                  onChange={(e) => setInviteDuration(Number(e.target.value))}
-                  className="w-full accent-[#FBBF24] cursor-pointer"
-                />
-              </div>
+              {/* 4. Target Duration (Shown if not in custom timeline mode) */}
+              {(inviteDiscipline === 'study' || prayerFocusMode === 'plain') && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                      Target Duration
+                    </label>
+                    <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
+                      {inviteDuration} mins
+                    </span>
+                  </div>
 
-              {/* 3. Optional Focus Intention */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
-                  Focus Intention (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={inviteFocus}
-                  onChange={(e) => setInviteFocus(e.target.value)}
-                  placeholder="e.g. Surrender & Divine Guidance"
-                  className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs"
-                />
-              </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[15, 30, 45, 60].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setInviteDuration(mins)}
+                        className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          inviteDuration === mins
+                            ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
+                            : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
 
-              {/* 4. Automated Schedule Accordion */}
+                  <input
+                    type="range"
+                    min={5}
+                    max={120}
+                    step={5}
+                    value={inviteDuration}
+                    onChange={(e) => setInviteDuration(Number(e.target.value))}
+                    className="w-full accent-[#FBBF24] cursor-pointer"
+                  />
+                </div>
+              )}
+
+              {/* 5. Automated Schedule Accordion */}
               <div className="pt-2 border-t border-[#E5E7EB] space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1406,264 +1597,203 @@ export default function BuddyChatPage() {
         </div>
       )}
 
-      {/* Manage Permissions Modal */}
-      {isPermissionsModalOpen && (
-        <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
-          <div className="fixed inset-0" onClick={() => setIsPermissionsModalOpen(false)} />
+      {/* Embedded Prayer Timeline Builder Sub-Modal */}
+      <PrayerFocusTimelineBuilder
+        isOpen={isTimelineBuilderOpen}
+        onClose={() => setIsTimelineBuilderOpen(false)}
+        initialSegments={timelineSegments}
+        onApplyTimeline={(newSegs, totalMins) => {
+          setTimelineSegments(newSegs)
+          setInviteDuration(totalMins)
+          setIsTimelineBuilderOpen(false)
+        }}
+      />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Manage Buddy Permissions</h3>
-              <button onClick={() => setIsPermissionsModalOpen(false)} className="text-[#707070]">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-3 pt-1 text-xs">
-              {/* Share History Toggle */}
-              <div className="faith-card p-3.5 flex items-center justify-between bg-white">
-                <div>
-                  <p className="font-bold text-[#0E0E0E]">Share Session History</p>
-                  <p className="text-[10px] text-[#707070]">Allow {buddyName} to see your completed clock-ins</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShareHistory((s) => !s)}
-                  className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                    shareHistory ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                      shareHistory ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Allow Nudges Toggle */}
-              <div className="faith-card p-3.5 flex items-center justify-between bg-white">
-                <div>
-                  <p className="font-bold text-[#0E0E0E]">Allow Encouragement Nudges</p>
-                  <p className="text-[10px] text-[#707070]">Receive spiritual reminders from {buddyName}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAllowNudge((s) => !s)}
-                  className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                    allowNudge ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                      allowNudge ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Share Live Sessions Toggle */}
-              <div className="faith-card p-3.5 flex items-center justify-between bg-white">
-                <div>
-                  <p className="font-bold text-[#0E0E0E]">Live 2-Way Clock-In Invites</p>
-                  <p className="text-[10px] text-[#707070]">Allow synchronized devotion rooms & audio</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShareLiveSession((s) => !s)}
-                  className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                    shareLiveSession ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                      shareLiveSession ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsPermissionsModalOpen(false)}
-                className="w-full py-3.5 bg-[#0E0E0E] text-white font-bold text-xs rounded-2xl shadow-md mt-2"
-              >
-                Save Permissions
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Remove Buddy Confirmation Modal */}
-      {isRemoveBuddyConfirmOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xs bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-3 shadow-2xl text-center animate-in zoom-in-95">
-            <h3 className="text-sm font-black text-[#0E0E0E]">Remove Buddy?</h3>
-            <p className="text-xs text-[#707070] leading-relaxed">
-              This will remove {buddyName} from your accountability list and delete your shared
-              chat history.
-            </p>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsRemoveBuddyConfirmOpen(false)}
-                className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleRemoveBuddy}
-                className="py-2.5 px-3 rounded-xl bg-rose-600 text-white text-xs font-bold"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Report User Modal */}
-      {isReportModalOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xs bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-3 shadow-2xl text-center animate-in zoom-in-95">
-            <h3 className="text-sm font-black text-[#0E0E0E]">Report User</h3>
-            <p className="text-xs text-[#707070] leading-relaxed">
-              Thank you for keeping our community safe. Our team will review this user&apos;s activity.
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsReportModalOpen(false)}
-              className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Embedded Live Session In-App Bible Reader */}
+      <LiveSessionBibleReader
+        isOpen={isBibleReaderOpen}
+        onClose={() => setIsBibleReaderOpen(false)}
+        initialReference={studyPassage || liveFocusText || 'Hebrews 11'}
+      />
 
       {/* ========================================================================= */}
       {/* 5. THE LIVE 1-ON-1 OVERLAY UI                                             */}
       {/* ========================================================================= */}
-      {isLiveOverlayOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
-          <div className="flex items-center justify-between">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              LIVE 2-WAY SYNC
-            </span>
+      {isLiveOverlayOpen && (() => {
+        // Active timeline segment computation
+        let accumulatedSecs = 0
+        let activeSegIndex = 0
+        let activeSeg: TimelineSegment | null = null
+        let activeSegSecsLeft = 0
 
-            <button
-              type="button"
-              onClick={() => setShowEndConfirm(true)}
-              className="py-1.5 px-3 rounded-xl bg-white/10 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1 transition-all"
-            >
-              <X size={16} />
-              <span>Exit</span>
-            </button>
-          </div>
+        if (liveTimelineSegments && liveTimelineSegments.length > 0) {
+          for (let i = 0; i < liveTimelineSegments.length; i++) {
+            const segDurationSecs = (liveTimelineSegments[i].durationMinutes || 1) * 60
+            if (liveDurationSecs < accumulatedSecs + segDurationSecs) {
+              activeSegIndex = i
+              activeSeg = liveTimelineSegments[i]
+              activeSegSecsLeft = Math.max(0, accumulatedSecs + segDurationSecs - liveDurationSecs)
+              break
+            }
+            accumulatedSecs += segDurationSecs
+          }
+          if (!activeSeg && liveTimelineSegments.length > 0) {
+            activeSeg = liveTimelineSegments[liveTimelineSegments.length - 1]
+          }
+        }
 
-          <div className="flex flex-col items-center justify-center space-y-3">
-            <div className="relative flex items-center justify-center">
-              <div
-                className={`w-20 h-20 rounded-full bg-[#FBBF24] text-white font-black text-xl flex items-center justify-center border-4 border-white shadow-2xl relative z-10 ${
-                  !isMicMuted ? 'ring-4 ring-emerald-500/60' : ''
-                }`}
-              >
-                <span>Me</span>
+        return (
+          <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
+            {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span>LIVE 2-WAY SYNC</span>
+                </span>
+
+                {/* Ambient Sound Mute/Unmute Toggle Button */}
                 <button
                   type="button"
-                  onClick={() => setIsMicMuted((m) => !m)}
-                  className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white shadow-md ${
-                    isMicMuted ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
+                  onClick={() => {
+                    const nextMuted = ambientSound.toggleMute()
+                    setIsAmbientMuted(nextMuted)
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !isAmbientMuted
+                      ? 'bg-[#FBBF24]/20 border-[#FBBF24]/40 text-[#FBBF24]'
+                      : 'bg-white/10 border-white/20 text-white/50 hover:text-white'
                   }`}
-                  title={isMicMuted ? 'Unmute Mic' : 'Mute Mic'}
+                  title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
                 >
-                  {isMicMuted ? <MicrophoneSlash size={14} /> : <Microphone size={14} />}
+                  {!isAmbientMuted ? <SpeakerHigh size={15} weight="bold" /> : <SpeakerSlash size={15} />}
+                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambient: On' : 'Ambient: Muted'}</span>
                 </button>
               </div>
 
-              <div
-                className={`w-20 h-20 rounded-full bg-white text-[#0E0E0E] font-black text-xl flex items-center justify-center border-4 border-white shadow-2xl -ml-6 relative z-0 ${
-                  isBuddySpeaking ? 'ring-4 ring-[#FBBF24] animate-pulse' : ''
-                }`}
+              {/* Present Avatars & Exit */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center -space-x-2">
+                  <div
+                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    title="You (Present)"
+                  >
+                    Me
+                  </div>
+                  <div
+                    className="w-8 h-8 rounded-full bg-white text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    title={`${buddyName} (Present)`}
+                  >
+                    {buddyInitial}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowEndConfirm(true)}
+                  className="py-1.5 px-3 rounded-xl bg-white/10 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <X size={16} />
+                  <span>Exit</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Middle Section: Stopwatch Ring & Contextual Study / Prayer Phase Card */}
+            <div className="flex flex-col items-center justify-center space-y-4 my-auto">
+              {/* Circular Stopwatch */}
+              <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="8"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    stroke="#FBBF24"
+                    className="transition-all duration-1000"
+                    strokeWidth="8"
+                    strokeDasharray={DASH_ARRAY}
+                    strokeDashoffset={
+                      DASH_ARRAY - ((liveDurationSecs % (liveTargetMins * 60)) / (liveTargetMins * 60)) * DASH_ARRAY
+                    }
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                </svg>
+
+                <div className="absolute flex flex-col items-center text-center">
+                  <span className="text-3xl sm:text-4xl font-extrabold font-mono-tabular tracking-tight">
+                    {liveFormatted}
+                  </span>
+                  <span className="text-xs font-black uppercase tracking-widest text-[#FBBF24] mt-1 capitalize">
+                    {liveDiscipline}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono-tabular">
+                    Target: {liveTargetMins}m
+                  </span>
+                </div>
+              </div>
+
+              {/* Study Mode: In-App Bible Reader Action Bar */}
+              {liveDiscipline === 'study' && (
+                <div className="flex flex-col items-center space-y-2 max-w-sm w-full">
+                  <button
+                    type="button"
+                    onClick={() => setIsBibleReaderOpen(true)}
+                    className="w-full py-3 px-4 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] hover:bg-[#f5b81b] active:scale-95 transition-all font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20 cursor-pointer"
+                  >
+                    <BookOpen size={18} weight="bold" />
+                    <span>Open In-App Bible Reader</span>
+                  </button>
+                  <p className="text-[11px] text-slate-400 text-center">
+                    Reading: <span className="font-bold text-white">{studyPassage || liveFocusText || 'Hebrews 11'}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Prayer Mode: Guided Timeline Phase Card or Plain Focus */}
+              {liveDiscipline === 'prayer' && (
+                liveTimelineSegments.length > 0 && activeSeg ? (
+                  <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 text-center max-w-sm w-full space-y-2 shadow-xl animate-in fade-in">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-[#FBBF24] uppercase tracking-wider">
+                      <span>Phase {activeSegIndex + 1} of {liveTimelineSegments.length}</span>
+                      <span className="font-mono-tabular">
+                        {Math.floor(activeSegSecsLeft / 60)}:{(activeSegSecsLeft % 60).toString().padStart(2, '0')} left
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-white leading-snug">
+                      {activeSeg.type === 'scripture' ? `📖 ${activeSeg.reference}` : activeSeg.prompt}
+                    </p>
+                  </div>
+                ) : liveFocusText ? (
+                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs italic text-slate-200 max-w-xs text-center shadow-lg">
+                    &ldquo;{liveFocusText}&rdquo;
+                  </div>
+                ) : null
+              )}
+            </div>
+
+            {/* Bottom Bar: Action Finish Button */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setShowEndConfirm(true)}
+                className="py-3 px-6 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
               >
-                <span>{buddyInitial}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10">
-              <SpeakerHigh size={15} className="text-[#FBBF24]" />
-              <span>
-                {isBuddySpeaking
-                  ? `${buddyName} is speaking...`
-                  : isMicMuted
-                  ? 'Your Mic is Muted (Tap mic to speak)'
-                  : 'WebRTC 2-Way Audio Connected'}
-              </span>
+                <Square size={16} weight="fill" />
+                <span>Finish & Credit Target</span>
+              </button>
             </div>
           </div>
-
-          <div className="flex flex-col items-center justify-center space-y-3">
-            <div className="relative w-60 h-60 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="90"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="8"
-                  fill="transparent"
-                />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="90"
-                  stroke="#FBBF24"
-                  className="transition-all duration-1000"
-                  strokeWidth="8"
-                  strokeDasharray={DASH_ARRAY}
-                  strokeDashoffset={
-                    DASH_ARRAY - ((liveDurationSecs % (liveTargetMins * 60)) / (liveTargetMins * 60)) * DASH_ARRAY
-                  }
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-              </svg>
-
-              <div className="absolute flex flex-col items-center">
-                <span className="text-4xl font-extrabold font-mono-tabular tracking-tight">
-                  {liveFormatted}
-                </span>
-                <span className="text-xs font-black uppercase tracking-widest text-[#FBBF24] mt-1 capitalize">
-                  {liveDiscipline}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono-tabular">
-                  Target: {liveTargetMins}m
-                </span>
-              </div>
-            </div>
-
-            {liveFocusText && (
-              <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs italic text-slate-200 max-w-xs text-center shadow-lg">
-                &ldquo;{liveFocusText}&rdquo;
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={() => setShowEndConfirm(true)}
-              className="py-3 px-6 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all"
-            >
-              <Square size={16} weight="fill" />
-              <span>Finish & Credit Target</span>
-            </button>
-          </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Confirmation Modal to End Session */}
       {showEndConfirm && (
