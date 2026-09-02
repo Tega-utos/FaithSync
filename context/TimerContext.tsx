@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { DisciplineType } from '@/types/database.types'
 import {
+  playGentleChime,
   startSilentMediaLoop,
   stopSilentMediaLoop,
 } from '@/components/audio/Chime'
@@ -10,6 +11,8 @@ import {
   requestScreenWakeLock,
   releaseScreenWakeLock,
 } from '@/lib/sessionLockScreen'
+import { createClient } from '@/lib/supabase/client'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 
 export type TimerMode = 'stopwatch' | 'countdown'
 export type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED'
@@ -152,7 +155,49 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session])
 
-  // 3. Absolute Timestamp-Based Sync Interval & Event Listeners for Background Recovery
+// Helper: Auto-save running session directly to database ledger on minimize or target completion
+async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<void> {
+  const runSecs =
+    sessionToSave.lastResumeTimestamp && !sessionToSave.isPaused
+      ? Math.max(0, Math.floor((Date.now() - sessionToSave.lastResumeTimestamp) / 1000))
+      : 0
+  const totalSeconds = (sessionToSave.accumulatedSeconds || 0) + runSecs
+
+  // Require at least 20 seconds of devotion to save as a valid ledger record
+  if (totalSeconds < 20) return
+
+  try {
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+
+    const targetSecs = sessionToSave.targetDurationSeconds || totalSeconds
+    const isComplete = totalSeconds >= targetSecs && targetSecs > 0
+
+    await (supabase.from('sessions') as any).insert({
+      user_id: user.id,
+      type: sessionToSave.discipline,
+      duration_seconds: totalSeconds,
+      target_duration_seconds: targetSecs,
+      is_complete: isComplete,
+      focus_type: sessionToSave.focusType || 'quick',
+      focus_timeline: (sessionToSave.focusTimeline as any) || null,
+      shared_to_square: false,
+      started_at: sessionToSave.startedAt || new Date().toISOString(),
+      ended_at: new Date().toISOString(),
+    })
+
+    // Invalidate client caches so Ledger and Dashboard immediately reflect the new session
+    invalidateMemoryCache('history_summaries')
+    invalidateMemoryCache(`dashboard_data_${user.id}`)
+  } catch (err) {
+    console.warn('Auto-save session note:', err)
+  }
+}
+
+  // 3. Absolute Timestamp-Based Sync Interval & Event Listeners for Background Recovery & Minimize Auto-Save
   useEffect(() => {
     if (!session.isActive || session.isPaused) {
       if (intervalRef.current) {
@@ -167,6 +212,27 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         if (!prev.isActive || prev.isPaused || !prev.lastResumeTimestamp) return prev
         const currentRunSecs = Math.max(0, Math.floor((Date.now() - prev.lastResumeTimestamp) / 1000))
         const exactTotalSecs = (prev.accumulatedSeconds || 0) + currentRunSecs
+
+        // Anti-Sleep Runaway Prevention: Auto-complete & save when reaching target
+        const targetSecs = prev.targetDurationSeconds || 900
+        const maxAllowedSecs = prev.mode === 'countdown' ? targetSecs : targetSecs + 60
+
+        if (exactTotalSecs >= maxAllowedSecs) {
+          playGentleChime(false)
+          autoSaveSessionToRecord({
+            ...prev,
+            durationSeconds: targetSecs,
+            secondsElapsed: targetSecs,
+          })
+          stopSilentMediaLoop()
+          releaseScreenWakeLock()
+          localStorage.removeItem(STORAGE_KEY)
+          return {
+            ...initialSession,
+            discipline: prev.discipline,
+          }
+        }
+
         if (exactTotalSecs === prev.durationSeconds) return prev
         return {
           ...prev,
@@ -179,26 +245,54 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     // High frequency interval (500ms) for smooth second updates
     intervalRef.current = setInterval(syncElapsed, 500)
 
-    // Immediate re-sync when screen unlocks, app is focused, or page becomes visible
-    const handleWake = () => {
-      syncElapsed()
-      if (document.visibilityState === 'visible') {
+    // Minimize & App Departure Handler: When minimizing or leaving the app, auto-stop and save to record
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setSession((prev) => {
+          if (!prev.isActive || prev.isPaused) return prev
+          autoSaveSessionToRecord(prev)
+          stopSilentMediaLoop()
+          releaseScreenWakeLock()
+          localStorage.removeItem(STORAGE_KEY)
+          return {
+            ...initialSession,
+            discipline: prev.discipline,
+          }
+        })
+      } else if (document.visibilityState === 'visible') {
+        syncElapsed()
         requestScreenWakeLock()
       }
     }
 
-    document.addEventListener('visibilitychange', handleWake)
-    window.addEventListener('focus', handleWake)
-    window.addEventListener('pageshow', handleWake)
+    const handlePageHide = () => {
+      setSession((prev) => {
+        if (!prev.isActive || prev.isPaused) return prev
+        autoSaveSessionToRecord(prev)
+        stopSilentMediaLoop()
+        releaseScreenWakeLock()
+        localStorage.removeItem(STORAGE_KEY)
+        return {
+          ...initialSession,
+          discipline: prev.discipline,
+        }
+      })
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('beforeunload', handlePageHide)
+    window.addEventListener('focus', syncElapsed)
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
-      document.removeEventListener('visibilitychange', handleWake)
-      window.removeEventListener('focus', handleWake)
-      window.removeEventListener('pageshow', handleWake)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('beforeunload', handlePageHide)
+      window.removeEventListener('focus', syncElapsed)
     }
   }, [session.isActive, session.isPaused])
 
