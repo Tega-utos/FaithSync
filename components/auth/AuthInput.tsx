@@ -33,7 +33,7 @@ export function AuthInput({
         <label
           htmlFor={inputId}
           className={`block text-[11px] font-bold tracking-tight ${
-            hasError ? 'text-[#EA2C26]' : 'text-[#707070]'
+            hasError ? 'text-[#EA2C26]' : 'text-text-secondary'
           }`}
         >
           {label}
@@ -41,14 +41,14 @@ export function AuthInput({
       )}
 
       <div
-        className={`relative flex items-center rounded-2xl bg-white border transition-all shadow-2xs ${
+        className={`relative flex items-center rounded-2xl bg-card border transition-all shadow-2xs ${
           hasError
             ? 'border-[#EA2C26] ring-2 ring-[#EA2C26]/10'
-            : 'border-[#E5E7EB] focus-within:border-[#0E0E0E] focus-within:ring-1 focus-within:ring-black/10'
+            : 'border-border focus-within:border-[#0E0E0E] focus-within:ring-1 focus-within:ring-black/10'
         } ${className}`}
       >
         {icon && (
-          <div className="pl-3.5 pr-2 text-[#9095A1] shrink-0 flex items-center justify-center">
+          <div className="pl-3.5 pr-2 text-text-muted shrink-0 flex items-center justify-center">
             {icon}
           </div>
         )}
@@ -56,7 +56,7 @@ export function AuthInput({
         <input
           id={inputId}
           type={computedType}
-          className={`w-full bg-transparent px-3.5 py-3 text-xs font-bold text-[#0E0E0E] placeholder-[#9095A1] outline-none ${
+          className={`w-full bg-transparent px-3.5 py-3 text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none ${
             icon ? 'pl-1' : ''
           } ${isPassword ? 'pr-10' : ''}`}
           {...rest}
@@ -66,7 +66,7 @@ export function AuthInput({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 p-1 text-[#9095A1] hover:text-[#0E0E0E] transition-colors cursor-pointer"
+            className="absolute right-3 p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             tabIndex={-1}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
@@ -78,7 +78,7 @@ export function AuthInput({
       {(hasError || helperText) && (
         <p
           className={`text-[10px] font-bold px-1 ${
-            hasError ? 'text-[#EA2C26]' : 'text-[#9095A1]'
+            hasError ? 'text-[#EA2C26]' : 'text-text-muted'
           }`}
         >
           {typeof error === 'string' ? error : helperText}

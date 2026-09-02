@@ -357,23 +357,23 @@ export default function FindBuddyPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 min-h-[92vh] space-y-5">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Back</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E]">Find Buddy</h1>
+        <h1 className="text-sm font-extrabold text-text-primary">Find Buddy</h1>
         <div className="w-8" />
       </div>
 
       <div className="space-y-1">
-        <h2 className="text-xl font-black text-[#0E0E0E] tracking-tight">Buddy Finder</h2>
-        <p className="text-xs text-[#707070] leading-relaxed">
+        <h2 className="text-xl font-black text-text-primary tracking-tight">Buddy Finder</h2>
+        <p className="text-xs text-text-secondary leading-relaxed">
           Connect securely using a unique Sync Code, or browse the directory to find new buddies.
         </p>
       </div>
@@ -381,7 +381,7 @@ export default function FindBuddyPage() {
       {/* Incoming Requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             Incoming Requests ({pendingRequests.length})
           </span>
           <div className="space-y-2">
@@ -398,10 +398,10 @@ export default function FindBuddyPage() {
                     {req.initial}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
-                      {req.name} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview Profile</span>
+                    <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                      {req.name} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview Profile</span>
                     </p>
-                    <p className="text-[10px] text-[#707070] truncate">{req.church}</p>
+                    <p className="text-[10px] text-text-secondary truncate">{req.church}</p>
                   </div>
                 </Link>
 
@@ -416,7 +416,7 @@ export default function FindBuddyPage() {
                   <button
                     type="button"
                     onClick={() => handleIgnore(req.id)}
-                    className="bg-white border border-[#E5E7EB] text-[#707070] py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
+                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
                   >
                     Ignore
                   </button>
@@ -431,7 +431,7 @@ export default function FindBuddyPage() {
       <div className="space-y-4">
         {/* A. Join by Sync Code */}
         <div className="faith-card p-4 space-y-2.5 bg-[#FDF9F1]">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             A. Add by Sync Code (Exact Match)
           </span>
 
@@ -471,7 +471,7 @@ export default function FindBuddyPage() {
                 setCodeLookupSuccess(null)
               }}
               placeholder="e.g. SYNC26"
-              className="flex-1 px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-xl font-mono font-bold text-xs uppercase tracking-widest text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+              className="flex-1 px-3.5 py-2.5 bg-card border border-border rounded-xl font-mono font-bold text-xs uppercase tracking-widest text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
             />
             <button
               type="submit"
@@ -486,9 +486,9 @@ export default function FindBuddyPage() {
         {/* OR Divider */}
         <div className="relative flex items-center justify-center">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#E5E7EB]" />
+            <div className="w-full border-t border-border" />
           </div>
-          <span className="relative bg-[#FAF6EE] px-4 text-[11px] font-bold text-[#9095A1] uppercase tracking-widest">
+          <span className="relative bg-surface px-4 text-[11px] font-bold text-text-muted uppercase tracking-widest">
             OR
           </span>
         </div>
@@ -496,7 +496,7 @@ export default function FindBuddyPage() {
         {/* B. Browse Directory */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
               B. Browse Believer Directory
             </span>
 
@@ -512,13 +512,13 @@ export default function FindBuddyPage() {
 
           <form onSubmit={handleDirectorySearch} className="flex items-center gap-2">
             <div className="relative flex-1">
-              <MagnifyingGlass size={16} className="text-[#9095A1] absolute left-3.5 top-3" />
+              <MagnifyingGlass size={16} className="text-text-muted absolute left-3.5 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Name, Sync Code, or Church..."
-                className="w-full pl-9 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-sm"
               />
             </div>
             <button
@@ -535,12 +535,12 @@ export default function FindBuddyPage() {
       {/* Directory Matches */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             Directory Matches ({filteredUsers.length})
           </span>
 
           {filterScope === 'my_church' && myChurch && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#0E0E0E] flex items-center gap-1">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/40 text-text-primary flex items-center gap-1">
               <Church size={11} className="text-[#FBBF24]" />
               <span>{myChurch}</span>
             </span>
@@ -553,8 +553,8 @@ export default function FindBuddyPage() {
               <Users size={24} />
             </div>
             <div className="space-y-1 max-w-xs">
-              <h3 className="text-xs font-bold text-[#0E0E0E]">No users found</h3>
-              <p className="text-[11px] text-[#707070] leading-relaxed">
+              <h3 className="text-xs font-bold text-text-primary">No users found</h3>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
                 We couldn&apos;t find anyone matching your search criteria. Invite your friends to join you on FaithSync!
               </p>
             </div>
@@ -594,7 +594,7 @@ export default function FindBuddyPage() {
 
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
+                        <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
                           {userItem.name}
                         </p>
                         <span className="px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-700 text-[9px] font-bold shrink-0">
@@ -602,8 +602,8 @@ export default function FindBuddyPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-[10px] text-[#707070]">
-                        <span className="flex items-center gap-1 font-bold text-[#0E0E0E] truncate max-w-[120px]">
+                      <div className="flex items-center gap-2 text-[10px] text-text-secondary">
+                        <span className="flex items-center gap-1 font-bold text-text-primary truncate max-w-[120px]">
                           <Church size={12} className="text-[#FBBF24] shrink-0" />
                           <span className="truncate">{userItem.church}</span>
                         </span>
@@ -618,7 +618,7 @@ export default function FindBuddyPage() {
 
                   <div>
                     {userItem.connectionStatus === 'self' ? (
-                      <span className="px-3 py-1.5 rounded-xl bg-[#F3F4F6] text-[#707070] text-xs font-bold block cursor-not-allowed">
+                      <span className="px-3 py-1.5 rounded-xl bg-subtle text-text-secondary text-xs font-bold block cursor-not-allowed">
                         This is you
                       </span>
                     ) : userItem.connectionStatus === 'accepted' ? (
@@ -653,17 +653,17 @@ export default function FindBuddyPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="fixed inset-0" onClick={() => setIsFilterModalOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Refine Directory Search</h3>
-              <button onClick={() => setIsFilterModalOpen(false)} className="text-[#707070]">
+          <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Refine Directory Search</h3>
+              <button onClick={() => setIsFilterModalOpen(false)} className="text-text-secondary">
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-4 pt-1">
               <div>
-                <label className="text-[11px] font-bold text-[#707070] block mb-1.5">
+                <label className="text-[11px] font-bold text-text-secondary block mb-1.5">
                   Community Scope
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -673,7 +673,7 @@ export default function FindBuddyPage() {
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterScope === 'global'
                         ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
-                        : 'bg-white text-[#707070] border-[#E5E7EB]'
+                        : 'bg-card text-text-secondary border-border'
                     }`}
                   >
                     Global
@@ -684,7 +684,7 @@ export default function FindBuddyPage() {
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterScope === 'my_church'
                         ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
-                        : 'bg-white text-[#707070] border-[#E5E7EB]'
+                        : 'bg-card text-text-secondary border-border'
                     }`}
                   >
                     My Church
@@ -692,7 +692,7 @@ export default function FindBuddyPage() {
                 </div>
 
                 {filterScope === 'my_church' && (
-                  <p className="text-[10px] text-[#707070] mt-1.5 flex items-center gap-1">
+                  <p className="text-[10px] text-text-secondary mt-1.5 flex items-center gap-1">
                     <Church size={12} className="text-[#FBBF24]" />
                     <span>
                       {myChurch
@@ -704,7 +704,7 @@ export default function FindBuddyPage() {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#707070] block mb-1.5">
+                <label className="text-[11px] font-bold text-text-secondary block mb-1.5">
                   Activity Level
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -714,7 +714,7 @@ export default function FindBuddyPage() {
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterActivity === 'all'
                         ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
-                        : 'bg-white text-[#707070] border-[#E5E7EB]'
+                        : 'bg-card text-text-secondary border-border'
                     }`}
                   >
                     Any Activity
@@ -725,7 +725,7 @@ export default function FindBuddyPage() {
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterActivity === 'daily'
                         ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
-                        : 'bg-white text-[#707070] border-[#E5E7EB]'
+                        : 'bg-card text-text-secondary border-border'
                     }`}
                   >
                     Daily Active Only
@@ -750,24 +750,24 @@ export default function FindBuddyPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="fixed inset-0" onClick={() => setIsInviteModalOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Invite Your Buddies</h3>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-[#707070]">
+          <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Invite Your Buddies</h3>
+              <button onClick={() => setIsInviteModalOpen(false)} className="text-text-secondary">
                 <X size={20} />
               </button>
             </div>
 
             <div className="text-center space-y-3 py-2">
-              <p className="text-xs text-[#707070]">
+              <p className="text-xs text-text-secondary">
                 Share your personal Sync Code with friends so they can add you directly.
               </p>
 
               <div
                 onClick={handleCopyMyCode}
-                className="p-4 rounded-2xl bg-white border-2 border-dashed border-[#FBBF24] cursor-pointer"
+                className="p-4 rounded-2xl bg-card border-2 border-dashed border-[#FBBF24] cursor-pointer"
               >
-                <p className="text-2xl font-black font-mono tracking-widest text-[#0E0E0E]">
+                <p className="text-2xl font-black font-mono tracking-widest text-text-primary">
                   {myBuddyCode}
                 </p>
                 <p className="text-[10px] text-[#FBBF24] font-bold mt-1">

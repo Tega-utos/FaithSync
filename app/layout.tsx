@@ -4,6 +4,7 @@ import "@fontsource-variable/geist-mono";
 import "./globals.css";
 import { TimerProvider } from "@/context/TimerContext";
 import { AppShell } from "@/components/navigation/AppShell";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -25,13 +26,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#FAF6EE] text-[#0E0E0E] selection:bg-[#FBBF24]/30">
-        <TimerProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </TimerProvider>
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-surface text-text-primary selection:bg-[#FBBF24]/30">
+        <ThemeProvider>
+          <TimerProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </TimerProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

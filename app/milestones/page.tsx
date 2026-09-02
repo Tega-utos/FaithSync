@@ -176,7 +176,7 @@ export default function MilestonesPage() {
 
   if (loading) {
     return (
-      <div className="command-center-container px-4 sm:px-6 pt-12 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-[#707070]">
+      <div className="command-center-container px-4 sm:px-6 pt-12 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-text-secondary">
         <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
         <p className="text-xs font-bold">Loading records & milestones...</p>
       </div>
@@ -186,17 +186,17 @@ export default function MilestonesPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-5">
       {/* 1. Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Back</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight">
+        <h1 className="text-sm font-extrabold text-text-primary tracking-tight">
           Records & Milestones
         </h1>
 
@@ -204,48 +204,48 @@ export default function MilestonesPage() {
       </div>
 
       {/* 2. The Stats Summary Card */}
-      <div className="faith-card p-5 sm:p-6 bg-white border border-[#E5E7EB] rounded-3xl shadow-sm space-y-5">
+      <div className="faith-card p-5 sm:p-6 bg-card border border-border rounded-3xl shadow-sm space-y-5">
         {/* Top Section (The Big Numbers) */}
         <div className="grid grid-cols-2 items-center">
           {/* Left: Lifetime Sessions */}
           <div className="pr-4">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#707070] block mb-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary block mb-1">
               Sessions
             </span>
-            <div className="text-3xl sm:text-4xl font-black font-mono-tabular tracking-tight text-[#0E0E0E]">
+            <div className="text-3xl sm:text-4xl font-black font-mono-tabular tracking-tight text-text-primary">
               {stats.completedSessions}
             </div>
-            <span className="text-[10px] text-[#9095A1] font-medium mt-0.5 block">
+            <span className="text-[10px] text-text-muted font-medium mt-0.5 block">
               Completed Targets
             </span>
           </div>
 
           {/* Vertical Divider & Right: Total Time */}
-          <div className="pl-4 border-l border-[#E5E7EB]">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#707070] block mb-1">
+          <div className="pl-4 border-l border-border">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary block mb-1">
               Total Time
             </span>
             <div className="text-3xl sm:text-4xl font-black font-mono-tabular tracking-tight text-[#FBBF24]">
               {formattedTotalTime}
             </div>
-            <span className="text-[10px] text-[#9095A1] font-medium mt-0.5 block">
+            <span className="text-[10px] text-text-muted font-medium mt-0.5 block">
               Lifetime Devotion
             </span>
           </div>
         </div>
 
         {/* Bottom Section (The Breakdown) */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E5E7EB]">
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
           {/* Prayer Breakdown */}
           <div className="p-3 rounded-2xl bg-[#FFF0F0] border border-[#EA2C26]/20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-[#EA2C26] flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-card text-[#EA2C26] flex items-center justify-center shrink-0 shadow-sm">
               <Fire size={20} weight="fill" />
             </div>
             <div className="truncate">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#EA2C26] block">
                 Prayer
               </span>
-              <span className="text-sm font-black font-mono-tabular text-[#0E0E0E]">
+              <span className="text-sm font-black font-mono-tabular text-text-primary">
                 {stats.prayerMinutes} Mins
               </span>
             </div>
@@ -253,14 +253,14 @@ export default function MilestonesPage() {
 
           {/* Study Breakdown */}
           <div className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-[#FBBF24] flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-card text-[#FBBF24] flex items-center justify-center shrink-0 shadow-sm">
               <BookOpen size={20} />
             </div>
             <div className="truncate">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#B45309] block">
                 Study
               </span>
-              <span className="text-sm font-black font-mono-tabular text-[#0E0E0E]">
+              <span className="text-sm font-black font-mono-tabular text-text-primary">
                 {stats.studyMinutes} Mins
               </span>
             </div>
@@ -275,7 +275,7 @@ export default function MilestonesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Trophy size={16} className="text-[#FBBF24]" />
-              <h2 className="text-xs font-black uppercase tracking-wider text-[#0E0E0E]">
+              <h2 className="text-xs font-black uppercase tracking-wider text-text-primary">
                 Earned Badges ({earnedBadges.length})
               </h2>
             </div>
@@ -288,9 +288,9 @@ export default function MilestonesPage() {
 
           {earnedBadges.length === 0 ? (
             /* Dashed empty state */
-            <div className="p-6 rounded-2xl border-2 border-dashed border-[#E5E7EB] bg-white/60 text-center space-y-1.5">
-              <p className="text-xs font-bold text-[#0E0E0E]">No badges earned yet</p>
-              <p className="text-[11px] text-[#707070]">
+            <div className="p-6 rounded-2xl border-2 border-dashed border-border bg-card/60 text-center space-y-1.5">
+              <p className="text-xs font-bold text-text-primary">No badges earned yet</p>
+              <p className="text-[11px] text-text-secondary">
                 Keep going! Clock in and hit your daily targets to unlock your first trophy.
               </p>
             </div>
@@ -307,7 +307,7 @@ export default function MilestonesPage() {
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#FBBF24]/20 via-transparent to-transparent pointer-events-none" />
 
                     {/* Gold-Filtered Icon Slot */}
-                    <div className="w-12 h-12 rounded-xl bg-white/10 border border-[#FBBF24]/40 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-card/10 border border-[#FBBF24]/40 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner relative z-10">
                       <IconComponent size={24} weight="fill" />
                     </div>
 
@@ -334,8 +334,8 @@ export default function MilestonesPage() {
         {/* B. Locked Badges */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Lock size={16} className="text-[#9095A1]" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-[#707070]">
+            <Lock size={16} className="text-text-muted" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary">
               Locked Badges ({lockedBadges.length})
             </h2>
           </div>
@@ -345,16 +345,16 @@ export default function MilestonesPage() {
               return (
                 <div
                   key={badge.id}
-                  className="faith-card p-4 bg-white border border-[#E5E7EB] rounded-2xl flex items-center gap-3.5 opacity-80"
+                  className="faith-card p-4 bg-card border border-border rounded-2xl flex items-center gap-3.5 opacity-80"
                 >
                   {/* Grayed-out Lock Icon Slot */}
-                  <div className="w-12 h-12 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB] flex items-center justify-center text-[#9095A1] shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-subtle border border-border flex items-center justify-center text-text-muted shrink-0">
                     <Lock size={20} />
                   </div>
 
                   <div className="space-y-0.5 truncate">
-                    <h3 className="text-xs font-bold text-[#0E0E0E]">{badge.title}</h3>
-                    <p className="text-[11px] text-[#707070] leading-snug">{badge.description}</p>
+                    <h3 className="text-xs font-bold text-text-primary">{badge.title}</h3>
+                    <p className="text-[11px] text-text-secondary leading-snug">{badge.description}</p>
                   </div>
                 </div>
               )

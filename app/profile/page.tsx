@@ -33,11 +33,13 @@ import {
   User,
   Quotes,
   HandsPraying,
+  PaintBrush,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { shareOrCopyCode } from '@/lib/utils/syncCodes'
 import { calculateUserStreak } from '@/lib/utils/streak'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 interface BuddyPartner {
   id: string
@@ -743,7 +745,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-[#707070]">
+      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-text-secondary">
         <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
         <p className="text-xs font-bold">Loading profile...</p>
       </div>
@@ -753,22 +755,22 @@ export default function ProfilePage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
       {/* 1. Header & Back Navigation */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Home</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight">Profile</h1>
+        <h1 className="text-sm font-extrabold text-text-primary tracking-tight">Profile</h1>
 
         <button
           type="button"
           onClick={handleOpenEditModal}
-          className="p-2 rounded-xl text-[#FBBF24] hover:text-[#0E0E0E] transition-colors"
+          className="p-2 rounded-xl text-[#FBBF24] hover:text-text-primary transition-colors"
           title="Edit Profile"
         >
           <PencilSimple size={18} />
@@ -776,7 +778,7 @@ export default function ProfilePage() {
       </div>
 
       {/* 1. Primary Identity Card */}
-      <div className="faith-card p-5 space-y-4 relative bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-4 relative bg-card border border-border">
         <div className="flex items-center gap-4">
           {/* Dynamic Avatar with Upload & Rim Badge */}
           <div
@@ -796,7 +798,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Small Gold Pencil Badge on Rim */}
-            <div className="absolute bottom-0 right-0 p-1.5 bg-[#FBBF24] text-[#0E0E0E] rounded-full ring-2 ring-white shadow-sm flex items-center justify-center">
+            <div className="absolute bottom-0 right-0 p-1.5 bg-[#FBBF24] text-text-primary rounded-full ring-2 ring-white shadow-sm flex items-center justify-center">
               <PencilSimple size={12} weight="bold" />
             </div>
 
@@ -815,16 +817,16 @@ export default function ProfilePage() {
             onClick={handleOpenEditModal}
           >
             <div className="flex items-center gap-1.5">
-              <h2 className="text-base font-black text-[#0E0E0E] truncate">{displayName}</h2>
+              <h2 className="text-base font-black text-text-primary truncate">{displayName}</h2>
               <PencilSimple size={14} className="text-[#FBBF24]" />
             </div>
 
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#F3F4F6] text-[#374151] text-[10px] font-bold">
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-subtle text-text-primary text-[10px] font-bold">
               <Church size={11} className="text-[#FBBF24]" />
               <span>{church}</span>
             </div>
 
-            <p className="text-xs text-[#707070] italic leading-snug line-clamp-2 pt-0.5">
+            <p className="text-xs text-text-secondary italic leading-snug line-clamp-2 pt-0.5">
               &ldquo;{bio}&rdquo;
             </p>
           </div>
@@ -836,10 +838,10 @@ export default function ProfilePage() {
           className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 flex items-center justify-between cursor-pointer hover:bg-[#FDF9F1] transition-all group"
         >
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
               Your Sync Code:
             </span>
-            <span className="text-xs font-black font-mono tracking-widest text-[#0E0E0E] bg-white px-2.5 py-0.5 rounded-md border border-[#E5E7EB] shadow-xs">
+            <span className="text-xs font-black font-mono tracking-widest text-text-primary bg-card px-2.5 py-0.5 rounded-md border border-border shadow-xs">
               {buddyCode}
             </span>
           </div>
@@ -861,8 +863,8 @@ export default function ProfilePage() {
 
         {/* Shared Records Shortcut */}
         <Link href="/square" className="block pt-0.5">
-          <div className="p-2.5 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center justify-between hover:border-[#FBBF24]/40 transition-colors">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#0E0E0E]">
+          <div className="p-2.5 rounded-xl bg-surface border border-border flex items-center justify-between hover:border-[#FBBF24]/40 transition-colors">
+            <div className="flex items-center gap-2 text-xs font-bold text-text-primary">
               <ShareNetwork size={15} className="text-[#FBBF24]" />
               <span>{squareShareCount} Public Square Post{squareShareCount === 1 ? '' : 's'}</span>
             </div>
@@ -876,30 +878,30 @@ export default function ProfilePage() {
       {/* 2. The Progress Hub (Streaks & Accountability) */}
       <div className="grid grid-cols-2 gap-3">
         {/* The Streak Card */}
-        <div className="faith-card p-4 flex flex-col justify-between space-y-2 bg-white border border-[#E5E7EB]">
+        <div className="faith-card p-4 flex flex-col justify-between space-y-2 bg-card border border-border">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
               Streak
             </span>
             <Fire size={18} weight="fill" className="text-[#234537]" />
           </div>
           <div>
-            <p className="text-xl font-black text-[#0E0E0E] font-mono-tabular">{streakDays} Days</p>
-            <p className="text-[10px] text-[#707070]">Consistency is key</p>
+            <p className="text-xl font-black text-text-primary font-mono-tabular">{streakDays} Days</p>
+            <p className="text-[10px] text-text-secondary">Consistency is key</p>
           </div>
         </div>
 
         {/* Records & Milestones Shortcut */}
         <Link href="/milestones" className="block">
-          <div className="faith-card p-4 flex flex-col justify-between space-y-2 bg-white border border-[#E5E7EB] hover:border-[#FBBF24]/50 transition-colors h-full">
+          <div className="faith-card p-4 flex flex-col justify-between space-y-2 bg-card border border-border hover:border-[#FBBF24]/50 transition-colors h-full">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
                 Milestones
               </span>
               <Trophy size={18} className="text-[#FBBF24]" />
             </div>
             <div>
-              <p className="text-xs font-black text-[#0E0E0E]">Trophy Room</p>
+              <p className="text-xs font-black text-text-primary">Trophy Room</p>
               <p className="text-[10px] text-[#FBBF24] font-bold flex items-center gap-0.5 mt-0.5">
                 View trophies <CaretRight size={12} />
               </p>
@@ -909,13 +911,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Daily Accountability Card with Visual Progress Bars */}
-      <div className="faith-card p-5 space-y-4 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-4 bg-card border border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#0E0E0E]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-text-primary">
               Daily Accountability
             </h3>
-            <p className="text-[10px] text-[#707070]">Today&apos;s goal progress</p>
+            <p className="text-[10px] text-text-secondary">Today&apos;s goal progress</p>
           </div>
 
           <button
@@ -930,15 +932,15 @@ export default function ProfilePage() {
         {/* Prayer Progress Bar */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs font-bold">
-            <span className="flex items-center gap-1.5 text-[#0E0E0E]">
+            <span className="flex items-center gap-1.5 text-text-primary">
               <Fire size={14} weight="fill" className="text-[#EA2C26]" />
               <span>Prayer</span>
             </span>
-            <span className="font-mono-tabular text-[11px] text-[#707070]">
+            <span className="font-mono-tabular text-[11px] text-text-secondary">
               {todayPrayerMins} / {prayerTarget} min
             </span>
           </div>
-          <div className="w-full bg-[#F3F4F6] h-2.5 rounded-full overflow-hidden">
+          <div className="w-full bg-subtle h-2.5 rounded-full overflow-hidden">
             <div
               className="bg-[#EA2C26] h-full rounded-full transition-all duration-700"
               style={{ width: `${prayerPercent}%` }}
@@ -949,15 +951,15 @@ export default function ProfilePage() {
         {/* Study Progress Bar */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs font-bold">
-            <span className="flex items-center gap-1.5 text-[#0E0E0E]">
+            <span className="flex items-center gap-1.5 text-text-primary">
               <BookOpen size={14} className="text-[#FBBF24]" />
               <span>Study</span>
             </span>
-            <span className="font-mono-tabular text-[11px] text-[#707070]">
+            <span className="font-mono-tabular text-[11px] text-text-secondary">
               {todayStudyMins} / {studyTarget} min
             </span>
           </div>
-          <div className="w-full bg-[#F3F4F6] h-2.5 rounded-full overflow-hidden">
+          <div className="w-full bg-subtle h-2.5 rounded-full overflow-hidden">
             <div
               className="bg-[#FBBF24] h-full rounded-full transition-all duration-700"
               style={{ width: `${studyPercent}%` }}
@@ -967,11 +969,11 @@ export default function ProfilePage() {
       </div>
 
       {/* 3. Records & Milestones Preview */}
-      <div className="faith-card p-5 space-y-3 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-3 bg-card border border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy size={16} className="text-[#FBBF24]" />
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#0E0E0E]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-text-primary">
               Badges Preview
             </h3>
           </div>
@@ -984,14 +986,14 @@ export default function ProfilePage() {
         {earnedBadges.length === 0 ? (
           /* Premium Dashed Empty State */
           <Link href="/clock-in" className="block">
-            <div className="p-4 rounded-2xl border-2 border-dashed border-[#E5E7EB] bg-[#FAF6EE]/50 hover:bg-[#FDF9F1] hover:border-[#FBBF24]/40 transition-all text-center space-y-1.5 cursor-pointer">
+            <div className="p-4 rounded-2xl border-2 border-dashed border-border bg-surface/50 hover:bg-[#FDF9F1] hover:border-[#FBBF24]/40 transition-all text-center space-y-1.5 cursor-pointer">
               <div className="w-8 h-8 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
                 <Sparkle size={16} weight="fill" />
               </div>
-              <p className="text-xs font-bold text-[#0E0E0E]">
+              <p className="text-xs font-bold text-text-primary">
                 Complete your first session to unlock a badge
               </p>
-              <p className="text-[10px] text-[#707070]">Tap to start clocking in →</p>
+              <p className="text-[10px] text-text-secondary">Tap to start clocking in →</p>
             </div>
           </Link>
         ) : (
@@ -1013,11 +1015,11 @@ export default function ProfilePage() {
       </div>
 
       {/* 4. Accountability Buddy Management */}
-      <div className="faith-card p-5 space-y-4 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-4 bg-card border border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users size={18} className="text-[#FBBF24]" />
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#0E0E0E]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-text-primary">
               Accountability Roster
             </h3>
           </div>
@@ -1040,10 +1042,10 @@ export default function ProfilePage() {
                 {req.senderInitial}
               </div>
               <div className="min-w-0 flex-1 truncate">
-                <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
-                  {req.senderName} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview</span>
+                <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                  {req.senderName} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview</span>
                 </p>
-                <p className="text-[10px] text-[#707070]">Sent buddy request</p>
+                <p className="text-[10px] text-text-secondary">Sent buddy request</p>
               </div>
             </Link>
 
@@ -1066,7 +1068,7 @@ export default function ProfilePage() {
                   await supabase.from('buddies').delete().eq('id', req.id)
                   setPendingRequests((prev) => prev.filter((r) => r.id !== req.id))
                 }}
-                className="px-2.5 py-1.5 bg-white border border-[#E5E7EB] text-[#707070] rounded-xl text-xs font-bold hover:text-[#EA2C26]"
+                className="px-2.5 py-1.5 bg-card border border-border text-text-secondary rounded-xl text-xs font-bold hover:text-[#EA2C26]"
               >
                 Ignore
               </button>
@@ -1076,9 +1078,9 @@ export default function ProfilePage() {
 
         {/* Active Buddy List with Accordion Permissions */}
         {buddies.length === 0 && pendingRequests.length === 0 ? (
-          <div className="p-4 text-center bg-[#FAF6EE] rounded-2xl border border-[#E5E7EB] space-y-1">
-            <p className="text-xs font-semibold text-[#374151]">No accountability buddies connected</p>
-            <p className="text-[10px] text-[#707070]">
+          <div className="p-4 text-center bg-surface rounded-2xl border border-border space-y-1">
+            <p className="text-xs font-semibold text-text-primary">No accountability buddies connected</p>
+            <p className="text-[10px] text-text-secondary">
               Share your Buddy Code ({buddyCode}) to walk together.
             </p>
           </div>
@@ -1091,19 +1093,19 @@ export default function ProfilePage() {
               return (
                 <div
                   key={buddy.id}
-                  className="rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] overflow-hidden transition-all"
+                  className="rounded-2xl bg-surface border border-border overflow-hidden transition-all"
                 >
                   <div
                     onClick={() => setExpandedBuddyId(isExpanded ? null : buddy.id)}
-                    className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-[#F3F4F6]"
+                    className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-subtle"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center">
                         {buddy.initial}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#0E0E0E]">{buddy.name}</p>
-                        <p className="text-[10px] text-[#707070]">{buddy.church}</p>
+                        <p className="text-xs font-bold text-text-primary">{buddy.name}</p>
+                        <p className="text-[10px] text-text-secondary">{buddy.church}</p>
                       </div>
                     </div>
 
@@ -1114,7 +1116,7 @@ export default function ProfilePage() {
                         className={`relative px-3 py-1 rounded-xl text-xs font-bold transition-all overflow-hidden flex items-center gap-1 ${
                           isWaving
                             ? 'bg-[#EA2C26] text-white'
-                            : 'bg-white border border-[#E5E7EB] text-[#0E0E0E] hover:border-[#FBBF24]'
+                            : 'bg-card border border-border text-text-primary hover:border-[#FBBF24]'
                         }`}
                       >
                         {isWaving && (
@@ -1134,7 +1136,7 @@ export default function ProfilePage() {
 
                       <CaretDown
                         size={16}
-                        className={`text-[#707070] transition-transform ${
+                        className={`text-text-secondary transition-transform ${
                           isExpanded ? 'rotate-180' : ''
                         }`}
                       />
@@ -1143,12 +1145,12 @@ export default function ProfilePage() {
 
                   {/* Accordion Permissions */}
                   {isExpanded && (
-                    <div className="p-3.5 bg-white border-t border-[#E5E7EB] space-y-2.5 animate-in slide-in-from-top-2 duration-200">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                    <div className="p-3.5 bg-card border-t border-border space-y-2.5 animate-in slide-in-from-top-2 duration-200">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                         Buddy Permissions & Sharing
                       </span>
 
-                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
+                      <div className="flex items-center justify-between text-xs text-text-primary">
                         <span>Clock-in Together (allow session invites)</span>
                         <button
                           type="button"
@@ -1160,14 +1162,14 @@ export default function ProfilePage() {
                           }`}
                         >
                           <div
-                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                            className={`bg-card w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
                               buddy.permissions.canInviteToClockIn ? 'translate-x-4' : 'translate-x-0'
                             }`}
                           />
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
+                      <div className="flex items-center justify-between text-xs text-text-primary">
                         <span>Notify on Clock-in (send push alert)</span>
                         <button
                           type="button"
@@ -1179,14 +1181,14 @@ export default function ProfilePage() {
                           }`}
                         >
                           <div
-                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                            className={`bg-card w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
                               buddy.permissions.sendNotificationOnStart ? 'translate-x-4' : 'translate-x-0'
                             }`}
                           />
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-[#0E0E0E]">
+                      <div className="flex items-center justify-between text-xs text-text-primary">
                         <span>Share History (allow viewing full session log)</span>
                         <button
                           type="button"
@@ -1198,7 +1200,7 @@ export default function ProfilePage() {
                           }`}
                         >
                           <div
-                            className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                            className={`bg-card w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
                               buddy.permissions.canViewDetailedHistory ? 'translate-x-4' : 'translate-x-0'
                             }`}
                           />
@@ -1216,7 +1218,7 @@ export default function ProfilePage() {
         <Link href="/find-buddy" className="block pt-1">
           <button
             type="button"
-            className="w-full py-3 rounded-2xl border-2 border-dashed border-[#E5E7EB] hover:border-[#FBBF24] bg-white text-[#0E0E0E] text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+            className="w-full py-3 rounded-2xl border-2 border-dashed border-border hover:border-[#FBBF24] bg-card text-text-primary text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
           >
             <UserPlus size={16} className="text-[#FBBF24]" />
             <span>Find & Add More Buddies</span>
@@ -1225,28 +1227,28 @@ export default function ProfilePage() {
       </div>
 
       {/* 5. Reflection & Review Card */}
-      <div className="faith-card p-5 space-y-3 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-3 bg-card border border-border">
         <div className="flex items-center gap-2">
           <CalendarCheck size={18} className="text-[#FBBF24]" />
-          <h3 className="text-xs font-black uppercase tracking-wider text-[#0E0E0E]">
+          <h3 className="text-xs font-black uppercase tracking-wider text-text-primary">
             Reflection & Review
           </h3>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 pt-1">
           <Link href="/review-digest" className="block">
-            <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
-              <span className="text-xs font-black text-[#0E0E0E] block">Weekly Review</span>
-              <p className="text-[10px] text-[#707070] leading-snug">
+            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
+              <span className="text-xs font-black text-text-primary block">Weekly Review</span>
+              <p className="text-[10px] text-text-secondary leading-snug">
                 Growth is often clearer in reflection.
               </p>
             </div>
           </Link>
 
           <Link href="/monthly-reflection" className="block">
-            <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
-              <span className="text-xs font-black text-[#0E0E0E] block">Monthly Reflection</span>
-              <p className="text-[10px] text-[#707070] leading-snug">
+            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
+              <span className="text-xs font-black text-text-primary block">Monthly Reflection</span>
+              <p className="text-[10px] text-text-secondary leading-snug">
                 Holistic spiritual journaling and milestones.
               </p>
             </div>
@@ -1255,27 +1257,35 @@ export default function ProfilePage() {
       </div>
 
       {/* 6. App Settings & Preferences */}
-      <div className="faith-card divide-y divide-[#F3F4F6] overflow-hidden bg-white border border-[#E5E7EB]">
+      <div className="faith-card divide-y divide-border-light overflow-hidden bg-card border border-border">
         <div
           onClick={() => setIsNotificationsOpen(true)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF6EE] transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-surface transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Bell size={16} className="text-[#707070]" />
-            <span className="text-xs font-bold text-[#0E0E0E]">Push Notifications & Reviews</span>
+            <Bell size={16} className="text-text-secondary" />
+            <span className="text-xs font-bold text-text-primary">Push Notifications & Reviews</span>
           </div>
-          <CaretRight size={16} className="text-[#707070]" />
+          <CaretRight size={16} className="text-text-secondary" />
+        </div>
+
+        <div className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <PaintBrush size={16} className="text-text-secondary" />
+            <span className="text-xs font-bold text-text-primary">Appearance</span>
+          </div>
+          <ThemeToggle />
         </div>
 
         <div
           onClick={() => setIsPrivacyOpen(true)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF6EE] transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-surface transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Shield size={16} className="text-[#707070]" />
-            <span className="text-xs font-bold text-[#0E0E0E]">Privacy & Public Sharing</span>
+            <Shield size={16} className="text-text-secondary" />
+            <span className="text-xs font-bold text-text-primary">Privacy & Public Sharing</span>
           </div>
-          <CaretRight size={16} className="text-[#707070]" />
+          <CaretRight size={16} className="text-text-secondary" />
         </div>
 
         {/* Distinct Red-Tinted Log Out Button */}
@@ -1316,10 +1326,10 @@ export default function ProfilePage() {
       {/* Edit Profile Modal */}
       {isEditProfileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Edit Profile Identity</h3>
-              <button onClick={() => setIsEditProfileOpen(false)} className="text-[#707070]">
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-1 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Edit Profile Identity</h3>
+              <button onClick={() => setIsEditProfileOpen(false)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
@@ -1327,31 +1337,31 @@ export default function ProfilePage() {
             <form onSubmit={handleSaveIdentity} className="space-y-3.5">
               {/* Display Name Input Wrap */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#707070] block">Display Name</label>
-                <div className="p-3 rounded-2xl bg-white border border-[#E5E7EB] flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <User size={18} className="text-[#9095A1] shrink-0" />
+                <label className="text-[11px] font-bold text-text-secondary block">Display Name</label>
+                <div className="p-3 rounded-2xl bg-card border border-border flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
+                  <User size={18} className="text-text-muted shrink-0" />
                   <input
                     type="text"
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder="Your Name"
-                    className="bg-transparent border-none outline-none text-xs text-[#0E0E0E] w-full font-bold placeholder-[#9095A1]"
+                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-bold placeholder-[#9095A1]"
                   />
                 </div>
               </div>
 
               {/* Local Assembly (Church) Input Wrap */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#707070] block">Local Assembly (Church)</label>
-                <div className="p-3 rounded-2xl bg-white border border-[#E5E7EB] flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <Church size={18} className="text-[#9095A1] shrink-0" />
+                <label className="text-[11px] font-bold text-text-secondary block">Local Assembly (Church)</label>
+                <div className="p-3 rounded-2xl bg-card border border-border flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
+                  <Church size={18} className="text-text-muted shrink-0" />
                   <input
                     type="text"
                     value={editChurch}
                     onChange={(e) => setEditChurch(e.target.value)}
                     placeholder="e.g. Grace Assembly"
-                    className="bg-transparent border-none outline-none text-xs text-[#0E0E0E] w-full font-bold placeholder-[#9095A1]"
+                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-bold placeholder-[#9095A1]"
                   />
                 </div>
               </div>
@@ -1359,18 +1369,18 @@ export default function ProfilePage() {
               {/* Short Bio Input Wrap */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-[#707070]">Short Bio / Life Verse</label>
-                  <span className="text-[10px] text-[#9095A1] font-mono-tabular">{editBio.length}/150</span>
+                  <label className="text-[11px] font-bold text-text-secondary">Short Bio / Life Verse</label>
+                  <span className="text-[10px] text-text-muted font-mono-tabular">{editBio.length}/150</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-white border border-[#E5E7EB] flex items-start gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <Quotes size={18} className="text-[#9095A1] shrink-0 mt-0.5" />
+                <div className="p-3 rounded-2xl bg-card border border-border flex items-start gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
+                  <Quotes size={18} className="text-text-muted shrink-0 mt-0.5" />
                   <textarea
                     rows={2}
                     maxLength={150}
                     value={editBio}
                     onChange={(e) => setEditBio(e.target.value)}
                     placeholder="Standing firm in faith..."
-                    className="bg-transparent border-none outline-none text-xs text-[#0E0E0E] w-full font-medium placeholder-[#9095A1] resize-none leading-relaxed"
+                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-medium placeholder-[#9095A1] resize-none leading-relaxed"
                   />
                 </div>
               </div>
@@ -1378,7 +1388,7 @@ export default function ProfilePage() {
               {/* Large Gold Save Changes Button */}
               <button
                 type="submit"
-                className="w-full bg-[#FBBF24] text-[#0E0E0E] py-3.5 rounded-2xl font-black text-xs shadow-md hover:bg-[#F59E0B] active:scale-95 transition-all"
+                className="w-full bg-[#FBBF24] text-text-primary py-3.5 rounded-2xl font-black text-xs shadow-md hover:bg-[#F59E0B] active:scale-95 transition-all"
               >
                 Save Changes
               </button>
@@ -1390,16 +1400,16 @@ export default function ProfilePage() {
       {/* Edit Targets Modal */}
       {isEditTargetsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+          <div className="w-full max-w-md bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold text-[#0E0E0E]">Edit Daily Goals & Reminders</h3>
-                <p className="text-[10px] text-[#707070]">Customize your daily prayer and study targets</p>
+                <h3 className="text-sm font-bold text-text-primary">Edit Daily Goals & Reminders</h3>
+                <p className="text-[10px] text-text-secondary">Customize your daily prayer and study targets</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditTargetsOpen(false)}
-                className="p-1 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+                className="p-1 rounded-xl text-text-secondary hover:text-text-primary hover:bg-card transition-colors"
               >
                 <X size={18} />
               </button>
@@ -1407,15 +1417,15 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSaveTargets} className="space-y-5">
               {/* 1. Prayer Goal Section */}
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] space-y-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
                     <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" />
                     <span>Daily Prayer Goal</span>
                   </span>
 
                   {/* Direct Number Input */}
-                  <div className="flex items-center gap-1.5 bg-[#FAF6EE] px-2.5 py-1 rounded-xl border border-[#E5E7EB]">
+                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-border">
                     <input
                       type="number"
                       min={1}
@@ -1424,9 +1434,9 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setTempPrayerTarget(Math.max(1, Math.min(720, parseInt(e.target.value) || 1)))
                       }
-                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-[#0E0E0E] outline-none"
+                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-text-primary outline-none"
                     />
-                    <span className="text-[11px] font-bold text-[#707070]">min</span>
+                    <span className="text-[11px] font-bold text-text-secondary">min</span>
                   </div>
                 </div>
 
@@ -1440,7 +1450,7 @@ export default function ProfilePage() {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempPrayerTarget === mins
                           ? 'bg-[#0E0E0E] text-white shadow-xs'
-                          : 'bg-[#F9FAFB] border border-[#E5E7EB] text-[#4B5563] hover:border-[#FBBF24]'
+                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#FBBF24]'
                       }`}
                     >
                       {mins}m
@@ -1456,31 +1466,31 @@ export default function ProfilePage() {
                   step={5}
                   value={tempPrayerTarget}
                   onChange={(e) => setTempPrayerTarget(Number(e.target.value))}
-                  className="w-full accent-[#FBBF24] bg-[#F3F4F6] h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#FBBF24] bg-subtle h-2 rounded-lg cursor-pointer"
                 />
 
                 {/* Reminder Time Picker */}
-                <div className="flex items-center justify-between pt-1 border-t border-[#F3F4F6]">
-                  <label className="text-[11px] font-bold text-[#707070]">Daily Reminder:</label>
+                <div className="flex items-center justify-between pt-1 border-t border-border-light">
+                  <label className="text-[11px] font-bold text-text-secondary">Daily Reminder:</label>
                   <input
                     type="time"
                     value={prayerReminderTime}
                     onChange={(e) => setPrayerReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#FBBF24]"
+                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#FBBF24]"
                   />
                 </div>
               </div>
 
               {/* 2. Scripture Study Goal Section */}
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] space-y-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
                     <BookOpen size={16} className="text-[#234537]" weight="fill" />
                     <span>Daily Study Goal</span>
                   </span>
 
                   {/* Direct Number Input */}
-                  <div className="flex items-center gap-1.5 bg-[#FAF6EE] px-2.5 py-1 rounded-xl border border-[#E5E7EB]">
+                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-border">
                     <input
                       type="number"
                       min={1}
@@ -1489,9 +1499,9 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setTempStudyTarget(Math.max(1, Math.min(720, parseInt(e.target.value) || 1)))
                       }
-                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-[#0E0E0E] outline-none"
+                      className="w-12 bg-transparent text-xs font-black font-mono-tabular text-right text-text-primary outline-none"
                     />
-                    <span className="text-[11px] font-bold text-[#707070]">min</span>
+                    <span className="text-[11px] font-bold text-text-secondary">min</span>
                   </div>
                 </div>
 
@@ -1505,7 +1515,7 @@ export default function ProfilePage() {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempStudyTarget === mins
                           ? 'bg-[#234537] text-white shadow-xs'
-                          : 'bg-[#F9FAFB] border border-[#E5E7EB] text-[#4B5563] hover:border-[#234537]'
+                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#234537]'
                       }`}
                     >
                       {mins}m
@@ -1521,17 +1531,17 @@ export default function ProfilePage() {
                   step={5}
                   value={tempStudyTarget}
                   onChange={(e) => setTempStudyTarget(Number(e.target.value))}
-                  className="w-full accent-[#234537] bg-[#F3F4F6] h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#234537] bg-subtle h-2 rounded-lg cursor-pointer"
                 />
 
                 {/* Reminder Time Picker */}
-                <div className="flex items-center justify-between pt-1 border-t border-[#F3F4F6]">
-                  <label className="text-[11px] font-bold text-[#707070]">Daily Reminder:</label>
+                <div className="flex items-center justify-between pt-1 border-t border-border-light">
+                  <label className="text-[11px] font-bold text-text-secondary">Daily Reminder:</label>
                   <input
                     type="time"
                     value={studyReminderTime}
                     onChange={(e) => setStudyReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537]"
+                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537]"
                   />
                 </div>
               </div>
@@ -1541,7 +1551,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditTargetsOpen(false)}
-                  className="w-1/3 py-3 px-4 rounded-2xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] hover:text-[#0E0E0E]"
+                  className="w-1/3 py-3 px-4 rounded-2xl bg-card border border-border text-xs font-bold text-text-secondary hover:text-text-primary"
                 >
                   Cancel
                 </button>
@@ -1561,17 +1571,17 @@ export default function ProfilePage() {
       {/* Notifications Modal */}
       {isNotificationsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
-            <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Push Notification Preferences</h3>
-              <button onClick={() => setIsNotificationsOpen(false)} className="text-[#707070] hover:text-[#0E0E0E] p-1">
+          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
+            <div className="flex items-center justify-between pb-1 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Push Notification Preferences</h3>
+              <button onClick={() => setIsNotificationsOpen(false)} className="text-text-secondary hover:text-text-primary p-1">
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-3.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[#0E0E0E]">Daily Clock-In Reminders</span>
+                <span className="font-bold text-text-primary">Daily Clock-In Reminders</span>
                 <button
                   type="button"
                   role="switch"
@@ -1582,7 +1592,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       notifDailyReminders ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1591,8 +1601,8 @@ export default function ProfilePage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-[#0E0E0E] block">Buddy Nudge Alerts</span>
-                  <span className="text-[10px] text-[#707070]">Push alerts when your partner nudges you</span>
+                  <span className="font-bold text-text-primary block">Buddy Nudge Alerts</span>
+                  <span className="text-[10px] text-text-secondary">Push alerts when your partner nudges you</span>
                 </div>
                 <button
                   type="button"
@@ -1604,7 +1614,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       notifBuddyNudges ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1614,8 +1624,8 @@ export default function ProfilePage() {
               {/* Notify on Buddy Clock-In Toggle */}
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-[#0E0E0E] block">Notify on Buddy Clock-In</span>
-                  <span className="text-[10px] text-[#707070]">Send push alert when buddy completes a session</span>
+                  <span className="font-bold text-text-primary block">Notify on Buddy Clock-In</span>
+                  <span className="text-[10px] text-text-secondary">Send push alert when buddy completes a session</span>
                 </div>
                 <button
                   type="button"
@@ -1627,7 +1637,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       notifBuddyClockins ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1637,8 +1647,8 @@ export default function ProfilePage() {
               {/* Scheduled Buddy Clock-Ins Toggle */}
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-[#0E0E0E] block">Buddy Scheduled Clock-Ins</span>
-                  <span className="text-[10px] text-[#707070]">Alerts when buddy schedules a session & when it starts</span>
+                  <span className="font-bold text-text-primary block">Buddy Scheduled Clock-Ins</span>
+                  <span className="text-[10px] text-text-secondary">Alerts when buddy schedules a session & when it starts</span>
                 </div>
                 <button
                   type="button"
@@ -1650,7 +1660,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       notifBuddyScheduled ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1659,8 +1669,8 @@ export default function ProfilePage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-[#0E0E0E] block">Group Activity & Live Sessions</span>
-                  <span className="text-[10px] text-[#707070]">Cohort live waves and community updates</span>
+                  <span className="font-bold text-text-primary block">Group Activity & Live Sessions</span>
+                  <span className="text-[10px] text-text-secondary">Cohort live waves and community updates</span>
                 </div>
                 <button
                   type="button"
@@ -1672,7 +1682,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       notifGroupActivity ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1680,17 +1690,17 @@ export default function ProfilePage() {
               </div>
 
               {/* Weekly Review Schedule */}
-              <div className="pt-2 border-t border-[#E5E7EB] space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+              <div className="pt-2 border-t border-border space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                   Weekly Review Schedule
                 </span>
-                <div className="space-y-2 bg-white p-3 rounded-2xl border border-[#E5E7EB]">
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
                   <div className="flex items-center justify-between gap-2 min-w-0">
-                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Day of Week</label>
+                    <label className="text-xs font-bold text-text-primary shrink-0">Day of Week</label>
                     <select
                       value={reviewDayOfWeek}
                       onChange={(e) => setReviewDayOfWeek(e.target.value)}
-                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] min-w-0 max-w-[135px] truncate"
+                      className="px-2.5 py-1.5 bg-surface border border-border rounded-xl text-xs font-bold text-text-primary min-w-0 max-w-[135px] truncate"
                     >
                       <option value="Sunday">Sunday</option>
                       <option value="Monday">Monday</option>
@@ -1698,22 +1708,22 @@ export default function ProfilePage() {
                       <option value="Saturday">Saturday</option>
                     </select>
                   </div>
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F3F4F6] min-w-0">
-                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Reminder Time</label>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-light min-w-0">
+                    <label className="text-xs font-bold text-text-primary shrink-0">Reminder Time</label>
                     <input
                       type="time"
                       value={reviewReminderTime}
                       onChange={(e) => setReviewReminderTime(e.target.value)}
-                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center"
+                      className="px-2.5 py-1.5 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Monthly Review Schedule */}
-              <div className="pt-2 border-t border-[#E5E7EB] space-y-2">
+              <div className="pt-2 border-t border-border space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                     Monthly Review Schedule
                   </span>
                   <Link
@@ -1725,13 +1735,13 @@ export default function ProfilePage() {
                     <CaretRight size={10} weight="bold" />
                   </Link>
                 </div>
-                <div className="space-y-2 bg-white p-3 rounded-2xl border border-[#E5E7EB]">
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
                   <div className="flex items-center justify-between gap-2 min-w-0">
-                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Day of Month</label>
+                    <label className="text-xs font-bold text-text-primary shrink-0">Day of Month</label>
                     <select
                       value={monthReviewSchedule}
                       onChange={(e) => setMonthReviewSchedule(e.target.value)}
-                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] min-w-0 max-w-[135px] truncate"
+                      className="px-2.5 py-1.5 bg-surface border border-border rounded-xl text-xs font-bold text-text-primary min-w-0 max-w-[135px] truncate"
                     >
                       <option value="last_day">Last Day of Month</option>
                       <option value="first_day">1st of the Month</option>
@@ -1740,13 +1750,13 @@ export default function ProfilePage() {
                       <option value="day_28">28th of the Month</option>
                     </select>
                   </div>
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F3F4F6] min-w-0">
-                    <label className="text-xs font-bold text-[#0E0E0E] shrink-0">Reminder Time</label>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border-light min-w-0">
+                    <label className="text-xs font-bold text-text-primary shrink-0">Reminder Time</label>
                     <input
                       type="time"
                       value={monthReviewReminderTime}
                       onChange={(e) => setMonthReviewReminderTime(e.target.value)}
-                      className="px-2.5 py-1.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs font-mono font-bold text-[#0E0E0E] min-w-0 max-w-[135px] text-center"
+                      className="px-2.5 py-1.5 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center"
                     />
                   </div>
                 </div>
@@ -1768,13 +1778,13 @@ export default function ProfilePage() {
       {/* Privacy & Public Sharing Modal */}
       {isPrivacyOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Privacy & Public Sharing</h3>
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-1 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Privacy & Public Sharing</h3>
               <button
                 type="button"
                 onClick={() => setIsPrivacyOpen(false)}
-                className="p-1 rounded-xl text-[#707070] hover:text-[#0E0E0E]"
+                className="p-1 rounded-xl text-text-secondary hover:text-text-primary"
               >
                 <X size={18} />
               </button>
@@ -1782,7 +1792,7 @@ export default function ProfilePage() {
 
             <div className="space-y-3.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[#0E0E0E]">Share Streak with Buddies</span>
+                <span className="font-bold text-text-primary">Share Streak with Buddies</span>
                 <button
                   type="button"
                   role="switch"
@@ -1793,7 +1803,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       publicStreak ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1801,7 +1811,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[#0E0E0E]">Share Milestones & Badges to Square</span>
+                <span className="font-bold text-text-primary">Share Milestones & Badges to Square</span>
                 <button
                   type="button"
                   role="switch"
@@ -1812,7 +1822,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       publicMilestones ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />

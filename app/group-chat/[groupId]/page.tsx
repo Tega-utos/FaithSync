@@ -700,7 +700,7 @@ export default function GroupChatPage() {
 
   if (loading) {
     return (
-      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-[#707070]">
+      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-text-secondary">
         <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
         <p className="text-xs font-bold">Connecting to Group Chat...</p>
       </div>
@@ -708,14 +708,14 @@ export default function GroupChatPage() {
   }
 
   return (
-    <div className="command-center-container flex flex-col min-h-screen min-h-[100dvh] h-screen h-[100dvh] max-h-[100dvh] bg-[#FAF6EE] overflow-hidden">
+    <div className="command-center-container flex flex-col min-h-screen min-h-[100dvh] h-screen h-[100dvh] max-h-[100dvh] bg-surface overflow-hidden">
       {/* 1. Header (Group Stack Avatar, Name, Member Count, LIVE badge, Settings) */}
-      <div className="p-4 bg-white border-b border-[#E5E7EB] flex items-center justify-between z-10 shrink-0 gap-2">
+      <div className="p-4 bg-card border-b border-border flex items-center justify-between z-10 shrink-0 gap-2">
         <div className="flex items-center gap-2 truncate flex-1 min-w-0">
           <button
             type="button"
             onClick={() => router.push('/sync')}
-            className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0"
+            className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle transition-colors shrink-0"
           >
             <CaretLeft size={20} />
           </button>
@@ -731,7 +731,7 @@ export default function GroupChatPage() {
 
             <div className="truncate">
               <div className="flex items-center gap-1.5">
-                <h2 className="text-sm font-black text-[#0E0E0E] truncate">{groupName}</h2>
+                <h2 className="text-sm font-black text-text-primary truncate">{groupName}</h2>
                 {isGroupLive && (
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 text-[9px] font-black uppercase flex items-center gap-1 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
@@ -739,7 +739,7 @@ export default function GroupChatPage() {
                   </span>
                 )}
               </div>
-              <p className="text-[10px] text-[#707070] font-medium">{memberCount} members</p>
+              <p className="text-[10px] text-text-secondary font-medium">{memberCount} members</p>
             </div>
           </Link>
         </div>
@@ -768,7 +768,7 @@ export default function GroupChatPage() {
             <button
               type="button"
               onClick={() => setIsMenuOpen((s) => !s)}
-              className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors"
+              className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle transition-colors"
               title="Group Menu"
             >
               <DotsThreeVertical size={18} weight="bold" />
@@ -784,7 +784,7 @@ export default function GroupChatPage() {
 
             {/* Three Dots Dropdown List */}
             {isMenuOpen && (
-              <div className="absolute right-0 top-11 z-50 w-52 bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-1.5 space-y-0.5 text-xs font-bold text-[#0E0E0E] animate-in zoom-in-95">
+              <div className="absolute right-0 top-11 z-50 w-52 bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-0.5 text-xs font-bold text-text-primary animate-in zoom-in-95">
                 {/* 1. Send Nudge */}
                 <button
                   type="button"
@@ -824,9 +824,9 @@ export default function GroupChatPage() {
                 {/* 2. Group Info */}
                 <Link
                   href={`/group-info/${groupId}`}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-[#FAF6EE] flex items-center gap-2.5 block"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-surface flex items-center gap-2.5 block"
                 >
-                  <Info size={16} className="text-[#707070]" />
+                  <Info size={16} className="text-text-secondary" />
                   <span>Group Info</span>
                 </Link>
 
@@ -837,10 +837,10 @@ export default function GroupChatPage() {
                     setIsMenuOpen(false)
                     setIsNotifSheetOpen(true)
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-[#FAF6EE] flex items-center justify-between"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-surface flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Bell size={16} className="text-[#707070]" />
+                    <Bell size={16} className="text-text-secondary" />
                     <span>Manage Notifications</span>
                   </div>
                 </button>
@@ -869,11 +869,11 @@ export default function GroupChatPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
         {messages.length === 0 && (
           <div className="py-16 text-center space-y-2 flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center text-[#FBBF24] shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center text-[#FBBF24] shadow-xs">
               <Users size={24} weight="fill" />
             </div>
-            <p className="text-xs font-bold text-[#0E0E0E]">Welcome to {groupName}</p>
-            <p className="text-[11px] text-[#707070] max-w-xs">
+            <p className="text-xs font-bold text-text-primary">Welcome to {groupName}</p>
+            <p className="text-[11px] text-text-secondary max-w-xs">
               This cohort chat is ready. Send a message or start a group clock-in to pray and study together!
             </p>
           </div>
@@ -932,7 +932,7 @@ export default function GroupChatPage() {
                   <div className="flex items-center justify-between pb-1">
                     <div className="flex items-center gap-3">
                       {/* Distinct Gold Circle Badge */}
-                      <div className="w-11 h-11 rounded-full bg-[#FBBF24] text-[#0E0E0E] flex items-center justify-center font-bold shadow-md shrink-0">
+                      <div className="w-11 h-11 rounded-full bg-[#FBBF24] text-text-primary flex items-center justify-center font-bold shadow-md shrink-0">
                         {discipline === 'prayer' ? (
                           <HandsPraying size={22} weight="fill" />
                         ) : (
@@ -963,7 +963,7 @@ export default function GroupChatPage() {
                         <span>LIVE COHORT</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/40 text-[9px] font-black uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded-full bg-card/10 text-white/40 text-[9px] font-black uppercase tracking-wider">
                         COMPLETED
                       </span>
                     )}
@@ -971,7 +971,7 @@ export default function GroupChatPage() {
 
                   {/* Shared Focus Intention: Translucent Frosted-Glass Block */}
                   {focusText && (
-                    <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs text-white/90 italic flex items-start gap-2 shadow-inner">
+                    <div className="p-3.5 rounded-2xl bg-card/10 backdrop-blur-md border border-white/15 text-xs text-white/90 italic flex items-start gap-2 shadow-inner">
                       <Quotes size={15} className="text-[#FBBF24] shrink-0 mt-0.5" />
                       <span className="leading-relaxed">&ldquo;{focusText}&rdquo;</span>
                     </div>
@@ -979,7 +979,7 @@ export default function GroupChatPage() {
 
                   {/* Interactive Button */}
                   {isScheduledInFuture ? (
-                    <div className="w-full py-3 px-4 rounded-2xl bg-white/5 border border-white/15 text-[#FBBF24] font-bold text-xs flex items-center justify-between">
+                    <div className="w-full py-3 px-4 rounded-2xl bg-card/5 border border-white/15 text-[#FBBF24] font-bold text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Clock size={15} weight="bold" />
                         <span>Starts at {timeDisplay}</span>
@@ -995,7 +995,7 @@ export default function GroupChatPage() {
                         e.stopPropagation()
                         handleJoinGroupSession(msg)
                       }}
-                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] hover:bg-[#F59E0B] active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] text-text-primary hover:bg-[#F59E0B] active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                       <Play size={15} weight="fill" />
                       <span>{isLiveOverlayOpen ? 'View Active Cohort' : 'Join Cohort Room'} ({remainingMins}m left)</span>
@@ -1004,7 +1004,7 @@ export default function GroupChatPage() {
                     <button
                       type="button"
                       disabled
-                      className="w-full py-3 px-4 rounded-2xl bg-white/10 text-white/40 font-bold text-xs cursor-not-allowed text-center"
+                      className="w-full py-3 px-4 rounded-2xl bg-card/10 text-white/40 font-bold text-xs cursor-not-allowed text-center"
                     >
                       Session Ended
                     </button>
@@ -1018,7 +1018,7 @@ export default function GroupChatPage() {
           if (msg.message_type === 'system') {
             return (
               <div key={msg.id} className="w-full flex justify-center my-2">
-                <span className="px-4 py-1.5 rounded-full bg-[#E5E7EB]/80 text-[10px] font-bold text-[#374151] max-w-sm text-center shadow-xs">
+                <span className="px-4 py-1.5 rounded-full bg-[#E5E7EB]/80 text-[10px] font-bold text-text-primary max-w-sm text-center shadow-xs">
                   {msg.content}
                 </span>
               </div>
@@ -1038,7 +1038,7 @@ export default function GroupChatPage() {
                     <div className="w-5 h-5 rounded-full bg-[#0E0E0E] text-white text-[9px] font-bold flex items-center justify-center">
                       {msg.sender_initial}
                     </div>
-                    <span className="text-[10px] font-bold text-[#707070]">{msg.sender_name}</span>
+                    <span className="text-[10px] font-bold text-text-secondary">{msg.sender_name}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1 max-w-[85%]">
@@ -1046,7 +1046,7 @@ export default function GroupChatPage() {
                     <button
                       type="button"
                       onClick={() => handleDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
                       title="Delete message"
                     >
                       <Trash size={12} />
@@ -1056,7 +1056,7 @@ export default function GroupChatPage() {
                     className={`rounded-2xl overflow-hidden border shadow-xs ${
                       isMe
                         ? 'border-[#0E0E0E] bg-[#0E0E0E] text-white rounded-br-xs'
-                        : 'border-[#E5E7EB] bg-white text-[#0E0E0E] rounded-bl-xs'
+                        : 'border-border bg-card text-text-primary rounded-bl-xs'
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1075,14 +1075,14 @@ export default function GroupChatPage() {
                     <button
                       type="button"
                       onClick={() => handleDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
                       title="Moderate & delete message (Admin)"
                     >
                       <Trash size={12} />
                     </button>
                   )}
                 </div>
-                <span className="text-[9px] text-[#9095A1] mt-0.5 px-1 font-mono-tabular">
+                <span className="text-[9px] text-text-muted mt-0.5 px-1 font-mono-tabular">
                   {new Date(msg.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -1103,7 +1103,7 @@ export default function GroupChatPage() {
                   <div className="w-5 h-5 rounded-full bg-[#0E0E0E] text-white text-[9px] font-bold flex items-center justify-center">
                     {msg.sender_initial}
                   </div>
-                  <span className="text-[10px] font-bold text-[#707070]">{msg.sender_name}</span>
+                  <span className="text-[10px] font-bold text-text-secondary">{msg.sender_name}</span>
                 </div>
               )}
               <div className="flex items-center gap-1 max-w-[85%]">
@@ -1111,7 +1111,7 @@ export default function GroupChatPage() {
                   <button
                     type="button"
                     onClick={() => handleDeleteMessage(msg.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
                     title="Delete message"
                   >
                     <Trash size={12} />
@@ -1121,7 +1121,7 @@ export default function GroupChatPage() {
                   className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
                     isMe
                       ? 'bg-[#0E0E0E] text-white rounded-br-xs'
-                      : 'bg-white text-[#0E0E0E] border border-[#E5E7EB] rounded-bl-xs'
+                      : 'bg-card text-text-primary border border-border rounded-bl-xs'
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.content}</p>
@@ -1130,14 +1130,14 @@ export default function GroupChatPage() {
                   <button
                     type="button"
                     onClick={() => handleDeleteMessage(msg.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
                     title="Moderate & delete message (Admin)"
                   >
                     <Trash size={12} />
                   </button>
                 )}
               </div>
-              <span className="text-[9px] text-[#9095A1] mt-0.5 px-1 font-mono-tabular">
+              <span className="text-[9px] text-text-muted mt-0.5 px-1 font-mono-tabular">
                 {new Date(msg.created_at).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -1152,7 +1152,7 @@ export default function GroupChatPage() {
       {/* 3. The Action Bar (Bottom) */}
       <form
         onSubmit={handleSendMessage}
-        className="p-3 bg-white border-t border-[#E5E7EB] flex items-center gap-2 shrink-0 pb-6 sm:pb-3"
+        className="p-3 bg-card border-t border-border flex items-center gap-2 shrink-0 pb-6 sm:pb-3"
       >
         {/* Text Input */}
         <input
@@ -1160,7 +1160,7 @@ export default function GroupChatPage() {
           value={inputContent}
           onChange={(e) => setInputContent(e.target.value)}
           placeholder={`Message ${groupName}...`}
-          className="flex-1 px-3.5 py-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-white transition-all shadow-xs"
+          className="flex-1 px-3.5 py-2.5 bg-surface border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all shadow-xs"
         />
 
         {/* Picture / Image Picker Input & Button */}
@@ -1174,7 +1174,7 @@ export default function GroupChatPage() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors shrink-0 cursor-pointer"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle transition-colors shrink-0 cursor-pointer"
           title="Send a picture"
         >
           <Camera size={20} weight="bold" />
@@ -1198,19 +1198,19 @@ export default function GroupChatPage() {
           data-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in"
         >
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-extrabold text-[#0E0E0E]">Send Picture to Group</h3>
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-extrabold text-text-primary">Send Picture to Group</h3>
               <button
                 type="button"
                 onClick={() => setSelectedImage(null)}
-                className="text-[#707070] hover:text-[#0E0E0E] p-1 rounded-xl hover:bg-white"
+                className="text-text-secondary hover:text-text-primary p-1 rounded-xl hover:bg-card"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden max-h-64 border border-[#E5E7EB] bg-black/5 flex items-center justify-center">
+            <div className="rounded-2xl overflow-hidden max-h-64 border border-border bg-black/5 flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={selectedImage} alt="Preview" className="max-h-64 object-contain w-full" />
             </div>
@@ -1219,7 +1219,7 @@ export default function GroupChatPage() {
               <button
                 type="button"
                 onClick={() => setSelectedImage(null)}
-                className="py-3 px-4 rounded-2xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] hover:text-[#0E0E0E]"
+                className="py-3 px-4 rounded-2xl bg-card border border-border text-xs font-bold text-text-secondary hover:text-text-primary"
               >
                 Cancel
               </button>
@@ -1251,21 +1251,21 @@ export default function GroupChatPage() {
       {/* ========================================================================= */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-surface border border-border rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
               <div>
-                <h3 className="text-base font-black text-[#0E0E0E] tracking-tight">
+                <h3 className="text-base font-black text-text-primary tracking-tight">
                   Start Group Devotion
                 </h3>
-                <p className="text-xs text-[#707070]">
+                <p className="text-xs text-text-secondary">
                   Host a shared devotion with {groupName}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsInviteModalOpen(false)}
-                className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-card transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -1280,7 +1280,7 @@ export default function GroupChatPage() {
             >
               {/* 1. Discipline Mode Tabs */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
                   Discipline
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1290,7 +1290,7 @@ export default function GroupChatPage() {
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'study'
                         ? 'bg-[#0E0E0E] text-white shadow-md'
-                        : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                        : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
                     <BookOpen size={16} weight="bold" className={inviteDiscipline === 'study' ? 'text-[#FBBF24]' : ''} />
@@ -1302,7 +1302,7 @@ export default function GroupChatPage() {
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'prayer'
                         ? 'bg-[#0E0E0E] text-white shadow-md'
-                        : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                        : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
                     <HandsPraying size={16} weight="fill" className={inviteDiscipline === 'prayer' ? 'text-[#FBBF24]' : ''} />
@@ -1313,19 +1313,19 @@ export default function GroupChatPage() {
 
               {/* 2. Prayer Mode Options: Plain Focus vs. Timeline */}
               {inviteDiscipline === 'prayer' && (
-                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                <div className="space-y-2 p-3.5 bg-card border border-border rounded-2xl shadow-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                    <span className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
                       Prayer Structure
                     </span>
-                    <div className="flex items-center bg-[#FAF6EE] p-0.5 rounded-xl border border-[#E5E7EB]">
+                    <div className="flex items-center bg-surface p-0.5 rounded-xl border border-border">
                       <button
                         type="button"
                         onClick={() => setPrayerFocusMode('plain')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           prayerFocusMode === 'plain'
                             ? 'bg-[#0E0E0E] text-white shadow-2xs'
-                            : 'text-[#707070]'
+                            : 'text-text-secondary'
                         }`}
                       >
                         Plain Focus
@@ -1336,7 +1336,7 @@ export default function GroupChatPage() {
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
                           prayerFocusMode === 'timeline'
                             ? 'bg-[#0E0E0E] text-white shadow-2xs'
-                            : 'text-[#707070]'
+                            : 'text-text-secondary'
                         }`}
                       >
                         <ListNumbers size={13} weight="bold" />
@@ -1348,8 +1348,8 @@ export default function GroupChatPage() {
                   {prayerFocusMode === 'timeline' ? (
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#707070]">Guided Segments:</span>
-                        <span className="font-bold text-[#0E0E0E]">
+                        <span className="text-text-secondary">Guided Segments:</span>
+                        <span className="font-bold text-text-primary">
                           {timelineSegments.length} Phases • {timelineSegments.reduce((s, x) => s + (x.durationMinutes || 1), 0)} mins total
                         </span>
                       </div>
@@ -1357,9 +1357,9 @@ export default function GroupChatPage() {
                         {timelineSegments.map((seg, idx) => (
                           <div
                             key={seg.id || idx}
-                            className="p-2 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] text-[11px] flex items-center justify-between"
+                            className="p-2 rounded-xl bg-surface border border-border text-[11px] flex items-center justify-between"
                           >
-                            <span className="font-medium text-[#0E0E0E] truncate max-w-[200px]">
+                            <span className="font-medium text-text-primary truncate max-w-[200px]">
                               {idx + 1}. {seg.type === 'scripture' ? seg.reference : seg.prompt}
                             </span>
                             <span className="font-mono-tabular font-bold text-[#FBBF24] bg-[#0E0E0E] px-1.5 py-0.5 rounded text-[10px]">
@@ -1379,7 +1379,7 @@ export default function GroupChatPage() {
                     </div>
                   ) : (
                     <div className="space-y-1 pt-1">
-                      <label className="text-[10px] font-bold text-[#707070] block">
+                      <label className="text-[10px] font-bold text-text-secondary block">
                         Focus Theme (Optional)
                       </label>
                       <input
@@ -1387,7 +1387,7 @@ export default function GroupChatPage() {
                         value={inviteFocus}
                         onChange={(e) => setInviteFocus(e.target.value)}
                         placeholder="e.g. Praying for unity, revival and community"
-                        className="w-full px-3.5 py-2 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                        className="w-full px-3.5 py-2 bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24]"
                       />
                     </div>
                   )}
@@ -1396,9 +1396,9 @@ export default function GroupChatPage() {
 
               {/* 3. Study Mode Passage Input & Preset Chips */}
               {inviteDiscipline === 'study' && (
-                <div className="space-y-2 p-3.5 bg-white border border-[#E5E7EB] rounded-2xl shadow-xs">
+                <div className="space-y-2 p-3.5 bg-card border border-border rounded-2xl shadow-xs">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider block">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
                       Scripture Study Passage
                     </label>
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
@@ -1410,7 +1410,7 @@ export default function GroupChatPage() {
                     value={studyPassage}
                     onChange={(e) => setStudyPassage(e.target.value)}
                     placeholder="e.g. Hebrews 11 - Faith & Endurance"
-                    className="w-full px-3.5 py-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] font-medium"
+                    className="w-full px-3.5 py-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] font-medium"
                   />
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                     {['Hebrews 11', 'Romans 8', 'Psalm 23', 'John 15', 'Ephesians 6'].map((ref) => (
@@ -1418,7 +1418,7 @@ export default function GroupChatPage() {
                         key={ref}
                         type="button"
                         onClick={() => setStudyPassage(ref)}
-                        className="px-2 py-0.5 rounded-lg bg-[#FAF6EE] hover:bg-[#F3F4F6] border border-[#E5E7EB] text-[10px] font-bold text-[#707070] hover:text-[#0E0E0E] whitespace-nowrap cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg bg-surface hover:bg-subtle border border-border text-[10px] font-bold text-text-secondary hover:text-text-primary whitespace-nowrap cursor-pointer"
                       >
                         {ref}
                       </button>
@@ -1431,7 +1431,7 @@ export default function GroupChatPage() {
               {(inviteDiscipline === 'study' || prayerFocusMode === 'plain') && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+                    <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
                       Cohort Duration
                     </label>
                     <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
@@ -1447,8 +1447,8 @@ export default function GroupChatPage() {
                         onClick={() => setInviteDuration(mins)}
                         className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           inviteDuration === mins
-                            ? 'bg-[#FBBF24] text-[#0E0E0E] shadow-sm'
-                            : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                            ? 'bg-[#FBBF24] text-text-primary shadow-sm'
+                            : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
                         {mins}m
@@ -1469,14 +1469,14 @@ export default function GroupChatPage() {
               )}
 
               {/* 5. Automated Schedule Accordion */}
-              <div className="pt-2 border-t border-[#E5E7EB] space-y-2.5">
+              <div className="pt-2 border-t border-border space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-text-primary flex items-center gap-1.5">
                       <CalendarCheck size={15} className="text-[#FBBF24]" weight="bold" />
                       <span>Schedule for Later</span>
                     </label>
-                    <p className="text-[10px] text-[#707070]">
+                    <p className="text-[10px] text-text-secondary">
                       Synchronizes start time for all members
                     </p>
                   </div>
@@ -1489,7 +1489,7 @@ export default function GroupChatPage() {
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full bg-white shadow-md transition-transform ${
+                      className={`w-4 h-4 rounded-full bg-card shadow-md transition-transform ${
                         isScheduleEnabled ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -1505,7 +1505,7 @@ export default function GroupChatPage() {
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_6am'
                             ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
-                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                            : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Tomorrow</p>
@@ -1518,7 +1518,7 @@ export default function GroupChatPage() {
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_7am'
                             ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
-                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                            : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Tomorrow</p>
@@ -1531,7 +1531,7 @@ export default function GroupChatPage() {
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'today_8pm'
                             ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
-                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                            : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Today</p>
@@ -1544,7 +1544,7 @@ export default function GroupChatPage() {
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'custom'
                             ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
-                            : 'bg-white border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                            : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
                         <p className="text-[9px] uppercase tracking-wider opacity-70">Custom</p>
@@ -1557,7 +1557,7 @@ export default function GroupChatPage() {
                         type="time"
                         value={customScheduledTime}
                         onChange={(e) => setCustomScheduledTime(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs font-mono-tabular focus:outline-none focus:border-[#FBBF24]"
+                        className="w-full px-3.5 py-2.5 bg-card border border-border rounded-2xl text-xs font-mono-tabular focus:outline-none focus:border-[#FBBF24]"
                       />
                     )}
                   </div>
@@ -1591,21 +1591,21 @@ export default function GroupChatPage() {
         <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="fixed inset-0" onClick={() => setIsNotifSheetOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Group Notifications</h3>
-              <button onClick={() => setIsNotifSheetOpen(false)} className="text-[#707070] cursor-pointer">
+          <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Group Notifications</h3>
+              <button onClick={() => setIsNotifSheetOpen(false)} className="text-text-secondary cursor-pointer">
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-3 pt-1 text-xs">
-              <div className="faith-card p-3.5 flex items-center justify-between bg-white">
+              <div className="faith-card p-3.5 flex items-center justify-between bg-card">
                 <div className="flex items-center gap-2.5">
                   <Bell size={18} className="text-[#FBBF24]" />
                   <div>
-                    <p className="font-bold text-[#0E0E0E]">Cohort Clock-In Alerts</p>
-                    <p className="text-[10px] text-[#707070]">Receive live group devotion alerts</p>
+                    <p className="font-bold text-text-primary">Cohort Clock-In Alerts</p>
+                    <p className="text-[10px] text-text-secondary">Receive live group devotion alerts</p>
                   </div>
                 </div>
                 <button
@@ -1616,7 +1616,7 @@ export default function GroupChatPage() {
                   }`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                    className={`w-5 h-5 rounded-full bg-card transition-transform ${
                       groupNotifClockIn ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1638,16 +1638,16 @@ export default function GroupChatPage() {
       {/* Leave Group Confirmation Modal */}
       {isLeaveModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xs bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-3 shadow-2xl text-center animate-in zoom-in-95">
-            <h3 className="text-sm font-black text-[#0E0E0E]">Leave Group?</h3>
-            <p className="text-xs text-[#707070] leading-relaxed">
+          <div className="w-full max-w-xs bg-surface border border-border rounded-3xl p-5 space-y-3 shadow-2xl text-center animate-in zoom-in-95">
+            <h3 className="text-sm font-black text-text-primary">Leave Group?</h3>
+            <p className="text-xs text-text-secondary leading-relaxed">
               Are you sure you want to leave {groupName}? You will no longer receive live session alerts from this room.
             </p>
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsLeaveModalOpen(false)}
-                className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070] cursor-pointer"
+                className="py-2.5 px-3 rounded-xl bg-card border border-border text-xs font-bold text-text-secondary cursor-pointer"
               >
                 Cancel
               </button>
@@ -1731,7 +1731,7 @@ export default function GroupChatPage() {
                   className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     !isAmbientMuted
                       ? 'bg-[#FBBF24]/20 border-[#FBBF24]/40 text-[#FBBF24]'
-                      : 'bg-white/10 border-white/20 text-white/50 hover:text-white'
+                      : 'bg-card/10 border-white/20 text-white/50 hover:text-white'
                   }`}
                   title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
                 >
@@ -1744,7 +1744,7 @@ export default function GroupChatPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center -space-x-2">
                   <div
-                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
                     title="You (Present)"
                   >
                     Me
@@ -1755,7 +1755,7 @@ export default function GroupChatPage() {
                     .map((p) => (
                       <div
                         key={p.id}
-                        className="w-8 h-8 rounded-full bg-white text-[#0E0E0E] font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                        className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
                         title={`${p.name} (Present)`}
                       >
                         {p.initial}
@@ -1826,7 +1826,7 @@ export default function GroupChatPage() {
                   <button
                     type="button"
                     onClick={() => setIsBibleReaderOpen(true)}
-                    className="w-full py-3 px-4 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] hover:bg-[#f5b81b] active:scale-95 transition-all font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20 cursor-pointer"
+                    className="w-full py-3 px-4 rounded-2xl bg-[#FBBF24] text-text-primary hover:bg-[#f5b81b] active:scale-95 transition-all font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#FBBF24]/20 cursor-pointer"
                   >
                     <BookOpen size={18} weight="bold" />
                     <span>Open In-App Bible Reader</span>
@@ -1840,7 +1840,7 @@ export default function GroupChatPage() {
               {/* Prayer Mode: Guided Timeline Phase Card or Plain Focus */}
               {liveDiscipline === 'prayer' && (
                 liveTimelineSegments.length > 0 && activeSeg ? (
-                  <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 text-center max-w-sm w-full space-y-2 shadow-xl animate-in fade-in">
+                  <div className="p-4 rounded-3xl bg-card/10 backdrop-blur-md border border-white/20 text-center max-w-sm w-full space-y-2 shadow-xl animate-in fade-in">
                     <div className="flex items-center justify-between text-[11px] font-bold text-[#FBBF24] uppercase tracking-wider">
                       <span>Phase {activeSegIndex + 1} of {liveTimelineSegments.length}</span>
                       <span className="font-mono-tabular">
@@ -1852,7 +1852,7 @@ export default function GroupChatPage() {
                     </p>
                   </div>
                 ) : liveFocusText ? (
-                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs italic text-slate-200 max-w-xs text-center shadow-lg">
+                  <div className="p-3.5 rounded-2xl bg-card/10 backdrop-blur-md border border-white/20 text-xs italic text-slate-200 max-w-xs text-center shadow-lg">
                     &ldquo;{liveFocusText}&rdquo;
                   </div>
                 ) : null
@@ -1865,7 +1865,7 @@ export default function GroupChatPage() {
                 type="button"
                 onClick={() => setIsMicMuted((m) => !m)}
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-xl cursor-pointer ${
-                  isMicMuted ? 'bg-rose-600 text-white' : 'bg-white text-[#0E0E0E] hover:bg-slate-200'
+                  isMicMuted ? 'bg-rose-600 text-white' : 'bg-card text-text-primary hover:bg-slate-200'
                 }`}
                 title={isMicMuted ? 'Unmute' : 'Mute'}
               >
@@ -1881,30 +1881,30 @@ export default function GroupChatPage() {
       {/* ========================================================================= */}
       {isSessionCompleteScreen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-6 space-y-4 shadow-2xl text-center animate-in zoom-in-95">
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-6 space-y-4 shadow-2xl text-center animate-in zoom-in-95">
             <div className="w-14 h-14 rounded-full bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40 flex items-center justify-center mx-auto shadow-sm">
               <Sparkle size={28} weight="fill" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-[#0E0E0E]">Group Session Complete!</h3>
-              <p className="text-xs text-[#707070]">
+              <h3 className="text-lg font-black text-text-primary">Group Session Complete!</h3>
+              <p className="text-xs text-text-secondary">
                 {groupName} showed up together in unity.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-white border border-[#E5E7EB]">
+            <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-card border border-border">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                   Duration
                 </span>
-                <span className="text-xl font-black font-mono-tabular text-[#0E0E0E]">
+                <span className="text-xl font-black font-mono-tabular text-text-primary">
                   {Math.floor(liveDurationSecs / 60)} Mins
                 </span>
               </div>
 
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                   Encouragements
                 </span>
                 <span className="text-xl font-black font-mono-tabular text-[#FBBF24]">
@@ -1934,16 +1934,16 @@ export default function GroupChatPage() {
           data-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in"
         >
-          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
-                <h3 className="text-sm font-extrabold text-[#0E0E0E]">Manage Group Notifications</h3>
-                <p className="text-[11px] text-[#707070] font-medium">{groupName}</p>
+                <h3 className="text-sm font-extrabold text-text-primary">Manage Group Notifications</h3>
+                <p className="text-[11px] text-text-secondary font-medium">{groupName}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsNotifSheetOpen(false)}
-                className="text-[#707070] hover:text-[#0E0E0E] p-1.5 rounded-xl hover:bg-white transition-colors cursor-pointer"
+                className="text-text-secondary hover:text-text-primary p-1.5 rounded-xl hover:bg-card transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1951,14 +1951,14 @@ export default function GroupChatPage() {
 
             <div className="space-y-3 pt-1">
               {/* 1. Ongoing Group Clock-In Alerts */}
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#FBBF24] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                  <div className="w-8 h-8 rounded-full bg-surface text-[#FBBF24] flex items-center justify-center shrink-0 border border-border">
                     <Clock size={16} weight="fill" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#0E0E0E]">Ongoing Group Clock-Ins</p>
-                    <p className="text-[10px] text-[#707070] leading-tight">
+                    <p className="text-xs font-bold text-text-primary">Ongoing Group Clock-Ins</p>
+                    <p className="text-[10px] text-text-secondary leading-tight">
                       Alerts when a group prayer or study session is ongoing or starts
                     </p>
                   </div>
@@ -1974,7 +1974,7 @@ export default function GroupChatPage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       groupNotifClockIn ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -1982,14 +1982,14 @@ export default function GroupChatPage() {
               </div>
 
               {/* 2. Group Nudge Alerts */}
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#234537] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                  <div className="w-8 h-8 rounded-full bg-surface text-[#234537] flex items-center justify-center shrink-0 border border-border">
                     <HandWaving size={16} weight="fill" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#0E0E0E]">Group Nudge Alerts</p>
-                    <p className="text-[10px] text-[#707070] leading-tight">
+                    <p className="text-xs font-bold text-text-primary">Group Nudge Alerts</p>
+                    <p className="text-[10px] text-text-secondary leading-tight">
                       Receive encouragement nudges sent to the group
                     </p>
                   </div>
@@ -2005,7 +2005,7 @@ export default function GroupChatPage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       groupNotifNudges ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -2013,14 +2013,14 @@ export default function GroupChatPage() {
               </div>
 
               {/* 3. Group Chat Messages */}
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] flex items-center justify-between gap-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-card border border-border flex items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF6EE] text-[#707070] flex items-center justify-center shrink-0 border border-[#E5E7EB]">
+                  <div className="w-8 h-8 rounded-full bg-surface text-text-secondary flex items-center justify-center shrink-0 border border-border">
                     <Quotes size={16} weight="bold" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#0E0E0E]">Group Chat Messages</p>
-                    <p className="text-[10px] text-[#707070] leading-tight">
+                    <p className="text-xs font-bold text-text-primary">Group Chat Messages</p>
+                    <p className="text-[10px] text-text-secondary leading-tight">
                       Alerts for new messages in this group
                     </p>
                   </div>
@@ -2036,7 +2036,7 @@ export default function GroupChatPage() {
                   }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                       groupNotifChat ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />

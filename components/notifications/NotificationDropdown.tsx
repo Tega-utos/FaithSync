@@ -223,13 +223,13 @@ export function NotificationDropdown({
 
       <div
         ref={dropdownRef}
-        className="fixed sm:absolute top-16 sm:top-12 left-4 sm:left-auto right-4 sm:right-0 z-50 w-auto sm:w-88 max-w-[calc(100vw-32px)] sm:max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-4 space-y-3 animate-in zoom-in-95 duration-200"
+        className="fixed sm:absolute top-16 sm:top-12 left-4 sm:left-auto right-4 sm:right-0 z-50 w-auto sm:w-88 max-w-[calc(100vw-32px)] sm:max-w-sm bg-surface border border-border rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-4 space-y-3 animate-in zoom-in-95 duration-200"
       >
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <div className="flex items-center gap-2">
           <Bell size={16} weight="fill" className="text-[#FBBF24]" />
-          <h3 className="text-sm font-extrabold text-[#0E0E0E]">Notifications</h3>
+          <h3 className="text-sm font-extrabold text-text-primary">Notifications</h3>
           {unreadCount > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-[#EA2C26] text-white text-[10px] font-black">
               {unreadCount}
@@ -242,7 +242,7 @@ export function NotificationDropdown({
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="text-[11px] font-bold text-[#707070] hover:text-[#0E0E0E] flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-[11px] font-bold text-text-secondary hover:text-text-primary flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Checks size={14} weight="bold" />
               <span>Mark all read</span>
@@ -252,7 +252,7 @@ export function NotificationDropdown({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full text-[#9095A1] hover:text-[#0E0E0E] transition-colors cursor-pointer"
+            className="p-1 rounded-full text-text-muted hover:text-text-primary transition-colors cursor-pointer"
             aria-label="Close notifications"
           >
             <X size={14} weight="bold" />
@@ -263,17 +263,17 @@ export function NotificationDropdown({
       {/* Notifications List */}
       <div className="max-h-80 overflow-y-auto space-y-2 pr-1 no-scrollbar">
         {loading && notifications.length === 0 ? (
-          <div className="py-8 flex flex-col items-center justify-center space-y-2 text-[#707070]">
+          <div className="py-8 flex flex-col items-center justify-center space-y-2 text-text-secondary">
             <CircleNotch size={20} className="animate-spin text-[#FBBF24]" />
             <p className="text-xs font-bold">Checking notifications...</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="py-8 px-4 text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center mx-auto text-[#9095A1]">
+            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center mx-auto text-text-muted">
               <BellSlash size={22} weight="bold" />
             </div>
-            <p className="text-xs font-black text-[#0E0E0E]">No notifications yet</p>
-            <p className="text-[11px] text-[#707070] leading-relaxed max-w-[220px] mx-auto">
+            <p className="text-xs font-black text-text-primary">No notifications yet</p>
+            <p className="text-[11px] text-text-secondary leading-relaxed max-w-[220px] mx-auto">
               When buddies nudge you or send session invites, you will see them here.
             </p>
           </div>
@@ -284,23 +284,23 @@ export function NotificationDropdown({
               onClick={() => handleNotificationClick(notif)}
               className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 border ${
                 notif.read
-                  ? 'bg-white/60 border-[#E5E7EB]/60 opacity-80 hover:opacity-100 hover:bg-white'
-                  : 'bg-white border-[#FBBF24]/50 shadow-2xs hover:border-[#FBBF24]'
+                  ? 'bg-card/60 border-border/60 opacity-80 hover:opacity-100 hover:bg-card'
+                  : 'bg-card border-[#FBBF24]/50 shadow-2xs hover:border-[#FBBF24]'
               }`}
             >
               <div
                 className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center ${
-                  notif.read ? 'bg-[#FAF6EE]' : 'bg-[#FAF6EE] ring-1 ring-[#FBBF24]/40'
+                  notif.read ? 'bg-surface' : 'bg-surface ring-1 ring-[#FBBF24]/40'
                 }`}
               >
                 {renderIcon(notif.type, notif.icon_type)}
               </div>
 
               <div className="flex-1 min-w-0 space-y-1">
-                <p className="text-xs text-[#0E0E0E] leading-snug font-medium">
+                <p className="text-xs text-text-primary leading-snug font-medium">
                   {notif.text}
                 </p>
-                <div className="flex items-center justify-between text-[10px] text-[#9095A1] font-bold">
+                <div className="flex items-center justify-between text-[10px] text-text-muted font-bold">
                   <span>{getRelativeTime(notif.created_at)}</span>
                   {!notif.read && (
                     <span className="w-2 h-2 rounded-full bg-[#EA2C26]" />

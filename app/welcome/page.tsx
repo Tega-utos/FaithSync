@@ -7,7 +7,7 @@ import { Logo } from '@/components/Logo'
 
 export default function WelcomePage() {
   return (
-    <div className="command-center-container min-h-screen min-h-[100dvh] bg-white flex flex-col select-none">
+    <div className="command-center-container min-h-screen min-h-[100dvh] bg-card flex flex-col select-none">
       {/* 1. Hero Photograph (Expanded with tight 20px top / 16px side margins) */}
       <div className="px-4 pt-5 w-full flex justify-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
         <div className="relative w-full max-w-[420px] aspect-[521/582] max-h-[48vh]">
@@ -28,7 +28,7 @@ export default function WelcomePage() {
       <div className="flex-1 flex flex-col justify-start px-7 pt-6 pb-6 max-w-[420px] mx-auto w-full">
         {/* Label -> Logo -> Subtext (Tight grouping) */}
         <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <p className="text-[13px] font-semibold text-[#707070] mb-1.5">
+          <p className="text-[13px] font-semibold text-text-secondary mb-1.5">
             Welcome to
           </p>
 
@@ -47,7 +47,7 @@ export default function WelcomePage() {
           <Link href="/signup" className="block w-full">
             <button
               type="button"
-              className="w-full py-4 px-6 rounded-[30px] bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-4 px-6 rounded-[30px] bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all cursor-pointer"
             >
               Get Started
             </button>
@@ -57,7 +57,7 @@ export default function WelcomePage() {
           <Link href="/login" className="block w-full">
             <button
               type="button"
-              className="w-full py-3.5 px-6 rounded-[30px] bg-transparent border-2 border-dashed border-[#FBBF24] text-[#0E0E0E] font-black text-sm hover:bg-[#FDF9F1] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-[30px] bg-transparent border-2 border-dashed border-[#FBBF24] text-text-primary font-black text-sm hover:bg-[#FDF9F1] active:scale-[0.98] transition-all cursor-pointer"
             >
               I Already Have an Account
             </button>

@@ -152,9 +152,9 @@ export default function SignupPage() {
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-black text-[#0E0E0E]">Verification Link Sent</h3>
-            <p className="text-xs text-[#707070] leading-relaxed max-w-xs mx-auto">
-              We sent a confirmation link to <span className="font-bold text-[#0E0E0E]">{email}</span>. Click the link in your email to activate your account and complete setup.
+            <h3 className="text-base font-black text-text-primary">Verification Link Sent</h3>
+            <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
+              We sent a confirmation link to <span className="font-bold text-text-primary">{email}</span>. Click the link in your email to activate your account and complete setup.
             </p>
           </div>
 
@@ -169,11 +169,11 @@ export default function SignupPage() {
               type="button"
               onClick={handleResendEmail}
               disabled={resending}
-              className="w-full py-3.5 px-6 rounded-2xl bg-white border border-[#E5E7EB] hover:bg-[#FDF9F1] text-[#0E0E0E] font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] text-text-primary font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {resending ? (
                 <>
-                  <CircleNotch size={14} className="animate-spin text-[#0E0E0E]" />
+                  <CircleNotch size={14} className="animate-spin text-text-primary" />
                   <span>Resending...</span>
                 </>
               ) : (
@@ -186,7 +186,7 @@ export default function SignupPage() {
 
             <Link
               href="/login"
-              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors"
+              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
             >
               Already confirmed? Sign in
             </Link>
@@ -275,11 +275,11 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading || googleLoading}
-          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-1"
+          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-1"
         >
           {loading ? (
             <>
-              <CircleNotch size={18} className="animate-spin text-[#0E0E0E]" />
+              <CircleNotch size={18} className="animate-spin text-text-primary" />
               <span>Creating Account...</span>
             </>
           ) : (
@@ -290,8 +290,8 @@ export default function SignupPage() {
 
       {/* Dashed Divider */}
       <div className="relative flex items-center justify-center my-1">
-        <div className="border-t-2 border-dashed border-[#E5E7EB] w-full" />
-        <span className="bg-[#FAF6EE] px-3 text-[11px] font-bold text-[#707070] uppercase tracking-wider shrink-0">
+        <div className="border-t-2 border-dashed border-border w-full" />
+        <span className="bg-surface px-3 text-[11px] font-bold text-text-secondary uppercase tracking-wider shrink-0">
           or continue with
         </span>
       </div>
@@ -301,7 +301,7 @@ export default function SignupPage() {
         type="button"
         onClick={handleGoogleSignUp}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-white border border-[#E5E7EB] hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-[#0E0E0E] cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />
@@ -330,11 +330,11 @@ export default function SignupPage() {
 
       {/* Switch to Login */}
       <div className="text-center pt-1 pb-1">
-        <p className="text-xs text-[#707070] font-medium">
+        <p className="text-xs text-text-secondary font-medium">
           Already have an account?{' '}
           <Link
             href="/login"
-            className="font-bold text-[#0E0E0E] hover:underline"
+            className="font-bold text-text-primary hover:underline"
           >
             Sign in
           </Link>

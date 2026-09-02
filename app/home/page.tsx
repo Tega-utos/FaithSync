@@ -148,13 +148,13 @@ export default function HomePage() {
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
       {/* Personalized Greeting */}
       <div className="space-y-1 pt-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[#0E0E0E]">
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">
           {getGreeting()},{' '}
           <span className="text-[#FBBF24] underline decoration-[#FBBF24]/30 underline-offset-4">
             {dashboard.firstName}
           </span>
         </h1>
-        <p className="text-xs font-medium text-[#707070] leading-relaxed">
+        <p className="text-xs font-medium text-text-secondary leading-relaxed">
           Your daily build-up starts here. Let&apos;s make today count.
         </p>
       </div>
@@ -169,8 +169,8 @@ export default function HomePage() {
       <div className="faith-card p-5 space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-[#0E0E0E] tracking-tight">Today&apos;s Momentum</h2>
-            <p className="text-[11px] text-[#707070]">Prayer & Scripture Study</p>
+            <h2 className="text-sm font-bold text-text-primary tracking-tight">Today&apos;s Momentum</h2>
+            <p className="text-[11px] text-text-secondary">Prayer & Scripture Study</p>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] text-xs font-extrabold shadow-2xs">
@@ -210,10 +210,10 @@ export default function HomePage() {
               </svg>
               <div className="absolute flex flex-col items-center">
                 <HandsPraying size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-[#0E0E0E]">Prayer</span>
+                <span className="text-xs font-bold text-text-primary">Prayer</span>
               </div>
             </div>
-            <span className="text-xs font-mono font-bold text-[#374151] bg-[#FAF6EE] px-2.5 py-1 rounded-lg border border-[#E5E7EB] flex items-center gap-1.5 justify-center">
+            <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
               <Clock size={13} className="text-[#FBBF24]" />
               <span>{dashboard.prayerMinutes} / {dashboard.prayerTarget} min</span>
             </span>
@@ -248,10 +248,10 @@ export default function HomePage() {
               </svg>
               <div className="absolute flex flex-col items-center">
                 <BookOpen size={18} className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-[#0E0E0E]">Study</span>
+                <span className="text-xs font-bold text-text-primary">Study</span>
               </div>
             </div>
-            <span className="text-xs font-mono font-bold text-[#374151] bg-[#FAF6EE] px-2.5 py-1 rounded-lg border border-[#E5E7EB] flex items-center gap-1.5 justify-center">
+            <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
               <BookOpen size={13} className="text-[#FBBF24]" />
               <span>{dashboard.studyMinutes} / {dashboard.studyTarget} min</span>
             </span>
@@ -260,11 +260,11 @@ export default function HomePage() {
       </div>
 
       {/* Interactive Verse of the Day Card */}
-      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white border border-[#E5E7EB] shadow-xs relative overflow-hidden">
+      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white border border-border shadow-xs relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
               Verse of the Day
             </span>
           </div>
@@ -274,19 +274,19 @@ export default function HomePage() {
         </div>
 
         <blockquote className="space-y-1">
-          <p className="text-xs sm:text-sm font-semibold text-[#0E0E0E] leading-relaxed italic">
+          <p className="text-xs sm:text-sm font-semibold text-text-primary leading-relaxed italic">
             &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
           </p>
-          <p className="text-[10px] text-[#707070] font-medium">
+          <p className="text-[10px] text-text-secondary font-medium">
             Spiritual Theme: Strength & Endurance in Daily Waiting
           </p>
         </blockquote>
 
         {/* 1-Tap Verse Actions */}
-        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#F3F4F6]">
+        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-light">
           <Link
             href="/bible?book=Isaiah&chapter=40"
-            className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
+            className="p-2 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
           >
             <BookOpen size={13} className="text-[#FBBF24]" weight="bold" />
             <span>Read Bible</span>
@@ -294,7 +294,7 @@ export default function HomePage() {
 
           <Link
             href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
-            className="p-2 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-[#FAF6EE]"
+            className="p-2 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
           >
             <ShareNetwork size={13} className="text-[#234537]" weight="bold" />
             <span>Share to Square</span>
@@ -309,7 +309,7 @@ export default function HomePage() {
           className="w-full bg-[#0E0E0E] text-white py-4 px-6 rounded-2xl flex items-center justify-between font-bold text-base shadow-lg shadow-black/15 group-hover:bg-[#1f1f1f] group-active:scale-[0.99] transition-all"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-card/10 flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/assets/icon-timer-active.svg"
@@ -330,7 +330,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users size={18} className="text-[#FBBF24]" />
-            <h2 className="text-sm font-bold text-[#0E0E0E]">Accountability Buddies</h2>
+            <h2 className="text-sm font-bold text-text-primary">Accountability Buddies</h2>
           </div>
           <Link href="/accountability" className="text-xs font-bold text-[#FBBF24] hover:underline">
             View All
@@ -351,10 +351,10 @@ export default function HomePage() {
                 {req.senderInitial}
               </div>
               <div className="min-w-0 flex-1 truncate">
-                <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
-                  {req.senderName} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview</span>
+                <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                  {req.senderName} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview</span>
                 </p>
-                <p className="text-[10px] text-[#707070]">Sent buddy request</p>
+                <p className="text-[10px] text-text-secondary">Sent buddy request</p>
               </div>
             </Link>
 
@@ -367,7 +367,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={() => handleIgnore(req.id)}
-                className="p-1 text-[#707070] hover:text-[#EA2C26] rounded-lg"
+                className="p-1 text-text-secondary hover:text-[#EA2C26] rounded-lg"
               >
                 <X size={16} />
               </button>
@@ -377,9 +377,9 @@ export default function HomePage() {
 
         {/* Active Buddy List */}
         {dashboard.buddies.length === 0 && dashboard.pendingRequests.length === 0 ? (
-          <div className="p-5 text-center bg-[#FAF6EE] rounded-xl border border-[#E5E7EB] space-y-2">
-            <p className="text-xs font-semibold text-[#374151]">No accountability buddies yet</p>
-            <p className="text-[11px] text-[#707070]">
+          <div className="p-5 text-center bg-surface rounded-xl border border-border space-y-2">
+            <p className="text-xs font-semibold text-text-primary">No accountability buddies yet</p>
+            <p className="text-[11px] text-text-secondary">
               Share your Buddy Code to walk and grow together.
             </p>
             <Link href="/find-buddy" className="inline-block pt-1">
@@ -395,7 +395,7 @@ export default function HomePage() {
                 <div
                   key={buddy.id}
                   onClick={() => router.push(`/buddy-chat/${buddy.id}`)}
-                  className="p-3 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 hover:bg-[#F3F4F6] transition-all cursor-pointer"
+                  className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 hover:bg-subtle transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <div className="relative">
@@ -403,13 +403,13 @@ export default function HomePage() {
                         {buddy.initial}
                       </div>
                       {buddy.isActiveNow && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#FAF6EE]" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-surface" />
                       )}
                     </div>
 
                     <div className="truncate">
-                      <p className="text-xs font-bold text-[#0E0E0E] truncate">{buddy.name}</p>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#707070]">
+                      <p className="text-xs font-bold text-text-primary truncate">{buddy.name}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                         {buddy.bothDone ? (
                           <span className="text-emerald-600 font-bold flex items-center gap-0.5">
                             <CheckCircle size={12} weight="fill" /> Goals complete
@@ -490,12 +490,12 @@ export default function HomePage() {
             )}
 
             <div>
-              <p className="text-xs font-bold text-[#0E0E0E]">
+              <p className="text-xs font-bold text-text-primary">
                 {dashboard.globalCount === 0
                   ? '0 believers clocked in today'
                   : `${dashboard.globalCount} believer${dashboard.globalCount === 1 ? '' : 's'} active today`}
               </p>
-              <p className="text-[10px] text-[#707070]">
+              <p className="text-[10px] text-text-secondary">
                 {dashboard.globalCount === 0
                   ? 'Be the first to clock in today in Community Square'
                   : 'Join the reflections in Community Square'}
@@ -503,7 +503,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <CaretRight size={18} className="text-[#707070] group-hover:translate-x-1 transition-transform" />
+          <CaretRight size={18} className="text-text-secondary group-hover:translate-x-1 transition-transform" />
         </div>
       </Link>
     </div>

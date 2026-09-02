@@ -201,21 +201,21 @@ export default function AccountabilityPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 min-h-[92vh] space-y-5">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Home</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E]">Accountability</h1>
+        <h1 className="text-sm font-extrabold text-text-primary">Accountability</h1>
 
         <Link
           href="/find-buddy"
-          className="p-1.5 rounded-xl text-[#FBBF24] hover:text-[#0E0E0E] transition-colors"
+          className="p-1.5 rounded-xl text-[#FBBF24] hover:text-text-primary transition-colors"
           title="Find New Buddies"
         >
           <UserPlus size={18} />
@@ -223,8 +223,8 @@ export default function AccountabilityPage() {
       </div>
 
       <div className="space-y-1">
-        <h2 className="text-xl font-black text-[#0E0E0E] tracking-tight">Buddies Hub</h2>
-        <p className="text-xs text-[#707070] leading-relaxed">
+        <h2 className="text-xl font-black text-text-primary tracking-tight">Buddies Hub</h2>
+        <p className="text-xs text-text-secondary leading-relaxed">
           Monitor your buddy&apos;s daily spiritual momentum, send encouragement nudges, and clock in together.
         </p>
       </div>
@@ -232,7 +232,7 @@ export default function AccountabilityPage() {
       {/* Top-Anchored Incoming Requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             Incoming Requests ({pendingRequests.length})
           </span>
           <div className="space-y-2">
@@ -249,10 +249,10 @@ export default function AccountabilityPage() {
                     {req.initial}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
-                      {req.name} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview</span>
+                    <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                      {req.name} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview</span>
                     </p>
-                    <p className="text-[10px] text-[#707070] truncate">{req.church}</p>
+                    <p className="text-[10px] text-text-secondary truncate">{req.church}</p>
                   </div>
                 </Link>
 
@@ -267,7 +267,7 @@ export default function AccountabilityPage() {
                   <button
                     type="button"
                     onClick={() => handleIgnore(req.id)}
-                    className="bg-white border border-[#E5E7EB] text-[#707070] py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
+                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
                   >
                     Ignore
                   </button>
@@ -280,21 +280,21 @@ export default function AccountabilityPage() {
 
       {/* SCENARIO A vs SCENARIO B */}
       {loading ? (
-        <div className="py-20 text-center text-xs text-[#707070]">
+        <div className="py-20 text-center text-xs text-text-secondary">
           Loading accountability buddies...
         </div>
       ) : buddies.length === 0 ? (
         /* Scenario A: No Buddies */
         <div className="faith-card p-8 sm:p-10 text-center flex flex-col items-center justify-center space-y-4 my-6 animate-in zoom-in-95">
-          <div className="w-20 h-20 rounded-full bg-[#FAF6EE] border-2 border-dashed border-[#FBBF24]/50 text-[#9095A1] flex items-center justify-center shadow-inner">
+          <div className="w-20 h-20 rounded-full bg-surface border-2 border-dashed border-[#FBBF24]/50 text-text-muted flex items-center justify-center shadow-inner">
             <UserPlus size={36} className="text-[#FBBF24]" />
           </div>
 
           <div className="space-y-1.5 max-w-sm">
-            <h2 className="text-base font-black text-[#0E0E0E] tracking-tight">
+            <h2 className="text-base font-black text-text-primary tracking-tight">
               No buddies yet.
             </h2>
-            <p className="text-xs text-[#707070] leading-relaxed">
+            <p className="text-xs text-text-secondary leading-relaxed">
               Accountability makes consistency easier. Find a buddy to share your journey with.
             </p>
           </div>
@@ -313,7 +313,7 @@ export default function AccountabilityPage() {
         /* Scenario B: Has Buddies */
         <div className="space-y-4 animate-in fade-in">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
               Active Accountability Buddies ({buddies.length})
             </span>
             <Link
@@ -346,8 +346,8 @@ export default function AccountabilityPage() {
                       </div>
 
                       <div className="space-y-0.5">
-                        <h3 className="text-sm font-bold text-[#0E0E0E]">{buddy.name}</h3>
-                        <p className="text-[11px] text-[#707070]">
+                        <h3 className="text-sm font-bold text-text-primary">{buddy.name}</h3>
+                        <p className="text-[11px] text-text-secondary">
                           {buddy.liveStatus} • {buddy.church}
                         </p>
                       </div>
@@ -362,14 +362,14 @@ export default function AccountabilityPage() {
                   </div>
 
                   {/* Daily Checklist */}
-                  <div className="p-3 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070] block">
+                  <div className="p-3 rounded-2xl bg-surface border border-border space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
                       Today&apos;s Checklist
                     </span>
 
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-between">
-                        <span className="font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                      <div className="p-2 rounded-xl bg-card border border-border flex items-center justify-between">
+                        <span className="font-bold text-text-primary flex items-center gap-1.5">
                           <HandsPraying size={14} weight="fill" className="text-[#FBBF24]" />
                           <span>Prayer</span>
                         </span>
@@ -379,15 +379,15 @@ export default function AccountabilityPage() {
                             <span>Done</span>
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-[#9095A1] font-medium text-[11px]">
-                            <Circle size={14} className="text-[#9095A1]" />
+                          <span className="flex items-center gap-1 text-text-muted font-medium text-[11px]">
+                            <Circle size={14} className="text-text-muted" />
                             <span>Pending</span>
                           </span>
                         )}
                       </div>
 
-                      <div className="p-2 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-between">
-                        <span className="font-bold text-[#0E0E0E] flex items-center gap-1.5">
+                      <div className="p-2 rounded-xl bg-card border border-border flex items-center justify-between">
+                        <span className="font-bold text-text-primary flex items-center gap-1.5">
                           <BookOpen size={14} className="text-[#FBBF24]" />
                           <span>Study</span>
                         </span>
@@ -397,8 +397,8 @@ export default function AccountabilityPage() {
                             <span>Done</span>
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-[#9095A1] font-medium text-[11px]">
-                            <Circle size={14} className="text-[#9095A1]" />
+                          <span className="flex items-center gap-1 text-text-muted font-medium text-[11px]">
+                            <Circle size={14} className="text-text-muted" />
                             <span>Pending</span>
                           </span>
                         )}
@@ -415,7 +415,7 @@ export default function AccountabilityPage() {
                       className={`py-2.5 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
                         isNudged
                           ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
-                          : 'bg-[#F3F4F6] text-[#262626] border-[#DCD6C8] hover:bg-[#E5E7EB]'
+                          : 'bg-subtle text-[#262626] border-[#DCD6C8] hover:bg-[#E5E7EB]'
                       }`}
                     >
                       {isNudged ? (

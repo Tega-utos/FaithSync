@@ -64,7 +64,7 @@ export function ScriptureText({
 
   if (loading) {
     return (
-      <div className={`flex items-center gap-2 text-xs text-[#707070] py-2 ${className}`}>
+      <div className={`flex items-center gap-2 text-xs text-text-secondary py-2 ${className}`}>
         <CircleNotch size={14} className="animate-spin text-[#FBBF24]" />
         <span>Loading {reference}...</span>
       </div>
@@ -82,7 +82,7 @@ export function ScriptureText({
   // 1. verseOnly: just the verse text without citation
   if (display === 'verseOnly') {
     return (
-      <div className={`text-sm text-[#0E0E0E] leading-relaxed italic ${className}`}>
+      <div className={`text-sm text-text-primary leading-relaxed italic ${className}`}>
         &ldquo;{text}&rdquo;
       </div>
     )
@@ -99,12 +99,12 @@ export function ScriptureText({
             <BookOpen size={16} weight="fill" />
             <span>{reference}</span>
           </div>
-          <span className="text-[10px] font-bold font-mono text-[#707070] uppercase bg-white px-2 py-0.5 rounded-md border border-[#E5E7EB]">
+          <span className="text-[10px] font-bold font-mono text-text-secondary uppercase bg-card px-2 py-0.5 rounded-md border border-border">
             {versionShort}
           </span>
         </div>
 
-        <p className="text-xs text-[#0E0E0E] leading-relaxed italic">
+        <p className="text-xs text-text-primary leading-relaxed italic">
           &ldquo;{text}&rdquo;
         </p>
       </div>
@@ -114,10 +114,10 @@ export function ScriptureText({
   // 3. verseWithReference: Text + citation line (Default)
   return (
     <div className={`space-y-1 ${className}`}>
-      <p className="text-xs text-[#0E0E0E] leading-relaxed italic">
+      <p className="text-xs text-text-primary leading-relaxed italic">
         &ldquo;{text}&rdquo;
       </p>
-      <p className="text-[11px] font-bold text-[#707070] flex items-center gap-1">
+      <p className="text-[11px] font-bold text-text-secondary flex items-center gap-1">
         <span>— {reference}</span>
         <span className="text-[10px] font-mono text-[#FBBF24]">({versionShort})</span>
       </p>

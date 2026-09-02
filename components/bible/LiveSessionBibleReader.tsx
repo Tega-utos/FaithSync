@@ -101,19 +101,19 @@ export function LiveSessionBibleReader({
 
   return (
     <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 animate-in fade-in">
-      <div className="relative w-full max-w-2xl bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[88vh] h-full animate-in slide-in-from-bottom-6 duration-300">
+      <div className="relative w-full max-w-2xl bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[88vh] h-full animate-in slide-in-from-bottom-6 duration-300">
         
         {/* Top Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#E5E7EB] shrink-0 bg-[#F5EFE1]/60 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-border shrink-0 bg-[#F5EFE1]/60 rounded-t-3xl">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#0E0E0E] text-[#FBBF24] flex items-center justify-center shadow-xs">
               <BookOpen size={18} weight="bold" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-[#0E0E0E] tracking-tight">
+              <h3 className="text-sm font-black text-text-primary tracking-tight">
                 Scripture Study Reader
               </h3>
-              <p className="text-[10px] text-[#707070] font-medium">
+              <p className="text-[10px] text-text-secondary font-medium">
                 Synchronized In-App Scripture
               </p>
             </div>
@@ -124,7 +124,7 @@ export function LiveSessionBibleReader({
             <select
               value={selectedVersion}
               onChange={(e) => setSelectedVersion(e.target.value)}
-              className="px-2.5 py-1 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] cursor-pointer shadow-2xs"
+              className="px-2.5 py-1 bg-card border border-border rounded-xl text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] cursor-pointer shadow-2xs"
             >
               {BIBLE_VERSIONS.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -134,12 +134,12 @@ export function LiveSessionBibleReader({
             </select>
 
             {/* Font Size Toggle */}
-            <div className="flex items-center bg-white border border-[#E5E7EB] rounded-xl p-0.5 shadow-2xs">
+            <div className="flex items-center bg-card border border-border rounded-xl p-0.5 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setFontSize('sm')}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${
-                  fontSize === 'sm' ? 'bg-[#0E0E0E] text-white' : 'text-[#707070]'
+                  fontSize === 'sm' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
                 }`}
               >
                 A-
@@ -148,7 +148,7 @@ export function LiveSessionBibleReader({
                 type="button"
                 onClick={() => setFontSize('base')}
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                  fontSize === 'base' ? 'bg-[#0E0E0E] text-white' : 'text-[#707070]'
+                  fontSize === 'base' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
                 }`}
               >
                 A
@@ -157,7 +157,7 @@ export function LiveSessionBibleReader({
                 type="button"
                 onClick={() => setFontSize('lg')}
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                  fontSize === 'lg' ? 'bg-[#0E0E0E] text-white' : 'text-[#707070]'
+                  fontSize === 'lg' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
                 }`}
               >
                 A+
@@ -168,7 +168,7 @@ export function LiveSessionBibleReader({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full text-[#707070] hover:text-[#0E0E0E] hover:bg-white transition-colors"
+              className="p-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-card transition-colors"
             >
               <X size={20} />
             </button>
@@ -176,19 +176,19 @@ export function LiveSessionBibleReader({
         </div>
 
         {/* Search Bar & Quick Books */}
-        <div className="p-3.5 border-b border-[#E5E7EB] bg-white space-y-2.5 shrink-0">
+        <div className="p-3.5 border-b border-border bg-card space-y-2.5 shrink-0">
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <MagnifyingGlass
                 size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#707070]"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary"
               />
               <input
                 type="text"
                 value={referenceInput}
                 onChange={(e) => setReferenceInput(e.target.value)}
                 placeholder="Search passage, e.g. Hebrews 11:1-6 or Psalm 23"
-                className="w-full pl-9 pr-4 py-2 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-white transition-all shadow-xs"
+                className="w-full pl-9 pr-4 py-2 bg-surface border border-border rounded-xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all shadow-xs"
               />
             </div>
             <button
@@ -206,7 +206,7 @@ export function LiveSessionBibleReader({
                 key={b}
                 type="button"
                 onClick={() => handleQuickBookSelect(b)}
-                className="px-2.5 py-1 rounded-lg bg-[#FAF6EE] hover:bg-[#F3F4F6] border border-[#E5E7EB] text-[11px] font-bold text-[#707070] hover:text-[#0E0E0E] whitespace-nowrap transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-surface hover:bg-subtle border border-border text-[11px] font-bold text-text-secondary hover:text-text-primary whitespace-nowrap transition-colors"
               >
                 {b}
               </button>
@@ -219,7 +219,7 @@ export function LiveSessionBibleReader({
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-2">
               <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
-              <p className="text-xs text-[#707070] font-sans">Opening scripture passage...</p>
+              <p className="text-xs text-text-secondary font-sans">Opening scripture passage...</p>
             </div>
           ) : error ? (
             <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-sans text-center space-y-2">
@@ -231,9 +231,9 @@ export function LiveSessionBibleReader({
           ) : verseData ? (
             <div className="space-y-4">
               {/* Passage Title Bar */}
-              <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]/80 font-sans">
+              <div className="flex items-center justify-between pb-2 border-b border-border/80 font-sans">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-black text-[#0E0E0E] tracking-tight">
+                  <h2 className="text-lg sm:text-xl font-black text-text-primary tracking-tight">
                     {verseData.reference}
                   </h2>
                   <span className="text-[10px] font-bold text-[#FBBF24] bg-[#0E0E0E] px-2 py-0.5 rounded-md">
@@ -245,7 +245,7 @@ export function LiveSessionBibleReader({
                   <button
                     type="button"
                     onClick={handleCopyPassage}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#0E0E0E] hover:border-[#FBBF24] shadow-2xs transition-all"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-text-primary hover:border-[#FBBF24] shadow-2xs transition-all"
                   >
                     {copiedRef ? (
                       <>
@@ -264,7 +264,7 @@ export function LiveSessionBibleReader({
 
               {/* Verses Text */}
               <div
-                className={`leading-relaxed text-[#0E0E0E] space-y-3 ${
+                className={`leading-relaxed text-text-primary space-y-3 ${
                   fontSize === 'sm'
                     ? 'text-xs sm:text-sm'
                     : fontSize === 'lg'
@@ -290,8 +290,8 @@ export function LiveSessionBibleReader({
         </div>
 
         {/* Footer Dock Info */}
-        <div className="p-3 border-t border-[#E5E7EB] bg-[#F5EFE1]/60 flex items-center justify-between text-xs font-sans rounded-b-3xl shrink-0">
-          <span className="text-[10px] text-[#707070] font-medium">
+        <div className="p-3 border-t border-border bg-[#F5EFE1]/60 flex items-center justify-between text-xs font-sans rounded-b-3xl shrink-0">
+          <span className="text-[10px] text-text-secondary font-medium">
             Live Shared Study Session
           </span>
           <button

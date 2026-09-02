@@ -12,13 +12,13 @@ export interface WeeklyProgressProps {
 
 export function WeeklyProgress({ completedDaysCount, weekDots }: WeeklyProgressProps) {
   return (
-    <div className="faith-card p-4 sm:p-5 space-y-3.5 bg-white border border-[#E5E7EB] shadow-xs">
+    <div className="faith-card p-4 sm:p-5 space-y-3.5 bg-card border border-border shadow-xs">
       {/* Header & Counter */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#0E0E0E]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-text-primary">
           Weekly Progress
         </h2>
-        <span className="text-[11px] font-black uppercase font-mono-tabular tracking-wider text-[#707070]">
+        <span className="text-[11px] font-black uppercase font-mono-tabular tracking-wider text-text-secondary">
           <span className="text-[#FBBF24] font-black">{completedDaysCount}</span> / 7 DAYS COMPLETE
         </span>
       </div>
@@ -35,7 +35,7 @@ export function WeeklyProgress({ completedDaysCount, weekDots }: WeeklyProgressP
               {/* Day Letter Label */}
               <span
                 className={`text-[10px] font-bold uppercase tracking-wider ${
-                  isToday ? 'text-[#0E0E0E] font-black' : 'text-[#9095A1]'
+                  isToday ? 'text-text-primary font-black' : 'text-text-muted'
                 }`}
               >
                 {DAY_LABELS[index]}
@@ -45,16 +45,16 @@ export function WeeklyProgress({ completedDaysCount, weekDots }: WeeklyProgressP
               <div
                 className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
                   isCompleted
-                    ? 'bg-[#FBBF24] text-[#0E0E0E] font-black shadow-[0_4px_14px_rgba(251,191,36,0.45)] scale-105'
+                    ? 'bg-[#FBBF24] text-text-primary font-black shadow-[0_4px_14px_rgba(251,191,36,0.45)] scale-105'
                     : isToday
-                    ? 'border-2 border-dashed border-[#9CA3AF] bg-[#F3F4F6]/70'
+                    ? 'border-2 border-dashed border-[#9CA3AF] bg-subtle/70'
                     : isMissed
                     ? 'border-2 border-[#D1D5DB] bg-transparent flex items-center justify-center'
-                    : 'border border-[#E5E7EB]/50 bg-transparent'
+                    : 'border border-border/50 bg-transparent'
                 }`}
               >
                 {isCompleted ? (
-                  <Check size={13} weight="bold" className="text-[#0E0E0E]" />
+                  <Check size={13} weight="bold" className="text-text-primary" />
                 ) : isMissed ? (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#9CA3AF]" />
                 ) : null}

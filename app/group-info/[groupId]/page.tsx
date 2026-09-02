@@ -238,22 +238,22 @@ export default function GroupInfoPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-32 min-h-[92vh] space-y-5">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Back</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E]">Group Profile</h1>
+        <h1 className="text-sm font-extrabold text-text-primary">Group Profile</h1>
         <div className="w-8" />
       </div>
 
       {/* A. The Identity Section */}
-      <div className="faith-card p-6 text-center space-y-3 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-6 text-center space-y-3 bg-card border border-border">
         {/* Massive Centered Group Avatar */}
         <div className="relative flex items-center justify-center mx-auto">
           <div className="w-20 h-20 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center text-2xl font-black border-4 border-white shadow-xl ring-2 ring-[#FBBF24]/40">
@@ -263,27 +263,27 @@ export default function GroupInfoPage() {
 
         {/* Group Name in Large Bold Text */}
         <div className="space-y-1">
-          <h2 className="text-xl font-black text-[#0E0E0E] tracking-tight">{group.name}</h2>
-          <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#707070]">
+          <h2 className="text-xl font-black text-text-primary tracking-tight">{group.name}</h2>
+          <div className="flex items-center justify-center gap-2 text-xs font-bold text-text-secondary">
             <span>{group.category}</span>
             <span>•</span>
-            <span className="flex items-center gap-1 text-[#0E0E0E]">
+            <span className="flex items-center gap-1 text-text-primary">
               <MapPin size={13} weight="fill" className="text-[#EA2C26]" />
               <span>{group.church}</span>
             </span>
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#FAF6EE] border border-[#E5E7EB] text-[11px] font-bold text-[#0E0E0E]">
+        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface border border-border text-[11px] font-bold text-text-primary">
           <Users size={13} className="text-[#FBBF24]" />
           <span>{group.memberCount} members active</span>
         </div>
       </div>
 
       {/* B. Group Guidelines */}
-      <div className="faith-card p-5 space-y-2 bg-[#F3F4F6]/70 border border-[#E5E7EB]">
+      <div className="faith-card p-5 space-y-2 bg-subtle/70 border border-border">
         {/* Guidelines Header with Admin Edit Button */}
-        <div className="flex items-center justify-between text-[#0E0E0E]">
+        <div className="flex items-center justify-between text-text-primary">
           <div className="flex items-center gap-1.5">
             <ShieldCheck size={16} className="text-[#FBBF24]" />
             <span className="text-[11px] font-black uppercase tracking-wider">
@@ -303,7 +303,7 @@ export default function GroupInfoPage() {
             </button>
           )}
         </div>
-        <p className="text-xs text-[#374151] leading-relaxed italic">
+        <p className="text-xs text-text-primary leading-relaxed italic">
           &ldquo;{group.rules}&rdquo;
         </p>
       </div>
@@ -311,7 +311,7 @@ export default function GroupInfoPage() {
       {/* C. The Members Roster */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             Members Roster ({members.length})
           </span>
         </div>
@@ -320,7 +320,7 @@ export default function GroupInfoPage() {
           {members.map((member) => (
             <div
               key={member.id}
-              className="faith-card p-3.5 flex items-center justify-between bg-white border border-[#E5E7EB]"
+              className="faith-card p-3.5 flex items-center justify-between bg-card border border-border"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white text-xs font-black flex items-center justify-center shadow-xs">
@@ -329,7 +329,7 @@ export default function GroupInfoPage() {
 
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-black text-[#0E0E0E]">{member.name}</p>
+                    <p className="text-xs font-black text-text-primary">{member.name}</p>
                     {/* The Gold Pill Badge for Admins */}
                     {member.role === 'admin' && (
                       <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/60 text-[#B45309] text-[9px] font-black uppercase flex items-center gap-0.5">
@@ -338,7 +338,7 @@ export default function GroupInfoPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-[#707070] font-mono-tabular">
+                  <span className="text-[10px] text-text-secondary font-mono-tabular">
                     {member.streakDays}d Streak
                   </span>
                 </div>
@@ -353,7 +353,7 @@ export default function GroupInfoPage() {
                     className={`px-2 py-1 rounded-xl text-[10px] font-bold border transition-colors ${
                       member.role === 'admin'
                         ? 'bg-amber-50 border-[#FBBF24]/50 text-[#B45309] hover:bg-amber-100'
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                        : 'bg-gray-50 border-border text-text-secondary hover:bg-subtle'
                     }`}
                     title={member.role === 'admin' ? 'Demote from Admin' : 'Make Co-Admin'}
                   >
@@ -375,7 +375,7 @@ export default function GroupInfoPage() {
       </div>
 
       {/* D. The Sticky Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-[#E5E7EB] z-30 flex items-center justify-center max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/90 backdrop-blur-md border-t border-border z-30 flex items-center justify-center max-w-md mx-auto">
         {isMember ? (
           <div className="w-full flex items-center gap-2">
             <button
@@ -399,7 +399,7 @@ export default function GroupInfoPage() {
             <button
               type="button"
               onClick={handleShare}
-              className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#0E0E0E] hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs"
+              className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-text-primary hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs"
               title="Share Group Invite"
             >
               <ShareNetwork size={18} />
@@ -420,7 +420,7 @@ export default function GroupInfoPage() {
           <button
             type="button"
             onClick={handleJoinGroup}
-            className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-lg hover:bg-[#F59E0B] active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-lg hover:bg-[#F59E0B] active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <UserPlus size={18} weight="bold" />
             <span>Join Group</span>
@@ -431,19 +431,19 @@ export default function GroupInfoPage() {
       {/* Edit Guidelines Modal (Admin Only) */}
       {isEditingRules && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-3 shadow-2xl animate-in zoom-in-95">
-            <h3 className="text-xs font-black text-[#0E0E0E]">Edit Group Guidelines</h3>
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-3 shadow-2xl animate-in zoom-in-95">
+            <h3 className="text-xs font-black text-text-primary">Edit Group Guidelines</h3>
             <textarea
               rows={4}
               value={tempRules}
               onChange={(e) => setTempRules(e.target.value)}
-              className="w-full p-3 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+              className="w-full p-3 bg-card border border-border rounded-2xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24]"
             />
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setIsEditingRules(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#707070]"
+                className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-text-secondary"
               >
                 Cancel
               </button>

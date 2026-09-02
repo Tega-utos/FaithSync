@@ -276,11 +276,11 @@ export function SessionSummaryModal({
     >
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 pb-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[88vh] overflow-y-auto no-scrollbar">
+      <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 pb-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[88vh] overflow-y-auto no-scrollbar">
         <div className="flex flex-col items-center space-y-1 text-center">
           <div className="w-10 h-1.5 bg-[#D1CBC0] rounded-full mb-1 sm:hidden" />
-          <h2 className="text-lg font-extrabold text-[#0E0E0E] tracking-tight">Session Summary</h2>
-          <p className="text-xs text-[#707070]">Good job showing up in the presence of God today.</p>
+          <h2 className="text-lg font-extrabold text-text-primary tracking-tight">Session Summary</h2>
+          <p className="text-xs text-text-secondary">Good job showing up in the presence of God today.</p>
         </div>
 
         {error && (
@@ -293,13 +293,13 @@ export function SessionSummaryModal({
         {/* Stats Row */}
         <div className="grid grid-cols-2 gap-3">
           <div className="faith-card p-3.5 text-center space-y-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Duration</span>
-            <p className="text-base font-extrabold text-[#0E0E0E] font-mono">{durationFormatted}</p>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Duration</span>
+            <p className="text-base font-extrabold text-text-primary font-mono">{durationFormatted}</p>
           </div>
 
           <div className="faith-card p-3.5 text-center space-y-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">Type</span>
-            <p className="text-base font-extrabold text-[#0E0E0E] capitalize flex items-center justify-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Type</span>
+            <p className="text-base font-extrabold text-text-primary capitalize flex items-center justify-center gap-1.5">
               {sessionData.discipline === 'prayer' ? (
                 <>
                   <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" /> Prayer
@@ -315,16 +315,16 @@ export function SessionSummaryModal({
 
         {/* Daily Checklist */}
         <div className="faith-card p-4 space-y-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             Today&apos;s Daily Checklist
           </span>
 
           {/* Prayer Row */}
-          <div className="flex items-center justify-between py-1 border-b border-[#F3F4F6]">
+          <div className="flex items-center justify-between py-1 border-b border-border-light">
             <div className="flex items-center gap-2">
               <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" />
-              <span className="text-xs font-bold text-[#0E0E0E]">Prayer</span>
-              <span className="text-[10px] font-mono text-[#707070]">({todayPrayerMins}/{prayerTarget}m)</span>
+              <span className="text-xs font-bold text-text-primary">Prayer</span>
+              <span className="text-[10px] font-mono text-text-secondary">({todayPrayerMins}/{prayerTarget}m)</span>
             </div>
 
             {isPrayerComplete ? (
@@ -336,7 +336,7 @@ export function SessionSummaryModal({
                 Partial
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#707070] text-[10px] font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-subtle text-text-secondary text-[10px] font-semibold">
                 Skipped
               </span>
             )}
@@ -346,8 +346,8 @@ export function SessionSummaryModal({
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center gap-2">
               <BookOpen size={16} className="text-[#FBBF24]" />
-              <span className="text-xs font-bold text-[#0E0E0E]">Scripture Study</span>
-              <span className="text-[10px] font-mono text-[#707070]">({todayStudyMins}/{studyTarget}m)</span>
+              <span className="text-xs font-bold text-text-primary">Scripture Study</span>
+              <span className="text-[10px] font-mono text-text-secondary">({todayStudyMins}/{studyTarget}m)</span>
             </div>
 
             {isStudyComplete ? (
@@ -359,7 +359,7 @@ export function SessionSummaryModal({
                 Partial
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#707070] text-[10px] font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-subtle text-text-secondary text-[10px] font-semibold">
                 Skipped
               </span>
             )}
@@ -369,10 +369,10 @@ export function SessionSummaryModal({
         {/* Reflection Logger */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-[#0E0E0E]">
+            <label className="text-xs font-bold text-text-primary">
               Reflection & Takeaways (optional)
             </label>
-            <span className="text-[10px] font-mono text-[#707070]">
+            <span className="text-[10px] font-mono text-text-secondary">
               {reflection.length}/150
             </span>
           </div>
@@ -383,7 +383,7 @@ export function SessionSummaryModal({
             value={reflection}
             onChange={(e) => setReflection(e.target.value)}
             placeholder="What did the Holy Spirit highlight in your time today?"
-            className="w-full p-3.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:ring-1 focus:ring-[#FBBF24] resize-none transition-all shadow-xs"
+            className="w-full p-3.5 bg-card border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:ring-1 focus:ring-[#FBBF24] resize-none transition-all shadow-xs"
           />
         </div>
 
@@ -396,8 +396,8 @@ export function SessionSummaryModal({
                   {primaryBuddy.name.charAt(0)}
                 </div>
                 <div className="truncate">
-                  <p className="text-xs font-bold text-[#0E0E0E] truncate">Hold {primaryBuddy.name} accountable</p>
-                  <p className="text-[10px] text-[#707070]">Tap to encourage their daily goal</p>
+                  <p className="text-xs font-bold text-text-primary truncate">Hold {primaryBuddy.name} accountable</p>
+                  <p className="text-[10px] text-text-secondary">Tap to encourage their daily goal</p>
                 </div>
               </div>
 
@@ -432,8 +432,8 @@ export function SessionSummaryModal({
               <div className="flex items-center gap-2">
                 <ShareNetwork size={16} className="text-[#FBBF24]" />
                 <div>
-                  <p className="text-xs font-bold text-[#0E0E0E]">Share to Community Square</p>
-                  <p className="text-[10px] text-[#707070]">Post your consistency proof on the Square</p>
+                  <p className="text-xs font-bold text-text-primary">Share to Community Square</p>
+                  <p className="text-[10px] text-text-secondary">Post your consistency proof on the Square</p>
                 </div>
               </div>
 
@@ -452,7 +452,7 @@ export function SessionSummaryModal({
                 }`}
               >
                 <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                  className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                     shareToSquare && isBothComplete ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
@@ -460,8 +460,8 @@ export function SessionSummaryModal({
             </div>
 
             {!isBothComplete && (
-              <div className="p-2 rounded-xl bg-[#F3F4F6]/50 border border-[#E5E7EB] flex items-center gap-2 text-[10px] text-[#707070] font-medium">
-                <Lock size={14} className="text-[#9095A1] shrink-0" />
+              <div className="p-2 rounded-xl bg-subtle/50 border border-border flex items-center gap-2 text-[10px] text-text-secondary font-medium">
+                <Lock size={14} className="text-text-muted shrink-0" />
                 <span>Complete both daily targets to unlock sharing</span>
               </div>
             )}

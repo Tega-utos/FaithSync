@@ -188,13 +188,13 @@ export default function BiblePage() {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#FAF9F6] text-[#1A1A1A] pb-28 relative">
       {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#F3F4F6] px-3 sm:px-6 py-2.5 shadow-sm">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border-light px-3 sm:px-6 py-2.5 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
           {/* Back Button */}
           <button
             type="button"
             onClick={handleBackWithFailsafe}
-            className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#FAF9F6] transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
+            className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-[#FAF9F6] transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
           >
             <CaretLeft size={18} />
             <span className="hidden sm:inline">Back</span>
@@ -208,7 +208,7 @@ export default function BiblePage() {
                 setSelectedBook(e.target.value)
                 setSelectedChapter(1)
               }}
-              className="bg-[#FAF9F6] border border-[#E5E7EB] rounded-xl px-2 py-1.5 text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] cursor-pointer max-w-[110px]"
+              className="bg-[#FAF9F6] border border-border rounded-xl px-2 py-1.5 text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] cursor-pointer max-w-[110px]"
             >
               {BIBLE_BOOKS.map((b) => (
                 <option key={b.name} value={b.name}>
@@ -220,7 +220,7 @@ export default function BiblePage() {
             <select
               value={selectedChapter}
               onChange={(e) => setSelectedChapter(Number(e.target.value))}
-              className="bg-[#FAF9F6] border border-[#E5E7EB] rounded-xl px-2 py-1.5 text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] cursor-pointer font-mono"
+              className="bg-[#FAF9F6] border border-border rounded-xl px-2 py-1.5 text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] cursor-pointer font-mono"
             >
               {Array.from({ length: totalChapters }, (_, i) => i + 1).map((ch) => (
                 <option key={ch} value={ch}>
@@ -232,7 +232,7 @@ export default function BiblePage() {
             <select
               value={selectedVersion}
               onChange={(e) => handleVersionChange(e.target.value)}
-              className="bg-[#FAF9F6] border border-[#E5E7EB] rounded-xl px-2 py-1.5 text-xs font-bold text-[#FBBF24] focus:outline-none focus:border-[#FBBF24] cursor-pointer font-mono"
+              className="bg-[#FAF9F6] border border-border rounded-xl px-2 py-1.5 text-xs font-bold text-[#FBBF24] focus:outline-none focus:border-[#FBBF24] cursor-pointer font-mono"
             >
               {BIBLE_VERSIONS.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -243,12 +243,12 @@ export default function BiblePage() {
           </div>
 
           {/* Font Resizer */}
-          <div className="flex items-center gap-1 shrink-0 bg-[#FAF9F6] border border-[#E5E7EB] rounded-xl p-0.5">
+          <div className="flex items-center gap-1 shrink-0 bg-[#FAF9F6] border border-border rounded-xl p-0.5">
             <button
               type="button"
               disabled={fontSizeIndex === 0}
               onClick={() => setFontSizeIndex((prev) => Math.max(0, prev - 1))}
-              className="px-2 py-1 text-xs font-bold text-[#707070] hover:text-[#0E0E0E] disabled:opacity-30"
+              className="px-2 py-1 text-xs font-bold text-text-secondary hover:text-text-primary disabled:opacity-30"
               title="Decrease Font Size"
             >
               A-
@@ -258,7 +258,7 @@ export default function BiblePage() {
               type="button"
               disabled={fontSizeIndex === FONT_SIZES.length - 1}
               onClick={() => setFontSizeIndex((prev) => Math.min(FONT_SIZES.length - 1, prev + 1))}
-              className="px-2 py-1 text-xs font-bold text-[#707070] hover:text-[#0E0E0E] disabled:opacity-30"
+              className="px-2 py-1 text-xs font-bold text-text-secondary hover:text-text-primary disabled:opacity-30"
               title="Increase Font Size"
             >
               A+
@@ -269,17 +269,17 @@ export default function BiblePage() {
 
       {/* Scripture Chapter Content */}
       <main className="max-w-xl mx-auto px-5 sm:px-6 pt-6 space-y-6">
-        <div className="text-center space-y-1 pb-4 border-b border-[#F3F4F6]">
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#0E0E0E]">
+        <div className="text-center space-y-1 pb-4 border-b border-border-light">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
             {selectedBook} {selectedChapter}
           </h1>
-          <p className="text-[10px] uppercase font-bold tracking-widest text-[#9095A1]">
+          <p className="text-[10px] uppercase font-bold tracking-widest text-text-muted">
             {currentVersionObj.label} ({currentVersionObj.shortName})
           </p>
         </div>
 
         {loading ? (
-          <div className="py-24 text-center text-xs text-[#707070] font-medium font-serif italic">
+          <div className="py-24 text-center text-xs text-text-secondary font-medium font-serif italic">
             Opening {selectedBook} {selectedChapter}...
           </div>
         ) : (
@@ -304,7 +304,7 @@ export default function BiblePage() {
         <button
           type="button"
           onClick={handlePrevChapter}
-          className="fixed bottom-6 left-4 sm:left-8 z-40 w-11 h-11 rounded-full bg-white border border-[#E5E7EB] shadow-lg flex items-center justify-center text-[#0E0E0E] hover:bg-[#FAF9F6] hover:scale-105 active:scale-95 transition-all"
+          className="fixed bottom-6 left-4 sm:left-8 z-40 w-11 h-11 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-text-primary hover:bg-[#FAF9F6] hover:scale-105 active:scale-95 transition-all"
           title={`Previous: Chapter ${selectedChapter - 1}`}
         >
           <CaretLeft size={20} />
@@ -315,7 +315,7 @@ export default function BiblePage() {
         <button
           type="button"
           onClick={handleNextChapter}
-          className="fixed bottom-6 right-4 sm:right-8 z-40 w-11 h-11 rounded-full bg-white border border-[#E5E7EB] shadow-lg flex items-center justify-center text-[#0E0E0E] hover:bg-[#FAF9F6] hover:scale-105 active:scale-95 transition-all"
+          className="fixed bottom-6 right-4 sm:right-8 z-40 w-11 h-11 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-text-primary hover:bg-[#FAF9F6] hover:scale-105 active:scale-95 transition-all"
           title={`Next: Chapter ${selectedChapter + 1}`}
         >
           <CaretRight size={20} />

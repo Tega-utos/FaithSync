@@ -232,16 +232,16 @@ export function PrayerFocusTimelineBuilder({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="relative z-10 w-full max-w-xl bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+      <div className="relative z-10 w-full max-w-xl bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB] shrink-0">
+        <div className="flex items-center justify-between pb-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-[#0E0E0E] text-white flex items-center justify-center shadow-xs">
               <Clock size={18} weight="bold" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#0E0E0E]">Prayer Focus Timeline</h2>
-              <p className="text-[10px] text-[#707070]">
+              <h2 className="text-sm font-bold text-text-primary">Prayer Focus Timeline</h2>
+              <p className="text-[10px] text-text-secondary">
                 Sequence scripture & reflection prompts across your session
               </p>
             </div>
@@ -251,7 +251,7 @@ export function PrayerFocusTimelineBuilder({
             <button
               type="button"
               onClick={() => setIsLoadTemplateOpen(true)}
-              className="p-2 rounded-xl bg-white border border-[#E5E7EB] text-[#707070] hover:text-[#0E0E0E] text-xs font-bold transition-all"
+              className="p-2 rounded-xl bg-card border border-border text-text-secondary hover:text-text-primary text-xs font-bold transition-all"
               title="Load Saved Template"
             >
               <FolderOpen size={16} />
@@ -260,7 +260,7 @@ export function PrayerFocusTimelineBuilder({
               type="button"
               onClick={() => setIsSaveTemplateOpen(true)}
               disabled={segments.length === 0}
-              className="p-2 rounded-xl bg-white border border-[#E5E7EB] text-[#707070] hover:text-[#0E0E0E] text-xs font-bold transition-all disabled:opacity-40"
+              className="p-2 rounded-xl bg-card border border-border text-text-secondary hover:text-text-primary text-xs font-bold transition-all disabled:opacity-40"
               title="Save as Template"
             >
               <FloppyDisk size={16} />
@@ -268,7 +268,7 @@ export function PrayerFocusTimelineBuilder({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-[#E5E7EB] text-[#707070] transition-colors"
+              className="p-1.5 rounded-full hover:bg-[#E5E7EB] text-text-secondary transition-colors"
             >
               <X size={18} />
             </button>
@@ -280,15 +280,15 @@ export function PrayerFocusTimelineBuilder({
           <div className="flex items-center gap-2">
             <Sparkle size={18} weight="fill" className="text-[#FBBF24]" />
             <div>
-              <p className="text-xs font-bold text-[#0E0E0E]">
+              <p className="text-xs font-bold text-text-primary">
                 Total Timeline: {totalMinutes} Minutes
               </p>
-              <p className="text-[10px] text-[#707070]">
+              <p className="text-[10px] text-text-secondary">
                 {segments.length} guided segment{segments.length === 1 ? '' : 's'}
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-bold font-mono text-[#FBBF24] bg-white px-2 py-0.5 rounded-lg border border-[#E5E7EB]">
+          <span className="text-[10px] font-bold font-mono text-[#FBBF24] bg-card px-2 py-0.5 rounded-lg border border-border">
             Auto-advancing
           </span>
         </div>
@@ -297,8 +297,8 @@ export function PrayerFocusTimelineBuilder({
         <div className="overflow-y-auto flex-1 space-y-2.5 pr-0.5">
           {segments.length === 0 ? (
             <div className="py-12 text-center space-y-2">
-              <p className="text-xs font-bold text-[#0E0E0E]">No segments in your timeline</p>
-              <p className="text-[11px] text-[#707070]">
+              <p className="text-xs font-bold text-text-primary">No segments in your timeline</p>
+              <p className="text-[11px] text-text-secondary">
                 Tap &ldquo;Add Segment&rdquo; below to add scripture readings or reflection prompts.
               </p>
             </div>
@@ -308,7 +308,7 @@ export function PrayerFocusTimelineBuilder({
               return (
                 <div
                   key={seg.id}
-                  className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs space-y-2.5"
+                  className="p-3.5 rounded-2xl bg-card border border-border shadow-xs space-y-2.5"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export function PrayerFocusTimelineBuilder({
 
                     {/* Duration input & Move Controls */}
                     <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-1 bg-[#FAF6EE] px-2 py-1 rounded-xl border border-[#E5E7EB]">
+                      <div className="flex items-center gap-1 bg-surface px-2 py-1 rounded-xl border border-border">
                         <input
                           type="number"
                           min="1"
@@ -337,16 +337,16 @@ export function PrayerFocusTimelineBuilder({
                           onChange={(e) =>
                             handleUpdateDuration(seg.id, parseInt(e.target.value, 10))
                           }
-                          className="w-8 bg-transparent text-center font-bold text-xs text-[#0E0E0E] focus:outline-none font-mono"
+                          className="w-8 bg-transparent text-center font-bold text-xs text-text-primary focus:outline-none font-mono"
                         />
-                        <span className="text-[10px] text-[#707070] font-medium">min</span>
+                        <span className="text-[10px] text-text-secondary font-medium">min</span>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleMoveUp(idx)}
                         disabled={idx === 0}
-                        className="p-1 rounded-lg text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] disabled:opacity-20"
+                        className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-subtle disabled:opacity-20"
                         title="Move Up"
                       >
                         <ArrowUp size={14} weight="bold" />
@@ -356,7 +356,7 @@ export function PrayerFocusTimelineBuilder({
                         type="button"
                         onClick={() => handleMoveDown(idx)}
                         disabled={idx === segments.length - 1}
-                        className="p-1 rounded-lg text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] disabled:opacity-20"
+                        className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-subtle disabled:opacity-20"
                         title="Move Down"
                       >
                         <ArrowDown size={14} weight="bold" />
@@ -389,7 +389,7 @@ export function PrayerFocusTimelineBuilder({
                       />
                     </div>
                   ) : (
-                    <div className="p-3 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] text-xs text-[#0E0E0E] font-medium italic">
+                    <div className="p-3 rounded-xl bg-surface border border-border text-xs text-text-primary font-medium italic">
                       &ldquo;{seg.prompt}&rdquo;
                     </div>
                   )}
@@ -400,7 +400,7 @@ export function PrayerFocusTimelineBuilder({
         </div>
 
         {/* Add Segment Dropdown / Buttons */}
-        <div className="pt-2 border-t border-[#E5E7EB] space-y-2 shrink-0">
+        <div className="pt-2 border-t border-border space-y-2 shrink-0">
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -408,7 +408,7 @@ export function PrayerFocusTimelineBuilder({
                 setActiveEditingSegmentId(null)
                 setIsScripturePickerOpen(true)
               }}
-              className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+              className="py-2.5 px-3 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
               <BookOpen size={16} className="text-[#FBBF24]" weight="fill" />
               <span>+ Add Scripture</span>
@@ -417,7 +417,7 @@ export function PrayerFocusTimelineBuilder({
             <button
               type="button"
               onClick={() => setIsReflectionModalOpen(true)}
-              className="py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] hover:border-rose-400 text-[#0E0E0E] font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+              className="py-2.5 px-3 rounded-xl bg-card border border-border hover:border-rose-400 text-text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
               <Sparkle size={16} className="text-rose-500" weight="fill" />
               <span>+ Add Reflection</span>
@@ -450,34 +450,34 @@ export function PrayerFocusTimelineBuilder({
       {/* 2. Reflection Prompt Selector Sub-Modal */}
       {isReflectionModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Add Reflection Prompt</h3>
+          <div className="w-full max-w-md bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Add Reflection Prompt</h3>
               <button
                 onClick={() => setIsReflectionModalOpen(false)}
-                className="text-[#707070]"
+                className="text-text-secondary"
               >
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
                 Suggested Prompts
               </span>
               {DEFAULT_REFLECTION_PROMPTS.map((prompt) => (
                 <div
                   key={prompt}
                   onClick={() => handleAddReflection(prompt)}
-                  className="p-3 rounded-xl bg-white border border-[#E5E7EB] text-xs text-[#0E0E0E] font-medium hover:border-rose-400 hover:bg-rose-50/40 cursor-pointer transition-all"
+                  className="p-3 rounded-xl bg-card border border-border text-xs text-text-primary font-medium hover:border-rose-400 hover:bg-rose-50/40 cursor-pointer transition-all"
                 >
                   &ldquo;{prompt}&rdquo;
                 </div>
               ))}
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-[#E5E7EB]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+            <div className="space-y-2 pt-2 border-t border-border">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
                 Or Write Custom Prompt
               </span>
               <textarea
@@ -485,7 +485,7 @@ export function PrayerFocusTimelineBuilder({
                 value={customPromptInput}
                 onChange={(e) => setCustomPromptInput(e.target.value)}
                 placeholder="e.g. Meditate on the goodness of God this morning..."
-                className="w-full p-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs text-[#0E0E0E] focus:outline-none focus:border-rose-400"
+                className="w-full p-2.5 rounded-xl border border-border bg-card text-xs text-text-primary focus:outline-none focus:border-rose-400"
               />
               <button
                 type="button"
@@ -503,16 +503,16 @@ export function PrayerFocusTimelineBuilder({
       {/* 3. Save Template Modal */}
       {isSaveTemplateOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Save as Template</h3>
-              <button onClick={() => setIsSaveTemplateOpen(false)} className="text-[#707070]">
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Save as Template</h3>
+              <button onClick={() => setIsSaveTemplateOpen(false)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-[#707070]">
+              <label className="text-[10px] font-bold uppercase text-text-secondary">
                 Template Name
               </label>
               <input
@@ -520,7 +520,7 @@ export function PrayerFocusTimelineBuilder({
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="e.g. Morning Gratitude & Peace"
-                className="w-full p-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24]"
+                className="w-full p-2.5 rounded-xl border border-border bg-card text-xs font-semibold text-text-primary focus:outline-none focus:border-[#FBBF24]"
               />
             </div>
 
@@ -544,22 +544,22 @@ export function PrayerFocusTimelineBuilder({
       {/* 4. Load Saved Templates Drawer */}
       {isLoadTemplateOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB] shrink-0">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Saved Focus Templates</h3>
-              <button onClick={() => setIsLoadTemplateOpen(false)} className="text-[#707070]">
+          <div className="w-full max-w-md bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between pb-2 border-b border-border shrink-0">
+              <h3 className="text-sm font-bold text-text-primary">Saved Focus Templates</h3>
+              <button onClick={() => setIsLoadTemplateOpen(false)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
 
             <div className="overflow-y-auto flex-1 space-y-2">
               {loadingTemplates ? (
-                <div className="py-8 text-center text-xs text-[#707070]">
+                <div className="py-8 text-center text-xs text-text-secondary">
                   <CircleNotch size={16} className="animate-spin text-[#FBBF24] mx-auto mb-2" />
                   <span>Loading templates...</span>
                 </div>
               ) : savedTemplates.length === 0 ? (
-                <div className="py-8 text-center text-xs text-[#707070]">
+                <div className="py-8 text-center text-xs text-text-secondary">
                   No saved templates found.
                 </div>
               ) : (
@@ -572,10 +572,10 @@ export function PrayerFocusTimelineBuilder({
                         setIsLoadTemplateOpen(false)
                       }
                     }}
-                    className="p-3 rounded-2xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] cursor-pointer transition-all space-y-1"
+                    className="p-3 rounded-2xl bg-card border border-border hover:border-[#FBBF24] cursor-pointer transition-all space-y-1"
                   >
-                    <p className="text-xs font-bold text-[#0E0E0E]">{tpl.name}</p>
-                    <p className="text-[10px] text-[#707070]">
+                    <p className="text-xs font-bold text-text-primary">{tpl.name}</p>
+                    <p className="text-[10px] text-text-secondary">
                       {Array.isArray(tpl.segments) ? tpl.segments.length : 0} segments •{' '}
                       {Array.isArray(tpl.segments)
                         ? tpl.segments.reduce((s: number, seg: any) => s + (seg.durationMinutes || 1), 0)

@@ -800,16 +800,16 @@ function SquarePageContent() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-20 space-y-4">
       {/* Top Header / Back Navigation */}
-      <div className="flex items-center justify-between pb-1 border-b border-[#E5E7EB]/60">
+      <div className="flex items-center justify-between pb-1 border-b border-border/60">
         <Link
           href="/sync"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#0E0E0E] hover:border-[#FBBF24] transition-all group shadow-2xs active:scale-95"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-text-primary hover:border-[#FBBF24] transition-all group shadow-2xs active:scale-95"
         >
           <CaretLeft size={16} weight="bold" className="text-[#FBBF24] group-hover:-translate-x-0.5 transition-transform" />
           <span>Back to SynC</span>
         </Link>
 
-        <span className="text-[11px] font-bold text-[#707070] uppercase tracking-wider">
+        <span className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
           Community Feed
         </span>
       </div>
@@ -818,11 +818,11 @@ function SquarePageContent() {
       <div className="space-y-1 pb-1">
         <div className="flex items-center gap-2">
           <Globe size={20} className="text-[#FBBF24]" />
-          <h1 className="text-xl sm:text-2xl font-black text-[#0E0E0E] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
             Community Square
           </h1>
         </div>
-        <p className="text-xs text-[#707070] leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           A shared sanctuary for collective reflection and fellowship.
         </p>
       </div>
@@ -846,7 +846,7 @@ function SquarePageContent() {
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   isActive
                     ? 'bg-[#FBBF24] text-white shadow-sm'
-                    : 'bg-white border border-[#E5E7EB] text-[#707070] hover:border-[#FBBF24]'
+                    : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                 }`}
               >
                 {tab.label}
@@ -858,15 +858,15 @@ function SquarePageContent() {
 
       {/* Feed Content or Empty State */}
       {loading ? (
-        <div className="py-20 text-center text-xs text-[#707070]">Loading reflections...</div>
+        <div className="py-20 text-center text-xs text-text-secondary">Loading reflections...</div>
       ) : filteredPosts.length === 0 ? (
         <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3 my-6">
           <div className="w-14 h-14 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 text-[#FBBF24] flex items-center justify-center">
             <Globe size={28} />
           </div>
           <div className="space-y-1 max-w-xs">
-            <h2 className="text-sm font-bold text-[#0E0E0E]">The square is quiet</h2>
-            <p className="text-xs text-[#707070] leading-relaxed">
+            <h2 className="text-sm font-bold text-text-primary">The square is quiet</h2>
+            <p className="text-xs text-text-secondary leading-relaxed">
               Be the first to share your journey, request prayer, or celebrate what God has done.
             </p>
           </div>
@@ -907,14 +907,14 @@ function SquarePageContent() {
                 <div className="flex items-start justify-between gap-2">
                   {post.is_anonymous ? (
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#FAF6EE] text-[#707070] border border-[#E5E7EB] font-bold text-xs flex items-center justify-center shadow-2xs">
+                      <div className="w-9 h-9 rounded-full bg-surface text-text-secondary border border-border font-bold text-xs flex items-center justify-center shadow-2xs">
                         <User size={18} weight="bold" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-[#0E0E0E]">
+                        <p className="text-xs font-black text-text-primary">
                           Anonymous Member
                         </p>
-                        <p className="text-[10px] text-[#707070]">
+                        <p className="text-[10px] text-text-secondary">
                           Community Square • {timeStr}
                         </p>
                       </div>
@@ -934,10 +934,10 @@ function SquarePageContent() {
                         )}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#0E0E0E]">
+                        <p className="text-xs font-bold text-text-primary">
                           {post.authorName}
                         </p>
-                        <p className="text-[10px] text-[#707070]">
+                        <p className="text-[10px] text-text-secondary">
                           {post.authorChurch} • {timeStr}
                         </p>
                       </div>
@@ -951,7 +951,7 @@ function SquarePageContent() {
                         <span>Prayer</span>
                       </span>
                     ) : isStruggle ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#F3F4F6] text-[#262626] text-[10px] font-bold inline-flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-subtle text-[#262626] text-[10px] font-bold inline-flex items-center gap-1">
                         <ShieldWarning size={12} />
                         <span>Struggle</span>
                       </span>
@@ -961,7 +961,7 @@ function SquarePageContent() {
                         <span>Testimony</span>
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6EE] border border-[#E5E7EB] text-[#707070] text-[10px] font-bold inline-flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
                         <Clock size={12} />
                         <span>Record</span>
                       </span>
@@ -977,18 +977,18 @@ function SquarePageContent() {
                           onClick={() =>
                             setActiveMenuPostId((prev) => (prev === post.id ? null : post.id))
                           }
-                          className="p-1 rounded-lg text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6] transition-colors"
+                          className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-subtle transition-colors"
                           title="Post options"
                         >
                           <DotsThreeVertical size={16} weight="bold" />
                         </button>
 
                         {activeMenuPostId === post.id && (
-                          <div className="absolute right-0 top-7 z-20 w-44 bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
+                          <div className="absolute right-0 top-7 z-20 w-44 bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
                             <button
                               type="button"
                               onClick={() => handleToggleAnonymous(post.id, Boolean(post.is_anonymous))}
-                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-[#0E0E0E] hover:bg-[#FAF6EE] flex items-center gap-2 transition-colors"
+                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
                             >
                               {post.is_anonymous ? (
                                 <>
@@ -1021,9 +1021,9 @@ function SquarePageContent() {
                 {/* Session Record Proof of Work Card */}
                 {isRecord ? (
                   <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] space-y-3 shadow-inner">
+                    <div className="p-4 rounded-2xl bg-card-hover border border-border space-y-3 shadow-inner">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#707070]">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
                           Daily Clock-In Proof
                         </span>
                         <span className="text-[10px] font-bold text-[#234537] bg-[#EBF3EE] px-2 py-0.5 rounded-full border border-[#234537]/20">
@@ -1033,15 +1033,15 @@ function SquarePageContent() {
 
                       {/* 2x2 Grid */}
                       <div className="grid grid-cols-2 gap-2.5">
-                        <div className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] space-y-0.5">
-                          <span className="text-[9px] font-bold uppercase text-[#707070] block">Prayer</span>
+                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
+                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Prayer</span>
                           <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
                             {post.prayerMins || 15} mins
                           </span>
                         </div>
 
-                        <div className="p-2.5 rounded-xl bg-white border border-[#E5E7EB] space-y-0.5">
-                          <span className="text-[9px] font-bold uppercase text-[#707070] block">Study</span>
+                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
+                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Study</span>
                           <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
                             {post.studyMins || 15} mins
                           </span>
@@ -1049,8 +1049,8 @@ function SquarePageContent() {
                       </div>
 
                       {/* All-Time Days Active Display */}
-                      <div className="pt-2 border-t border-[#E5E7EB]/70 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-[#707070] uppercase tracking-wider">
+                      <div className="pt-2 border-t border-border/70 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
                           All-Time Days Active
                         </span>
                         <div className="flex items-center gap-1">
@@ -1070,7 +1070,7 @@ function SquarePageContent() {
                       if (isAutoProofText && !title) {
                         return (
                           <div className="pt-1">
-                            <p className="text-xs font-bold text-[#0E0E0E]">
+                            <p className="text-xs font-bold text-text-primary">
                               Daily Devotion Completed
                             </p>
                           </div>
@@ -1079,17 +1079,17 @@ function SquarePageContent() {
 
                       return (
                         <div className="space-y-1.5 pt-1">
-                          <span className="text-[10px] font-bold text-[#707070] uppercase tracking-wider block">
+                          <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">
                             Daily Devotion Reflection
                           </span>
-                          <div className="border-l-4 border-[#234537] pl-3 py-1 space-y-1 bg-[#FAF6EE]/40 rounded-r-xl">
+                          <div className="border-l-4 border-[#234537] pl-3 py-1 space-y-1 bg-surface/40 rounded-r-xl">
                             {title && (
-                              <h2 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight not-italic">
+                              <h2 className="text-sm font-extrabold text-text-primary tracking-tight not-italic">
                                 {title}
                               </h2>
                             )}
                             {body && (
-                              <p className="text-xs text-[#0E0E0E] italic leading-relaxed whitespace-pre-line">
+                              <p className="text-xs text-text-primary italic leading-relaxed whitespace-pre-line">
                                 &ldquo;{body}&rdquo;
                               </p>
                             )}
@@ -1103,12 +1103,12 @@ function SquarePageContent() {
                   return (
                     <div className="space-y-1.5">
                       {title && (
-                        <h2 className="text-sm sm:text-base font-extrabold text-[#0E0E0E] tracking-tight">
+                        <h2 className="text-sm sm:text-base font-extrabold text-text-primary tracking-tight">
                           {title}
                         </h2>
                       )}
                       {body && (
-                        <p className="text-xs text-[#0E0E0E] leading-relaxed whitespace-pre-line">
+                        <p className="text-xs text-text-primary leading-relaxed whitespace-pre-line">
                           {body}
                         </p>
                       )}
@@ -1126,7 +1126,7 @@ function SquarePageContent() {
                 )}
 
                 {/* Footer: Discord-Style Reactions (Comments disabled on Record posts) */}
-                <div className="pt-2 border-t border-[#F3F4F6] space-y-2.5">
+                <div className="pt-2 border-t border-border-light space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {/* Discord Reaction Pills */}
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -1143,7 +1143,7 @@ function SquarePageContent() {
                             className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 ${
                               reactionData.userReacted
                                 ? 'bg-[#EBF3EE] border border-[#234537] text-[#234537] font-bold shadow-xs'
-                                : 'bg-[#F9FAFB] border border-[#E5E7EB] text-[#4B5563] hover:bg-[#F3F4F6] font-medium'
+                                : 'bg-card-hover border border-border text-text-secondary hover:bg-subtle font-medium'
                             }`}
                             title={`React with ${r.label}`}
                           >
@@ -1164,7 +1164,7 @@ function SquarePageContent() {
                               prev === post.id ? null : post.id
                             )
                           }
-                          className="px-2 py-1 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] hover:border-[#FBBF24] hover:bg-white text-[#707070] text-xs font-bold flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
+                          className="px-2 py-1 rounded-xl bg-card-hover border border-border hover:border-[#FBBF24] hover:bg-card text-text-secondary text-xs font-bold flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
                           title="Add faith reaction"
                         >
                           <Plus size={11} weight="bold" />
@@ -1172,7 +1172,7 @@ function SquarePageContent() {
                         </button>
 
                         {openReactionPickerPostId === post.id && (
-                          <div className="absolute left-0 bottom-8 sm:bottom-auto sm:top-8 z-30 bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
+                          <div className="absolute left-0 bottom-8 sm:bottom-auto sm:top-8 z-30 bg-card border border-border rounded-2xl shadow-xl p-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
                             {FAITH_REACTIONS.map((r) => {
                               const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
                               const IconComponent = r.Icon
@@ -1182,12 +1182,12 @@ function SquarePageContent() {
                                   type="button"
                                   onClick={() => handleToggleReaction(post.id, r.key)}
                                   className={`p-2 rounded-xl hover:scale-125 transition-transform flex flex-col items-center gap-1 ${
-                                    isSelected ? 'bg-[#EBF3EE]' : 'hover:bg-[#F9FAFB]'
+                                    isSelected ? 'bg-[#EBF3EE]' : 'hover:bg-card-hover'
                                   }`}
                                   title={r.label}
                                 >
                                   <IconComponent size={16} weight="fill" className={r.color} />
-                                  <span className="text-[9px] font-bold text-[#707070]">
+                                  <span className="text-[9px] font-bold text-text-secondary">
                                     {r.label}
                                   </span>
                                 </button>
@@ -1212,7 +1212,7 @@ function SquarePageContent() {
                               setConnectMessage('')
                               setConnectSent(false)
                             }}
-                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF6EE] text-[#0E0E0E] hover:bg-[#FAF6EE]/80 border border-[#E5E7EB] hover:border-[#FBBF24] transition-all flex items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-surface text-text-primary hover:bg-surface/80 border border-border hover:border-[#FBBF24] transition-all flex items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
                             title="Connect with author via Square Chat"
                           >
                             <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
@@ -1228,7 +1228,7 @@ function SquarePageContent() {
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
                             openCommentsPostId === post.id
                               ? 'bg-[#0E0E0E] text-white'
-                              : 'bg-[#FAF6EE] text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]'
+                              : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-subtle'
                           }`}
                         >
                           <ChatCircle size={15} weight="bold" />
@@ -1246,15 +1246,15 @@ function SquarePageContent() {
 
                   {/* Expandable Comments Section (Only for Non-Record Posts) */}
                   {!isRecord && openCommentsPostId === post.id && (
-                    <div className="pt-3 border-t border-[#E5E7EB]/70 space-y-3 animate-in fade-in">
+                    <div className="pt-3 border-t border-border/70 space-y-3 animate-in fade-in">
                       {/* Comments List */}
                       {loadingComments[post.id] ? (
-                        <div className="py-4 flex items-center justify-center gap-2 text-xs text-[#707070]">
+                        <div className="py-4 flex items-center justify-center gap-2 text-xs text-text-secondary">
                           <CircleNotch size={16} className="animate-spin text-[#FBBF24]" />
                           <span>Loading encouragements...</span>
                         </div>
                       ) : (commentsByPostId[post.id] || []).length === 0 ? (
-                        <div className="py-3 text-center text-xs text-[#707070] bg-[#FAF6EE]/60 rounded-xl">
+                        <div className="py-3 text-center text-xs text-text-secondary bg-surface/60 rounded-xl">
                           No comments yet. Share an encouraging word or prayer!
                         </div>
                       ) : (
@@ -1262,7 +1262,7 @@ function SquarePageContent() {
                           {(commentsByPostId[post.id] || []).map((comment) => (
                             <div
                               key={comment.id}
-                              className="p-2.5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]/80 space-y-1"
+                              className="p-2.5 rounded-xl bg-card-hover border border-border/80 space-y-1"
                             >
                               <div className="flex items-center justify-between text-[11px]">
                                 <div className="flex items-center gap-1.5">
@@ -1280,16 +1280,16 @@ function SquarePageContent() {
                                       <span>{comment.authorName?.charAt(0).toUpperCase()}</span>
                                     )}
                                   </div>
-                                  <span className="font-bold text-[#0E0E0E]">
+                                  <span className="font-bold text-text-primary">
                                     {comment.authorName}
                                   </span>
                                   {!comment.is_anonymous && (
-                                    <span className="text-[9px] text-[#707070]">
+                                    <span className="text-[9px] text-text-secondary">
                                       • {comment.authorChurch}
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-[#707070]">
+                                <span className="text-[10px] text-text-secondary">
                                   {new Date(comment.created_at).toLocaleTimeString([], {
                                     hour: '2-digit',
                                     minute: '2-digit',
@@ -1323,7 +1323,7 @@ function SquarePageContent() {
                               }))
                             }
                             placeholder="Write an encouraging comment or prayer..."
-                            className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#E5E7EB] text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-xs"
+                            className="flex-1 px-3.5 py-2 rounded-xl bg-card border border-border text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-xs"
                           />
                           <button
                             type="submit"
@@ -1345,7 +1345,7 @@ function SquarePageContent() {
                         </div>
 
                         <div className="flex items-center justify-between pt-1">
-                          <span className="text-[11px] font-medium text-[#707070]">Comment anonymously</span>
+                          <span className="text-[11px] font-medium text-text-secondary">Comment anonymously</span>
                           <button
                             type="button"
                             role="switch"
@@ -1361,7 +1361,7 @@ function SquarePageContent() {
                             }`}
                           >
                             <div
-                              className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
+                              className={`bg-card w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
                                 newCommentAnonymous[post.id] ? 'translate-x-4' : 'translate-x-0'
                               }`}
                             />
@@ -1392,11 +1392,11 @@ function SquarePageContent() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
           <div className="fixed inset-0" onClick={() => setIsComposeOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+          <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold text-[#0E0E0E]">Share to Square</h3>
-                <p className="text-[10px] text-[#707070]">
+                <h3 className="text-sm font-bold text-text-primary">Share to Square</h3>
+                <p className="text-[10px] text-text-secondary">
                   {composeStep === 'intent'
                     ? 'Select a category for your post'
                     : `Drafting a ${
@@ -1410,7 +1410,7 @@ function SquarePageContent() {
                       }`}
                 </p>
               </div>
-              <button onClick={() => setIsComposeOpen(false)} className="text-[#707070] hover:text-[#0E0E0E] p-1">
+              <button onClick={() => setIsComposeOpen(false)} className="text-text-secondary hover:text-text-primary p-1">
                 <X size={20} />
               </button>
             </div>
@@ -1430,15 +1430,15 @@ function SquarePageContent() {
                       <HandsPraying size={20} weight="fill" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#234537] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] transition-colors">
                         Request Prayer
                       </p>
-                      <p className="text-[10px] text-[#707070]">
+                      <p className="text-[10px] text-text-secondary">
                         Invite the community to pray with you.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
 
                 {/* 2. Share a Struggle */}
@@ -1450,19 +1450,19 @@ function SquarePageContent() {
                   className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#262626] transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#F3F4F6] text-[#262626] flex items-center justify-center font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-subtle text-[#262626] flex items-center justify-center font-bold shrink-0">
                       <ShieldWarning size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#262626] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#262626] transition-colors">
                         Share a Struggle
                       </p>
-                      <p className="text-[10px] text-[#707070]">
+                      <p className="text-[10px] text-text-secondary">
                         Honest declaration of difficulty and spiritual battles.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
 
                 {/* 3. Share a Testimony */}
@@ -1478,15 +1478,15 @@ function SquarePageContent() {
                       <Sparkle size={20} weight="fill" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors">
                         Share a Testimony
                       </p>
-                      <p className="text-[10px] text-[#707070]">
+                      <p className="text-[10px] text-text-secondary">
                         Celebrate God&apos;s faithfulness and answered prayers.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
 
                 {/* 4. Devotion & Scripture Reflection */}
@@ -1502,15 +1502,15 @@ function SquarePageContent() {
                       <BookOpen size={20} weight="bold" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#234537] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] transition-colors">
                         Scripture & Devotion Reflection
                       </p>
-                      <p className="text-[10px] text-[#707070]">
+                      <p className="text-[10px] text-text-secondary">
                         Share an edifying verse reflection or study note.
                       </p>
                     </div>
                   </div>
-                  <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
               </div>
             ) : (
@@ -1524,8 +1524,8 @@ function SquarePageContent() {
 
                 {/* 4-Category Pill Switcher */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#707070] block">Category</label>
-                  <div className="grid grid-cols-4 gap-1 p-1 bg-white border border-[#E5E7EB] rounded-2xl">
+                  <label className="text-[11px] font-bold text-text-secondary block">Category</label>
+                  <div className="grid grid-cols-4 gap-1 p-1 bg-card border border-border rounded-2xl">
                     {[
                       { id: 'prayer', label: 'Prayer' },
                       { id: 'struggle', label: 'Struggle' },
@@ -1541,7 +1541,7 @@ function SquarePageContent() {
                           className={`py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all text-center ${
                             isSel
                               ? 'bg-[#0E0E0E] text-white shadow-xs'
-                              : 'text-[#707070] hover:text-[#0E0E0E] hover:bg-[#FAF6EE]'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-surface'
                           }`}
                         >
                           {cat.label}
@@ -1552,7 +1552,7 @@ function SquarePageContent() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-[#707070] block mb-1">
+                  <label className="text-[11px] font-bold text-text-secondary block mb-1">
                     Title (optional)
                   </label>
                   <input
@@ -1560,13 +1560,13 @@ function SquarePageContent() {
                     value={postTitle}
                     onChange={(e) => setPostTitle(e.target.value)}
                     placeholder="e.g. Medical exam tomorrow"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                    className="w-full px-3.5 py-2.5 bg-card border border-border rounded-xl text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold text-[#707070]">
+                    <label className="text-[11px] font-bold text-text-secondary">
                       {selectedIntent === 'prayer'
                         ? 'Prayer Request'
                         : selectedIntent === 'struggle'
@@ -1575,7 +1575,7 @@ function SquarePageContent() {
                     </label>
                     <span
                       className={`text-[10px] font-mono font-bold ${
-                        charsRemaining < 15 ? 'text-[#234537] font-black' : 'text-[#707070]'
+                        charsRemaining < 15 ? 'text-[#234537] font-black' : 'text-text-secondary'
                       }`}
                     >
                       {postContent.length}/{charLimit}
@@ -1594,7 +1594,7 @@ function SquarePageContent() {
                         ? 'What difficulty or challenge are you bringing before God and the church?'
                         : 'How has God moved in your life and answered prayer?'
                     }
-                    className="w-full p-3.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] transition-all resize-none shadow-sm font-normal"
+                    className="w-full p-3.5 bg-card border border-border rounded-2xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] transition-all resize-none shadow-sm font-normal"
                   />
                 </div>
 
@@ -1611,7 +1611,7 @@ function SquarePageContent() {
                       <button
                         type="button"
                         onClick={() => setAttachedScripture(null)}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-white/90 border border-[#E5E7EB] text-[#707070] hover:text-[#234537] transition-colors"
+                        className="absolute top-2 right-2 p-1 rounded-full bg-card/90 border border-border text-text-secondary hover:text-[#234537] transition-colors"
                         title="Remove scripture"
                       >
                         <X size={14} />
@@ -1621,7 +1621,7 @@ function SquarePageContent() {
                     <button
                       type="button"
                       onClick={() => setIsScripturePickerOpen(true)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#FBBF24] text-[#0E0E0E] font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                      className="w-full py-2.5 px-3 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
                     >
                       <BookOpen size={15} className="text-[#FBBF24]" weight="fill" />
                       <span>+ Attach Scripture Verse</span>
@@ -1629,10 +1629,10 @@ function SquarePageContent() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border shadow-xs">
                   <div>
-                    <span className="text-xs font-bold text-[#0E0E0E] block">Post Anonymously</span>
-                    <span className="text-[10px] text-[#707070]">Hides your name, avatar, and church</span>
+                    <span className="text-xs font-bold text-text-primary block">Post Anonymously</span>
+                    <span className="text-[10px] text-text-secondary">Hides your name, avatar, and church</span>
                   </div>
                   <button
                     type="button"
@@ -1644,7 +1644,7 @@ function SquarePageContent() {
                     }`}
                   >
                     <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                      className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
                         isAnonymous ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -1655,7 +1655,7 @@ function SquarePageContent() {
                   <button
                     type="button"
                     onClick={() => setComposeStep('intent')}
-                    className="py-3 px-4 rounded-xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#707070]"
+                    className="py-3 px-4 rounded-xl bg-card border border-border text-xs font-bold text-text-secondary"
                   >
                     Back
                   </button>
@@ -1694,15 +1694,15 @@ function SquarePageContent() {
       {/* Peer-to-Peer Connect Modal */}
       {connectModalPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserPlus size={16} className="text-[#FBBF24]" />
-                <h3 className="text-sm font-bold text-[#0E0E0E]">
+                <h3 className="text-sm font-bold text-text-primary">
                   Connect with {connectModalPost.authorName}
                 </h3>
               </div>
-              <button onClick={() => setConnectModalPost(null)} className="text-[#707070]">
+              <button onClick={() => setConnectModalPost(null)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
@@ -1715,8 +1715,8 @@ function SquarePageContent() {
             ) : (
               <form onSubmit={handleSendConnectRequest} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#707070]">Write an Initial Message (140 chars):</span>
-                  <span className="text-[10px] font-mono text-[#707070]">
+                  <span className="text-xs text-text-secondary">Write an Initial Message (140 chars):</span>
+                  <span className="text-[10px] font-mono text-text-secondary">
                     {140 - connectMessage.length} left
                   </span>
                 </div>
@@ -1728,7 +1728,7 @@ function SquarePageContent() {
                   value={connectMessage}
                   onChange={(e) => setConnectMessage(e.target.value)}
                   placeholder="I saw your prayer request about your family and wanted to reach out. Can we connect?"
-                  className="w-full p-3 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] resize-none shadow-sm"
+                  className="w-full p-3 bg-card border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] resize-none shadow-sm"
                 />
 
                 <button
@@ -1761,7 +1761,7 @@ export default function SquarePage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF6EE] flex items-center justify-center">
+        <div className="min-h-screen bg-surface flex items-center justify-center">
           <CircleNotch size={32} className="animate-spin text-[#234537]" />
         </div>
       }

@@ -69,7 +69,7 @@ export function TimerPill({ onEndSession }: TimerPillProps) {
         <button
           type="button"
           onClick={handleTogglePlay}
-          className="p-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors ml-0.5"
+          className="p-1 rounded-full text-white/80 hover:text-white hover:bg-card/10 transition-colors ml-0.5"
           title={isIdle ? 'Start Timer' : isRunning ? 'Pause' : 'Resume'}
         >
           {isRunning ? (

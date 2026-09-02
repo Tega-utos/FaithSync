@@ -290,13 +290,13 @@ export default function SyncPage() {
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-black text-[#0E0E0E] tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
           SynC
         </h1>
 
         <Link
           href="/find-buddy"
-          className="p-2 rounded-xl bg-white border border-[#E5E7EB] text-[#0E0E0E] text-xs font-bold shadow-sm hover:border-[#FBBF24] transition-all flex items-center gap-1.5"
+          className="p-2 rounded-xl bg-card border border-border text-text-primary text-xs font-bold shadow-sm hover:border-[#FBBF24] transition-all flex items-center gap-1.5"
         >
           <UserPlus size={14} className="text-[#FBBF24]" />
           <span>Add Buddy</span>
@@ -304,7 +304,7 @@ export default function SyncPage() {
       </div>
 
       {/* 3-Segment Toggle Navigation Bar */}
-      <div className="p-1 rounded-2xl bg-[#F3F4F6]/60 border border-[#E5E7EB] grid grid-cols-3 gap-1">
+      <div className="p-1 rounded-2xl bg-subtle/60 border border-border grid grid-cols-3 gap-1">
         {/* Personal Tab */}
         <button
           type="button"
@@ -312,7 +312,7 @@ export default function SyncPage() {
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
             activeTab === 'personal'
               ? 'bg-[#0E0E0E] text-white shadow-md'
-              : 'text-[#707070] hover:text-[#0E0E0E]'
+              : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           Personal
@@ -325,7 +325,7 @@ export default function SyncPage() {
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
             activeTab === 'group'
               ? 'bg-[#0E0E0E] text-white shadow-md'
-              : 'text-[#707070] hover:text-[#0E0E0E]'
+              : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           Groups
@@ -335,7 +335,7 @@ export default function SyncPage() {
         <button
           type="button"
           onClick={() => router.push('/square')}
-          className="py-2 px-3 rounded-xl font-bold text-xs text-[#707070] hover:text-[#0E0E0E] transition-all flex items-center justify-center gap-1"
+          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary hover:text-text-primary transition-all flex items-center justify-center gap-1"
         >
           <span>Square</span>
           <Globe size={12} className="text-[#FBBF24]" />
@@ -348,7 +348,7 @@ export default function SyncPage() {
           {/* Incoming Requests */}
           {incomingRequests.length > 0 && (
             <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                 Incoming Requests ({incomingRequests.length})
               </span>
               <div className="space-y-2">
@@ -365,10 +365,10 @@ export default function SyncPage() {
                         {req.senderInitial}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors truncate">
-                          {req.senderName} <span className="text-[10px] font-normal text-[#707070] underline ml-1">Preview Profile</span>
+                        <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                          {req.senderName} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview Profile</span>
                         </p>
-                        <p className="text-[10px] text-[#707070] truncate">{req.senderChurch}</p>
+                        <p className="text-[10px] text-text-secondary truncate">{req.senderChurch}</p>
                       </div>
                     </Link>
 
@@ -383,7 +383,7 @@ export default function SyncPage() {
                       <button
                         type="button"
                         onClick={() => handleIgnoreRequest(req.id)}
-                        className="bg-white border border-[#E5E7EB] text-[#707070] py-1.5 px-2.5 rounded-xl font-bold text-xs hover:border-[#EA2C26] hover:text-[#EA2C26]"
+                        className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:border-[#EA2C26] hover:text-[#EA2C26]"
                       >
                         Ignore
                       </button>
@@ -397,22 +397,22 @@ export default function SyncPage() {
           {/* Buddies List */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                 Active Accountability Buddies
               </span>
-              <span className="text-[10px] font-mono text-[#707070]">{buddies.length} Buddies</span>
+              <span className="text-[10px] font-mono text-text-secondary">{buddies.length} Buddies</span>
             </div>
 
             {loading ? (
-              <div className="py-12 text-center text-xs text-[#707070]">Loading buddies...</div>
+              <div className="py-12 text-center text-xs text-text-secondary">Loading buddies...</div>
             ) : buddies.length === 0 ? (
               <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/35 flex items-center justify-center">
                   <Users size={24} />
                 </div>
                 <div className="space-y-1 max-w-xs">
-                  <h3 className="text-xs font-bold text-[#0E0E0E]">Find an accountability buddy</h3>
-                  <p className="text-[11px] text-[#707070] leading-relaxed">
+                  <h3 className="text-xs font-bold text-text-primary">Find an accountability buddy</h3>
+                  <p className="text-[11px] text-text-secondary leading-relaxed">
                     Connect with believers to encourage daily prayer and scripture study.
                   </p>
                 </div>
@@ -428,12 +428,12 @@ export default function SyncPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="faith-card divide-y divide-[#F3F4F6] overflow-hidden">
+                <div className="faith-card divide-y divide-border-light overflow-hidden">
                   {buddies.map((buddy) => (
                     <Link
                       key={buddy.id}
                       href={`/buddy-chat/${buddy.id}`}
-                      className="p-3.5 flex items-center justify-between hover:bg-[#FAF6EE] transition-colors block group"
+                      className="p-3.5 flex items-center justify-between hover:bg-surface transition-colors block group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
@@ -447,18 +447,18 @@ export default function SyncPage() {
 
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
+                            <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors">
                               {buddy.name}
                             </p>
-                            <span className="text-[9px] text-[#9095A1] font-mono">{buddy.lastActive}</span>
+                            <span className="text-[9px] text-text-muted font-mono">{buddy.lastActive}</span>
                           </div>
-                          <p className="text-[11px] text-[#707070] truncate max-w-[200px] sm:max-w-xs">
+                          <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs">
                             {buddy.lastMessage}
                           </p>
                         </div>
                       </div>
 
-                      <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform" />
+                      <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                   ))}
                 </div>
@@ -475,7 +475,7 @@ export default function SyncPage() {
 
           {/* Square Activity Section */}
           <div className="space-y-2 pt-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
               Square Connection Activity
             </span>
 
@@ -488,13 +488,13 @@ export default function SyncPage() {
                         {sq.targetInitial}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-[#0E0E0E]">{sq.targetName}</p>
-                        <p className="text-[9px] text-[#707070] font-mono">{sq.timeAgo}</p>
+                        <p className="text-xs font-bold text-text-primary">{sq.targetName}</p>
+                        <p className="text-[9px] text-text-secondary font-mono">{sq.timeAgo}</p>
                       </div>
                     </div>
 
                     {sq.type === 'outgoing' ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6EE] text-[#707070] border border-[#E5E7EB] text-[10px] font-bold">
+                      <span className="px-2.5 py-0.5 rounded-full bg-surface text-text-secondary border border-border text-[10px] font-bold">
                         Awaiting Response
                       </span>
                     ) : (
@@ -522,7 +522,7 @@ export default function SyncPage() {
                             } catch {}
                             setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
                           }}
-                          className="px-2 py-1 bg-white border border-[#E5E7EB] text-[#707070] rounded-lg text-xs font-bold hover:text-[#EA2C26]"
+                          className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26]"
                         >
                           Decline
                         </button>
@@ -531,7 +531,7 @@ export default function SyncPage() {
                   </div>
 
                   {sq.introMessage && (
-                    <div className="p-2.5 bg-[#FAF6EE] border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] italic flex items-start gap-2">
+                    <div className="p-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary italic flex items-start gap-2">
                       <Quotes size={14} className="text-[#FBBF24] shrink-0 mt-0.5" />
                       <span>&ldquo;{sq.introMessage}&rdquo;</span>
                     </div>
@@ -563,7 +563,7 @@ export default function SyncPage() {
             <button
               type="button"
               onClick={() => setIsJoinGroupOpen(true)}
-              className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] text-[#0E0E0E] flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] hover:bg-[#FAF6EE] transition-all cursor-pointer"
+              className="p-3.5 rounded-2xl bg-card border border-border text-text-primary flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] hover:bg-surface transition-all cursor-pointer"
             >
               <Users size={16} className="text-[#FBBF24]" />
               <span>Join with Code</span>
@@ -571,19 +571,19 @@ export default function SyncPage() {
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
               My Groups ({groups.length})
             </span>
           </div>
 
           <div className="space-y-3">
             {groups.length === 0 ? (
-              <div className="faith-card p-6 text-center space-y-2.5 bg-[#FAF6EE] border border-[#E5E7EB]">
+              <div className="faith-card p-6 text-center space-y-2.5 bg-surface border border-border">
                 <div className="w-10 h-10 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
                   <Users size={20} />
                 </div>
-                <p className="text-xs font-bold text-[#0E0E0E]">No groups joined yet</p>
-                <p className="text-[11px] text-[#707070] max-w-xs mx-auto">
+                <p className="text-xs font-bold text-text-primary">No groups joined yet</p>
+                <p className="text-[11px] text-text-secondary max-w-xs mx-auto">
                   Start an accountability circle for your Bible study, youth group, or ministry!
                 </p>
               </div>
@@ -597,7 +597,7 @@ export default function SyncPage() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
+                        <h3 className="text-sm font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors">
                           {group.name}
                         </h3>
                         {group.isLive && (
@@ -607,7 +607,7 @@ export default function SyncPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-[#707070]">
+                      <p className="text-[10px] text-text-secondary">
                         {group.category} • {group.church}
                       </p>
                     </div>
@@ -617,17 +617,17 @@ export default function SyncPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#F3F4F6]">
+                  <div className="flex items-center justify-between pt-3 mt-2 border-t border-border-light">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-[#0E0E0E] text-[#FBBF24] text-[10px] font-black flex items-center justify-center border border-white shadow-xs">
                         {group.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-[10px] text-[#707070] font-medium">
+                      <span className="text-[10px] text-text-secondary font-medium">
                         {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
                       </span>
                     </div>
 
-                    <CaretRight size={16} className="text-[#707070] group-hover:translate-x-0.5 transition-transform" />
+                    <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </Link>
               ))
@@ -639,10 +639,10 @@ export default function SyncPage() {
       {/* Modal 1: Add Buddy by Code */}
       {isAddBuddyOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Add Partner by Code</h3>
-              <button onClick={() => setIsAddBuddyOpen(false)} className="text-[#707070]">
+              <h3 className="text-sm font-bold text-text-primary">Add Partner by Code</h3>
+              <button onClick={() => setIsAddBuddyOpen(false)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
@@ -702,7 +702,7 @@ export default function SyncPage() {
               }}
               className="space-y-3"
             >
-              <p className="text-xs text-[#707070]">
+              <p className="text-xs text-text-secondary">
                 Enter your friend’s unique 6-character Buddy Code (e.g. SYNC26) to send an invite.
               </p>
 
@@ -722,7 +722,7 @@ export default function SyncPage() {
                   setBuddyCodeError(null)
                 }}
                 placeholder="e.g. SYNC26"
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl text-center font-mono font-black text-sm uppercase tracking-widest text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                className="w-full px-4 py-3 bg-card border border-border rounded-xl text-center font-mono font-black text-sm uppercase tracking-widest text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
               />
 
               <button
@@ -749,12 +749,12 @@ export default function SyncPage() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="fixed inset-0" onClick={() => setIsCreateGroupOpen(false)} />
 
-          <div className="relative z-10 w-full max-w-md bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
-              <h3 className="text-sm font-black text-[#0E0E0E]">
+          <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-black text-text-primary">
                 {createGroupStep === 'form' ? 'Create New Group' : 'Group Created! 🎉'}
               </h3>
-              <button onClick={() => setIsCreateGroupOpen(false)} className="text-[#707070] hover:text-[#0E0E0E]">
+              <button onClick={() => setIsCreateGroupOpen(false)} className="text-text-secondary hover:text-text-primary">
                 <X size={20} />
               </button>
             </div>
@@ -775,7 +775,7 @@ export default function SyncPage() {
                     </div>
                     <label
                       htmlFor="group-avatar-input"
-                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#FBBF24] text-[#0E0E0E] flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-transform"
+                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#FBBF24] text-text-primary flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-transform"
                       title="Upload group picture"
                     >
                       <Camera size={13} weight="bold" />
@@ -788,12 +788,12 @@ export default function SyncPage() {
                       onChange={() => alert('Profile picture selected from camera roll!')}
                     />
                   </div>
-                  <span className="text-[10px] text-[#707070] font-medium">Group Profile Picture</span>
+                  <span className="text-[10px] text-text-secondary font-medium">Group Profile Picture</span>
                 </div>
 
                 {/* 2. Group Name */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#707070] block mb-1">Group Name</label>
+                  <label className="text-[11px] font-bold text-text-secondary block mb-1">Group Name</label>
                   <input
                     type="text"
                     required
@@ -803,18 +803,18 @@ export default function SyncPage() {
                       setCreateGroupError(null)
                     }}
                     placeholder="e.g. Friday Morning Bible Study"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-xs"
+                    className="w-full px-3.5 py-2.5 bg-card border border-border rounded-xl text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-xs"
                   />
                 </div>
 
                 {/* 3. Category & Local Assembly */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-[#707070] block mb-1">Category</label>
+                    <label className="text-[11px] font-bold text-text-secondary block mb-1">Category</label>
                     <select
                       value={newGroupCategory}
                       onChange={(e) => setNewGroupCategory(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs font-bold text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-xs cursor-pointer"
+                      className="w-full px-3 py-2.5 bg-card border border-border rounded-xl text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-xs cursor-pointer"
                     >
                       <option value="Youth">Youth</option>
                       <option value="Men's Ministry">Men&apos;s Ministry</option>
@@ -827,23 +827,23 @@ export default function SyncPage() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-[#707070] block mb-1">Local Assembly</label>
+                    <label className="text-[11px] font-bold text-text-secondary block mb-1">Local Assembly</label>
                     <div className="relative">
                       <input
                         type="text"
                         value={newGroupChurch}
                         onChange={(e) => setNewGroupChurch(e.target.value)}
                         placeholder="e.g. Elevation Church"
-                        className="w-full pl-8 pr-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-xs"
+                        className="w-full pl-8 pr-3 py-2.5 bg-card border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-xs"
                       />
-                      <Church size={14} className="absolute left-2.5 top-3 text-[#9095A1]" />
+                      <Church size={14} className="absolute left-2.5 top-3 text-text-muted" />
                     </div>
                   </div>
                 </div>
 
                 {/* 4. Group Guidelines (Ethos) */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#707070] block mb-1">
+                  <label className="text-[11px] font-bold text-text-secondary block mb-1">
                     Group Guidelines (Optional)
                   </label>
                   <textarea
@@ -851,18 +851,18 @@ export default function SyncPage() {
                     value={newGroupRules}
                     onChange={(e) => setNewGroupRules(e.target.value)}
                     placeholder="Keep conversations uplifting. Clock in at least once a week."
-                    className="w-full px-3.5 py-2 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] resize-none shadow-xs"
+                    className="w-full px-3.5 py-2 bg-card border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] resize-none shadow-xs"
                   />
                 </div>
 
                 {/* 5. Private Group Toggle */}
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border shadow-xs">
                   <div className="space-y-0.5 max-w-[80%]">
                     <div className="flex items-center gap-1.5">
                       <Lock size={14} className="text-[#FBBF24]" />
-                      <p className="text-xs font-bold text-[#0E0E0E]">Private Group</p>
+                      <p className="text-xs font-bold text-text-primary">Private Group</p>
                     </div>
-                    <p className="text-[10px] text-[#707070] leading-tight">
+                    <p className="text-[10px] text-text-secondary leading-tight">
                       Hidden from public directory. Strictly invite-only.
                     </p>
                   </div>
@@ -875,7 +875,7 @@ export default function SyncPage() {
                     }`}
                   >
                     <div
-                      className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                      className={`w-5 h-5 rounded-full bg-card transition-transform ${
                         newGroupIsPrivate ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -907,8 +907,8 @@ export default function SyncPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="text-base font-black text-[#0E0E0E]">{newGroupName}</h4>
-                  <p className="text-xs text-[#707070] max-w-xs mx-auto">
+                  <h4 className="text-base font-black text-text-primary">{newGroupName}</h4>
+                  <p className="text-xs text-text-secondary max-w-xs mx-auto">
                     Your group is live! Share this unique Invite Code with members to join:
                   </p>
                 </div>
@@ -916,9 +916,9 @@ export default function SyncPage() {
                 {/* Massive Spaced-out Code in Dashed Box */}
                 <div
                   onClick={handleCopyInviteCode}
-                  className="p-5 rounded-3xl bg-white border-2 border-dashed border-[#FBBF24] cursor-pointer hover:bg-[#FDF9F1] transition-all group shadow-sm"
+                  className="p-5 rounded-3xl bg-card border-2 border-dashed border-[#FBBF24] cursor-pointer hover:bg-[#FDF9F1] transition-all group shadow-sm"
                 >
-                  <p className="text-2xl sm:text-3xl font-black font-mono tracking-[0.35em] text-[#0E0E0E]">
+                  <p className="text-2xl sm:text-3xl font-black font-mono tracking-[0.35em] text-text-primary">
                     {createdInviteCode.split('').join(' ')}
                   </p>
                   <p className="text-[10px] text-[#FBBF24] font-bold mt-2 flex items-center justify-center gap-1">
@@ -944,7 +944,7 @@ export default function SyncPage() {
                       setIsCreateGroupOpen(false)
                       router.push(`/group-info/${createdGroupId || 'new'}`)
                     }}
-                    className="py-3 px-3 rounded-2xl bg-white border border-[#E5E7EB] text-xs font-bold text-[#0E0E0E] hover:bg-[#FAF6EE] transition-colors"
+                    className="py-3 px-3 rounded-2xl bg-card border border-border text-xs font-bold text-text-primary hover:bg-surface transition-colors"
                   >
                     View Group Info
                   </button>
@@ -969,16 +969,16 @@ export default function SyncPage() {
       {isJoinGroupOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="fixed inset-0" onClick={() => setIsJoinGroupOpen(false)} />
-          <div className="relative z-10 w-full max-w-sm bg-[#FAF6EE] border border-[#E5E7EB] rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+          <div className="relative z-10 w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#0E0E0E]">Join Group with Code</h3>
-              <button onClick={() => setIsJoinGroupOpen(false)} className="text-[#707070]">
+              <h3 className="text-sm font-bold text-text-primary">Join Group with Code</h3>
+              <button onClick={() => setIsJoinGroupOpen(false)} className="text-text-secondary">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleJoinWithCode} className="space-y-3">
-              <p className="text-xs text-[#707070]">
+              <p className="text-xs text-text-secondary">
                 Enter the invite code provided by your group leader.
               </p>
 
@@ -995,7 +995,7 @@ export default function SyncPage() {
                 value={joinCodeInput}
                 onChange={(e) => setJoinCodeInput(e.target.value)}
                 placeholder="SYNC-XXXXXX"
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl text-center font-mono font-black text-sm uppercase tracking-widest text-[#0E0E0E] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                className="w-full px-4 py-3 bg-card border border-border rounded-xl text-center font-mono font-black text-sm uppercase tracking-widest text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
               />
 
               <button

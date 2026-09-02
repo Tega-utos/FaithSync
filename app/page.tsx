@@ -46,11 +46,11 @@ export default function SplashPage() {
   }, [router])
 
   return (
-    <div className="bg-white min-h-screen min-h-[100dvh] h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col items-center justify-center relative overflow-hidden select-none">
+    <div className="bg-card min-h-screen min-h-[100dvh] h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col items-center justify-center relative overflow-hidden select-none">
       {/* Dead-Center Primary Logo with 1s fadeInScale Animation */}
       <div className="flex flex-col items-center justify-center space-y-3 animate-fade-in-scale">
         <Logo height={48} priority />
-        <p className="text-[11px] font-bold text-[#707070] tracking-widest uppercase">
+        <p className="text-[11px] font-bold text-text-secondary tracking-widest uppercase">
           Walk in Step
         </p>
       </div>

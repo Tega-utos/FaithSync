@@ -40,7 +40,7 @@ export function AuthCard({
 
       {/* 2. Glassmorphic Beige Modal Card */}
       <div
-        className={`relative z-10 w-full bg-[#FAF6EE] rounded-t-[32px] p-6 sm:p-7 shadow-[0_-10px_40px_rgba(0,0,0,0.35)] border-t border-white/60 animate-slide-up space-y-4 ${className}`}
+        className={`relative z-10 w-full bg-surface rounded-t-[32px] p-6 sm:p-7 shadow-[0_-10px_40px_rgba(0,0,0,0.35)] border-t border-white/60 animate-slide-up space-y-4 ${className}`}
       >
         {/* Absolute Anchored Close Button (Top-Right) */}
         {showClose && (
@@ -49,7 +49,7 @@ export function AuthCard({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-[#707070] hover:text-[#0E0E0E] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <X size={16} weight="bold" />
@@ -57,7 +57,7 @@ export function AuthCard({
             ) : (
               <Link
                 href={closeHref}
-                className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-[#707070] hover:text-[#0E0E0E] transition-colors"
+                className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
                 aria-label="Close"
               >
                 <X size={16} weight="bold" />
@@ -70,7 +70,7 @@ export function AuthCard({
         <div className="flex flex-col items-center justify-center text-center pt-1 pb-0.5 space-y-1.5">
           <Logo height={32} priority />
           {subtitle && (
-            <p className="text-xs font-bold text-[#707070] tracking-tight">
+            <p className="text-xs font-bold text-text-secondary tracking-tight">
               {subtitle}
             </p>
           )}

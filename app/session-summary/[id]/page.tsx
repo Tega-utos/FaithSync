@@ -131,17 +131,17 @@ export default function SessionSummaryPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-4 pb-28 min-h-[92vh] space-y-6">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 flex items-center gap-1 text-xs font-bold"
+          className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 flex items-center gap-1 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Home</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E]">Session Summary</h1>
+        <h1 className="text-sm font-extrabold text-text-primary">Session Summary</h1>
         <div className="w-8" />
       </div>
 
@@ -151,17 +151,17 @@ export default function SessionSummaryPage() {
           <Check size={28} weight="bold" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-xl font-black text-[#0E0E0E] tracking-tight">Session Logged!</h2>
-          <p className="text-xs text-[#707070]">
+          <h2 className="text-xl font-black text-text-primary tracking-tight">Session Logged!</h2>
+          <p className="text-xs text-text-secondary">
             Your time has been recorded to your daily accountability ledger.
           </p>
         </div>
       </div>
 
       {/* Session Receipt Card */}
-      <div className="faith-card p-6 space-y-5 bg-[#FAF6EE] border border-[#E5E7EB] shadow-lg">
+      <div className="faith-card p-6 space-y-5 bg-surface border border-border shadow-lg">
         {/* Receipt Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center gap-2">
             {session.type === 'prayer' ? (
               <div className="w-9 h-9 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/30 flex items-center justify-center font-bold">
@@ -173,12 +173,12 @@ export default function SessionSummaryPage() {
               </div>
             )}
             <div>
-              <h3 className="text-sm font-bold text-[#0E0E0E] capitalize">{session.type} Session</h3>
-              <p className="text-[10px] text-[#707070]">Official Proof of Devotion</p>
+              <h3 className="text-sm font-bold text-text-primary capitalize">{session.type} Session</h3>
+              <p className="text-[10px] text-text-secondary">Official Proof of Devotion</p>
             </div>
           </div>
 
-          <span className="text-base font-black font-mono text-[#FBBF24] bg-white px-3 py-1 rounded-xl border border-[#E5E7EB]">
+          <span className="text-base font-black font-mono text-[#FBBF24] bg-card px-3 py-1 rounded-xl border border-border">
             {formattedDuration}
           </span>
         </div>
@@ -186,10 +186,10 @@ export default function SessionSummaryPage() {
         {/* Focus / Reflection Text */}
         {session.reflection && (
           <div className="space-y-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] flex items-center gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
               <Quotes size={14} className="text-[#FBBF24]" /> Your Reflection (Private)
             </span>
-            <div className="p-3.5 bg-white rounded-2xl border-l-4 border-[#234537] text-xs text-[#0E0E0E] italic leading-relaxed shadow-sm">
+            <div className="p-3.5 bg-card rounded-2xl border-l-4 border-[#234537] text-xs text-text-primary italic leading-relaxed shadow-sm">
               &ldquo;{session.reflection}&rdquo;
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function SessionSummaryPage() {
 
         {/* Scripture Reference */}
         {session.verse_reference && (
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FBBF24] bg-white px-3 py-1 rounded-xl border border-[#E5E7EB]">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FBBF24] bg-card px-3 py-1 rounded-xl border border-border">
             <BookOpen size={14} />
             <span>{session.verse_reference}</span>
           </div>
@@ -205,9 +205,9 @@ export default function SessionSummaryPage() {
 
         {/* Used Timeline Segments */}
         {Array.isArray(session.focus_timeline) && session.focus_timeline.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-[#E5E7EB]">
+          <div className="space-y-2 pt-2 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#707070] flex items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
                 <Clock size={13} className="text-[#FBBF24]" />
                 Prayer Focus Timeline ({session.focus_timeline.length} Segments)
               </span>
@@ -216,22 +216,22 @@ export default function SessionSummaryPage() {
               </span>
             </div>
 
-            <div className="space-y-2 pl-2 border-l-2 border-[#E5E7EB]">
+            <div className="space-y-2 pl-2 border-l-2 border-border">
               {session.focus_timeline.map((seg, idx) => (
                 <div
                   key={seg.id || idx}
-                  className="p-3 rounded-xl bg-white border border-[#E5E7EB] space-y-1 text-xs shadow-xs"
+                  className="p-3 rounded-xl bg-card border border-border space-y-1 text-xs shadow-xs"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold">
                       {seg.type === 'scripture' ? (
                         <>
                           <BookOpen size={14} className="text-[#FBBF24]" weight="fill" />
-                          <span className="text-[#0E0E0E] text-xs">
+                          <span className="text-text-primary text-xs">
                             {seg.reference || 'Scripture Passage'}
                           </span>
                           {seg.versionId && (
-                            <span className="text-[9px] font-mono uppercase bg-[#F3F4F6] text-[#707070] px-1.5 py-0.5 rounded">
+                            <span className="text-[9px] font-mono uppercase bg-subtle text-text-secondary px-1.5 py-0.5 rounded">
                               {seg.versionId}
                             </span>
                           )}
@@ -239,23 +239,23 @@ export default function SessionSummaryPage() {
                       ) : (
                         <>
                           <Sparkle size={14} className="text-rose-500" weight="fill" />
-                          <span className="text-[#0E0E0E] text-xs">Reflection Prompt</span>
+                          <span className="text-text-primary text-xs">Reflection Prompt</span>
                         </>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-[#707070] font-semibold">
+                    <span className="text-[10px] font-mono text-text-secondary font-semibold">
                       {seg.durationMinutes || 1} min
                     </span>
                   </div>
 
                   {seg.type === 'scripture' && seg.verseText && (
-                    <p className="text-xs text-[#707070] italic leading-snug">
+                    <p className="text-xs text-text-secondary italic leading-snug">
                       &ldquo;{seg.verseText}&rdquo;
                     </p>
                   )}
 
                   {seg.type === 'reflection' && seg.prompt && (
-                    <p className="text-xs text-[#0E0E0E] italic leading-snug">
+                    <p className="text-xs text-text-primary italic leading-snug">
                       &ldquo;{seg.prompt}&rdquo;
                     </p>
                   )}
@@ -267,13 +267,13 @@ export default function SessionSummaryPage() {
       </div>
 
       {/* Privacy-First Reflection Sharing Toggle (Only active if unlocked) */}
-      <div className={`faith-card p-4 space-y-2 border border-[#E5E7EB] transition-opacity ${
-        isBothComplete ? 'bg-[#FDF9F1]' : 'bg-[#F9FAFB] opacity-60'
+      <div className={`faith-card p-4 space-y-2 border border-border transition-opacity ${
+        isBothComplete ? 'bg-[#FDF9F1]' : 'bg-card-hover opacity-60'
       }`}>
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <p className="text-xs font-bold text-[#0E0E0E]">Include personal reflection on Square</p>
-            <p className="text-[10px] text-[#707070]">Default is OFF — share consistency stats only</p>
+            <p className="text-xs font-bold text-text-primary">Include personal reflection on Square</p>
+            <p className="text-[10px] text-text-secondary">Default is OFF — share consistency stats only</p>
           </div>
 
           <input
@@ -285,7 +285,7 @@ export default function SessionSummaryPage() {
           />
         </div>
 
-        <div className="pt-2 border-t border-[#E5E7EB]/60 flex items-center gap-1.5 text-[10px] text-[#9095A1]">
+        <div className="pt-2 border-t border-border/60 flex items-center gap-1.5 text-[10px] text-text-muted">
           <Lock size={12} className="text-[#FBBF24]" />
           <span>Your personal reflection notes remain completely confidential unless toggled on.</span>
         </div>
@@ -293,13 +293,13 @@ export default function SessionSummaryPage() {
 
       {/* Target Lock Notice */}
       {!isBothComplete && (
-        <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center gap-3 text-xs text-[#0E0E0E] shadow-xs">
-          <div className="w-8 h-8 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center text-[#707070] shrink-0">
+        <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center gap-3 text-xs text-text-primary shadow-xs">
+          <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-text-secondary shrink-0">
             <Lock size={16} />
           </div>
           <div className="space-y-0.5">
-            <p className="font-bold text-[#0E0E0E]">Sharing Locked</p>
-            <p className="text-[11px] text-[#707070]">
+            <p className="font-bold text-text-primary">Sharing Locked</p>
+            <p className="text-[11px] text-text-secondary">
               Complete both daily targets to unlock sharing: {todayPrayerMins}/{prayerTarget}m Prayer, {todayStudyMins}/{studyTarget}m Study.
             </p>
           </div>
@@ -314,7 +314,7 @@ export default function SessionSummaryPage() {
           disabled={!isBothComplete || sharing}
           className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
             !isBothComplete
-              ? 'bg-[#E5E7EB] text-[#9095A1] cursor-not-allowed shadow-none'
+              ? 'bg-[#E5E7EB] text-text-muted cursor-not-allowed shadow-none'
               : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95 cursor-pointer shadow-black/15'
           }`}
         >
@@ -325,7 +325,7 @@ export default function SessionSummaryPage() {
             </>
           ) : !isBothComplete ? (
             <>
-              <Lock size={18} className="text-[#9095A1]" />
+              <Lock size={18} className="text-text-muted" />
               <span>Complete Both Targets to Share</span>
             </>
           ) : (
@@ -339,9 +339,9 @@ export default function SessionSummaryPage() {
         <Link href="/" className="block">
           <button
             type="button"
-            className="w-full bg-white border border-[#E5E7EB] text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs hover:bg-[#FAF6EE] transition-all flex items-center justify-center gap-2 shadow-2xs"
+            className="w-full bg-card border border-border text-text-primary py-3.5 rounded-2xl font-bold text-xs hover:bg-surface transition-all flex items-center justify-center gap-2 shadow-2xs"
           >
-            <House size={16} className="text-[#707070]" />
+            <House size={16} className="text-text-secondary" />
             <span>Back to Dashboard</span>
           </button>
         </Link>

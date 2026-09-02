@@ -51,9 +51,9 @@ export default function ForgotPasswordPage() {
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-black text-[#0E0E0E]">Password Reset Link Sent</h3>
-            <p className="text-xs text-[#707070] leading-relaxed max-w-xs mx-auto">
-              If an account exists for <span className="font-bold text-[#0E0E0E]">{email}</span>, you will receive an email with instructions to securely reset your password.
+            <h3 className="text-base font-black text-text-primary">Password Reset Link Sent</h3>
+            <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
+              If an account exists for <span className="font-bold text-text-primary">{email}</span>, you will receive an email with instructions to securely reset your password.
             </p>
           </div>
 
@@ -61,13 +61,13 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => setSubmitted(false)}
-              className="w-full py-3.5 px-6 rounded-2xl bg-white border border-[#E5E7EB] hover:bg-[#FDF9F1] font-bold text-xs text-[#0E0E0E] shadow-2xs transition-all cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] font-bold text-xs text-text-primary shadow-2xs transition-all cursor-pointer"
             >
               Try another email
             </button>
             <Link
               href="/login"
-              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors"
+              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
             >
               Return to Sign In
             </Link>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
         </div>
       )}
 
-      <p className="text-xs text-[#707070] leading-relaxed">
+      <p className="text-xs text-text-secondary leading-relaxed">
         Enter the email address associated with your account and we will send you a secure link to reset your password.
       </p>
 
@@ -107,11 +107,11 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
         >
           {loading ? (
             <>
-              <CircleNotch size={18} className="animate-spin text-[#0E0E0E]" />
+              <CircleNotch size={18} className="animate-spin text-text-primary" />
               <span>Sending Link...</span>
             </>
           ) : (
@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center pt-1 pb-1">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
         >
           <ArrowLeft size={14} />
           <span>Back to Sign In</span>

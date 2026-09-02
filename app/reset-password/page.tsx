@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
       <AuthCard subtitle="Verifying Reset Link" closeHref="/login">
         <div className="py-12 flex flex-col items-center justify-center space-y-3 text-center">
           <CircleNotch size={28} className="animate-spin text-[#FBBF24]" />
-          <p className="text-xs font-bold text-[#707070]">Verifying recovery link...</p>
+          <p className="text-xs font-bold text-text-secondary">Verifying recovery link...</p>
         </div>
       </AuthCard>
     )
@@ -132,8 +132,8 @@ export default function ResetPasswordPage() {
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-black text-[#0E0E0E]">Password Reset Complete</h3>
-            <p className="text-xs text-[#707070] leading-relaxed max-w-xs mx-auto">
+            <h3 className="text-base font-black text-text-primary">Password Reset Complete</h3>
+            <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
               Your password has been successfully updated. You can now sign in with your new credentials.
             </p>
           </div>
@@ -141,7 +141,7 @@ export default function ResetPasswordPage() {
           <div className="pt-2">
             <Link
               href="/login"
-              className="inline-block w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all text-center"
+              className="inline-block w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all text-center"
             >
               Sign In Now
             </Link>
@@ -160,8 +160,8 @@ export default function ResetPasswordPage() {
             <WarningCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-black text-[#0E0E0E]">Reset Link Expired</h3>
-            <p className="text-xs text-[#707070] leading-relaxed max-w-xs mx-auto">
+            <h3 className="text-base font-black text-text-primary">Reset Link Expired</h3>
+            <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
               This password recovery link is invalid or has expired. Please request a new link.
             </p>
           </div>
@@ -169,13 +169,13 @@ export default function ResetPasswordPage() {
           <div className="pt-2 space-y-2">
             <Link
               href="/forgot-password"
-              className="inline-block w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-xs shadow-sm hover:bg-[#f5b318] transition-all text-center"
+              className="inline-block w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-xs shadow-sm hover:bg-[#f5b318] transition-all text-center"
             >
               Request New Link
             </Link>
             <Link
               href="/login"
-              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors"
+              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
             >
               Back to Sign In
             </Link>
@@ -196,7 +196,7 @@ export default function ResetPasswordPage() {
         </div>
       )}
 
-      <p className="text-xs text-[#707070] leading-relaxed">
+      <p className="text-xs text-text-secondary leading-relaxed">
         Choose a secure new password with at least 6 characters.
       </p>
 
@@ -228,11 +228,11 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
+          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
         >
           {loading ? (
             <>
-              <CircleNotch size={18} className="animate-spin text-[#0E0E0E]" />
+              <CircleNotch size={18} className="animate-spin text-text-primary" />
               <span>Updating Password...</span>
             </>
           ) : (

@@ -123,7 +123,7 @@ export default function LoginPage() {
           <div className="flex justify-end pt-0.5">
             <Link
               href="/forgot-password"
-              className="text-[11px] font-bold text-[#707070] hover:text-[#0E0E0E] transition-colors"
+              className="text-[11px] font-bold text-text-secondary hover:text-text-primary transition-colors"
             >
               Forgot password?
             </Link>
@@ -134,11 +134,11 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading || googleLoading}
-          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-[#0E0E0E] font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-1"
+          className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-1"
         >
           {loading ? (
             <>
-              <CircleNotch size={18} className="animate-spin text-[#0E0E0E]" />
+              <CircleNotch size={18} className="animate-spin text-text-primary" />
               <span>Signing In...</span>
             </>
           ) : (
@@ -149,8 +149,8 @@ export default function LoginPage() {
 
       {/* Dashed Divider */}
       <div className="relative flex items-center justify-center my-1">
-        <div className="border-t-2 border-dashed border-[#E5E7EB] w-full" />
-        <span className="bg-[#FAF6EE] px-3 text-[11px] font-bold text-[#707070] uppercase tracking-wider shrink-0">
+        <div className="border-t-2 border-dashed border-border w-full" />
+        <span className="bg-surface px-3 text-[11px] font-bold text-text-secondary uppercase tracking-wider shrink-0">
           or continue with
         </span>
       </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-white border border-[#E5E7EB] hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-[#0E0E0E] cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />
@@ -189,11 +189,11 @@ export default function LoginPage() {
 
       {/* Switch to Register */}
       <div className="text-center pt-1 pb-1">
-        <p className="text-xs text-[#707070] font-medium">
+        <p className="text-xs text-text-secondary font-medium">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="font-bold text-[#0E0E0E] hover:underline"
+            className="font-bold text-text-primary hover:underline"
           >
             Create one
           </Link>

@@ -15,9 +15,9 @@ export function OnboardingProgress({
 
   return (
     <div className="w-full space-y-2 select-none">
-      <div className="flex items-center justify-between text-[11px] font-bold text-[#707070]">
+      <div className="flex items-center justify-between text-[11px] font-bold text-text-secondary">
         <span className="uppercase tracking-wider text-[10px]">Step {currentStep} of {totalSteps}</span>
-        <span className="font-mono-tabular text-[#0E0E0E]">{percentage}% Complete</span>
+        <span className="font-mono-tabular text-text-primary">{percentage}% Complete</span>
       </div>
 
       <div className="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">

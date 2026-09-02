@@ -10,6 +10,7 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { shouldShowAppShell } from '@/lib/navigation/shellVisibility'
 import { Logo } from '@/components/Logo'
 import { calculateUserStreak } from '@/lib/utils/streak'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 export function Header() {
   const pathname = usePathname()
@@ -65,7 +66,7 @@ export function Header() {
     'M'
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#FAF6EE]/90 backdrop-blur-md px-4 sm:px-6 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-[#E5E7EB]/70">
+    <header className="sticky top-0 z-40 w-full bg-surface/90 backdrop-blur-md px-4 sm:px-6 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-border/70">
       <div className="max-w-[480px] mx-auto flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/home" className="flex items-center gap-2">
@@ -93,17 +94,20 @@ export function Header() {
             </div>
           )}
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Notification Bell Trigger Button */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsNotificationsOpen((prev) => !prev)}
-              className="relative p-1.5 rounded-full hover:bg-[#F3F4F6]/50 transition-colors text-[#374151]"
+              className="relative p-1.5 rounded-full hover:bg-subtle/50 transition-colors text-text-primary"
               aria-label="Toggle notifications"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-[#EA2C26] text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-[#FAF6EE] shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-[#EA2C26] text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-surface shadow-sm">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}

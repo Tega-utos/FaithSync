@@ -225,7 +225,7 @@ export default function ClockInPage() {
           <button
             type="button"
             onClick={() => router.push('/')}
-            className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+            className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
           >
             <CaretLeft size={18} />
             <span>Home</span>
@@ -234,9 +234,9 @@ export default function ClockInPage() {
           <div className="w-16" />
         )}
 
-        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#0E0E0E]">
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-text-primary">
           {isTimerActive ? (
-            <span className="flex items-center gap-1.5 capitalize text-[#0E0E0E]">
+            <span className="flex items-center gap-1.5 capitalize text-text-primary">
               {session.discipline === 'prayer' ? (
                 <HandsPraying size={18} weight="fill" className="text-[#FBBF24]" />
               ) : (
@@ -252,7 +252,7 @@ export default function ClockInPage() {
         {!isTimerActive ? (
           <Link
             href="/history"
-            className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+            className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
             title="Session History"
           >
             <ClockCounterClockwise size={18} />
@@ -262,7 +262,7 @@ export default function ClockInPage() {
           <button
             type="button"
             onClick={() => setSoundMuted((prev) => !prev)}
-            className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold"
+            className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
             title={soundMuted ? 'Unmute Chimes' : 'Mute Chimes'}
           >
             {soundMuted ? (
@@ -278,14 +278,14 @@ export default function ClockInPage() {
       {!isTimerActive ? (
         <div className="space-y-3.5 pt-1">
           {/* Mode Selector Toggle (Prayer vs Study) */}
-          <div className="p-1 rounded-2xl bg-[#F3F4F6]/60 border border-[#E5E7EB] grid grid-cols-2 gap-1 max-w-xs mx-auto">
+          <div className="p-1 rounded-2xl bg-subtle/60 border border-border grid grid-cols-2 gap-1 max-w-xs mx-auto">
             <button
               type="button"
               onClick={() => setSelectedDiscipline('prayer')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'prayer'
                   ? 'bg-[#0E0E0E] text-white shadow-md'
-                  : 'text-[#707070] hover:text-[#0E0E0E]'
+                  : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               <HandsPraying
@@ -302,7 +302,7 @@ export default function ClockInPage() {
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'study'
                   ? 'bg-[#0E0E0E] text-white shadow-md'
-                  : 'text-[#707070] hover:text-[#0E0E0E]'
+                  : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               <BookOpen
@@ -315,14 +315,14 @@ export default function ClockInPage() {
 
           {/* Focus Mode Segmented Toggle (Quick vs Timeline) */}
           <div className="max-w-xs mx-auto space-y-2">
-            <div className="p-1 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] grid grid-cols-2 gap-1">
+            <div className="p-1 rounded-2xl bg-surface border border-border grid grid-cols-2 gap-1">
               <button
                 type="button"
                 onClick={() => setFocusMode('quick')}
                 className={`py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                   focusMode === 'quick'
-                    ? 'bg-white text-[#0E0E0E] shadow-xs'
-                    : 'text-[#707070] hover:text-[#0E0E0E]'
+                    ? 'bg-card text-text-primary shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 Quick Focus
@@ -332,8 +332,8 @@ export default function ClockInPage() {
                 onClick={() => setFocusMode('timeline')}
                 className={`py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
                   focusMode === 'timeline'
-                    ? 'bg-white text-[#0E0E0E] shadow-xs'
-                    : 'text-[#707070] hover:text-[#0E0E0E]'
+                    ? 'bg-card text-text-primary shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <Clock size={12} className="text-[#FBBF24]" weight="bold" />
@@ -348,7 +348,7 @@ export default function ClockInPage() {
                 value={focusInput}
                 onChange={(e) => setFocusInput(e.target.value)}
                 placeholder="What is your focus? (e.g. Romans 12)"
-                className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-2xl text-xs text-[#0E0E0E] placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs text-center"
+                className="w-full px-4 py-2.5 bg-card border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs text-center"
               />
             ) : (
               /* Timeline Builder Trigger Card */
@@ -359,15 +359,15 @@ export default function ClockInPage() {
                 <div className="flex items-center gap-2">
                   <Sparkle size={16} weight="fill" className="text-[#FBBF24]" />
                   <div>
-                    <p className="text-xs font-bold text-[#0E0E0E]">
+                    <p className="text-xs font-bold text-text-primary">
                       {timelineSegments.length} Guided Segments ({timelineTotalMins}m)
                     </p>
-                    <p className="text-[10px] text-[#707070]">Tap to customize sequence</p>
+                    <p className="text-[10px] text-text-secondary">Tap to customize sequence</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#E5E7EB] text-[10px] font-bold text-[#0E0E0E]"
+                  className="px-2.5 py-1 rounded-xl bg-card border border-border text-[10px] font-bold text-text-primary"
                 >
                   Edit
                 </button>
@@ -384,19 +384,19 @@ export default function ClockInPage() {
                 <span className="text-[10px] font-bold uppercase text-[#FBBF24] tracking-wider">
                   Timeline Complete
                 </span>
-                <p className="text-xs font-bold text-[#0E0E0E]">
+                <p className="text-xs font-bold text-text-primary">
                   Free Prayer & Open Meditation
                 </p>
-                <p className="text-[10px] text-[#707070] italic">
+                <p className="text-[10px] text-text-secondary italic">
                   Rest in God&apos;s presence as long as you desire.
                 </p>
               </div>
             ) : currentSegment ? (
-              <div className="p-3.5 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs space-y-2 animate-in fade-in">
+              <div className="p-3.5 rounded-2xl bg-card border border-border shadow-xs space-y-2 animate-in fade-in">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase text-[#707070] tracking-wider">
+                  <span className="text-[10px] font-extrabold uppercase text-text-secondary tracking-wider">
                     Segment {currentSegmentIndex + 1} of {activeTimeline.length}:{' '}
-                    <span className="text-[#0E0E0E]">
+                    <span className="text-text-primary">
                       {currentSegment.type === 'scripture' ? 'Scripture' : 'Reflection'}
                     </span>
                   </span>
@@ -407,7 +407,7 @@ export default function ClockInPage() {
                 </div>
 
                 {/* Progress bar inside active segment */}
-                <div className="w-full bg-[#F3F4F6] rounded-full h-1 overflow-hidden">
+                <div className="w-full bg-subtle rounded-full h-1 overflow-hidden">
                   <div
                     className="bg-[#FBBF24] h-full transition-all duration-1000 ease-linear"
                     style={{
@@ -425,7 +425,7 @@ export default function ClockInPage() {
                     display="verseWithReference"
                   />
                 ) : (
-                  <p className="text-xs text-[#0E0E0E] italic leading-relaxed font-serif">
+                  <p className="text-xs text-text-primary italic leading-relaxed font-serif">
                     &ldquo;{currentSegment.prompt}&rdquo;
                   </p>
                 )}
@@ -433,7 +433,7 @@ export default function ClockInPage() {
             ) : null
           ) : session.focusText ? (
             <div className="text-center px-4 py-2">
-              <p className="text-xs font-serif italic text-[#707070] max-w-xs mx-auto">
+              <p className="text-xs font-serif italic text-text-secondary max-w-xs mx-auto">
                 &ldquo;{session.focusText}&rdquo;
               </p>
             </div>
@@ -487,11 +487,11 @@ export default function ClockInPage() {
               </span>
             )}
 
-            <div className="font-mono-tabular text-4xl sm:text-5xl font-bold tracking-tight text-[#0E0E0E]">
+            <div className="font-mono-tabular text-4xl sm:text-5xl font-bold tracking-tight text-text-primary">
               {formattedTime}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-bold capitalize text-[#707070]">
+            <div className="flex items-center gap-1.5 text-xs font-bold capitalize text-text-secondary">
               {session.discipline === 'prayer' ? (
                 <Fire size={14} weight="fill" className="text-[#FBBF24]" />
               ) : (
@@ -520,7 +520,7 @@ export default function ClockInPage() {
               <Link href="/bible" className="block">
                 <button
                   type="button"
-                  className="w-full bg-white border border-[#E5E7EB] text-[#0E0E0E] py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] transition-all"
+                  className="w-full bg-card border border-border text-text-primary py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] transition-all"
                 >
                   <BookBookmark size={18} className="text-[#FBBF24]" />
                   <span>Read Scripture in Bible Reader</span>
@@ -533,7 +533,7 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={isRunning ? handlePause : handleResume}
-              className="py-4 rounded-2xl bg-white border border-[#E5E7EB] text-[#0E0E0E] font-bold text-sm shadow-sm flex items-center justify-center gap-2 hover:bg-[#FAF6EE] transition-all"
+              className="py-4 rounded-2xl bg-card border border-border text-text-primary font-bold text-sm shadow-sm flex items-center justify-center gap-2 hover:bg-surface transition-all"
             >
               {isRunning ? (
                 <>

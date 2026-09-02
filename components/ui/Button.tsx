@@ -31,13 +31,13 @@ export function Button({
     secondary:
       'bg-[#234537] hover:bg-[#183329] text-white shadow-md shadow-[#234537]/20 border border-[#234537]/30',
     outline:
-      'border border-[#E5E7EB] hover:border-[#234537] text-[#0E0E0E] hover:bg-[#EBF3EE]',
+      'border border-border hover:border-[#234537] text-text-primary hover:bg-[#EBF3EE]',
     ghost:
-      'text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/60',
+      'text-text-secondary hover:text-text-primary hover:bg-subtle/60',
     danger:
       'bg-[#EA2C26] hover:bg-[#c9221d] text-white shadow-md shadow-[#EA2C26]/20',
     glow:
-      'bg-[#FBBF24] hover:bg-[#eab308] text-[#0E0E0E] font-bold shadow-lg shadow-[#FBBF24]/30',
+      'bg-[#FBBF24] hover:bg-[#eab308] text-text-primary font-bold shadow-lg shadow-[#FBBF24]/30',
   }
 
   const sizes = {

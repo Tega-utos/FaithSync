@@ -189,7 +189,7 @@ export default function OtherUserProfilePage() {
 
   if (loading) {
     return (
-      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-[#707070]">
+      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-2 min-h-[60vh] text-text-secondary">
         <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
         <p className="text-xs font-bold">Loading profile...</p>
       </div>
@@ -206,24 +206,24 @@ export default function OtherUserProfilePage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
       {/* 1. Header & Back Navigation */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1.5 text-xs font-bold"
         >
           <CaretLeft size={18} />
           <span>Back</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight">Public Profile</h1>
+        <h1 className="text-sm font-extrabold text-text-primary tracking-tight">Public Profile</h1>
         <div className="w-8" />
       </div>
 
       {/* 1. The Identity Section (Top Card) */}
-      <div className="faith-card p-6 text-center space-y-4 bg-white border border-[#E5E7EB]">
+      <div className="faith-card p-6 text-center space-y-4 bg-card border border-border">
         {/* Avatar: Uploaded photo or fallback solid gold circle with first initial */}
-        <div className="relative mx-auto w-24 h-24 rounded-full bg-[#FBBF24] text-[#0E0E0E] flex items-center justify-center text-3xl font-black shadow-lg border-2 border-white ring-2 ring-[#FBBF24]/35 overflow-hidden">
+        <div className="relative mx-auto w-24 h-24 rounded-full bg-[#FBBF24] text-text-primary flex items-center justify-center text-3xl font-black shadow-lg border-2 border-white ring-2 ring-[#FBBF24]/35 overflow-hidden">
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
@@ -234,7 +234,7 @@ export default function OtherUserProfilePage() {
 
         {/* Display Name & Church Pill */}
         <div className="space-y-2">
-          <h2 className="text-xl sm:text-2xl font-black text-[#0E0E0E] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
             {displayName}
           </h2>
 
@@ -246,7 +246,7 @@ export default function OtherUserProfilePage() {
 
           {/* Bio: Centered, italicized, muted gray font */}
           {bio && (
-            <p className="text-xs text-[#707070] italic pt-1 max-w-xs mx-auto leading-relaxed">
+            <p className="text-xs text-text-secondary italic pt-1 max-w-xs mx-auto leading-relaxed">
               &ldquo;{bio}&rdquo;
             </p>
           )}
@@ -255,12 +255,12 @@ export default function OtherUserProfilePage() {
         {/* Sync Code Badge (Tap to Copy) */}
         <div
           onClick={handleCopyBuddyCode}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E5E7EB] cursor-pointer hover:border-[#FBBF24] transition-all group"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface border border-border cursor-pointer hover:border-[#FBBF24] transition-all group"
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
             CODE:
           </span>
-          <span className="text-xs font-mono font-black text-[#0E0E0E]">
+          <span className="text-xs font-mono font-black text-text-primary">
             {buddyCode}
           </span>
           <div className="text-[#FBBF24]">
@@ -286,7 +286,7 @@ export default function OtherUserProfilePage() {
             </Link>
           ) : connectionStatus === 'incoming_pending' ? (
             <div className="p-4 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 space-y-2.5 animate-in fade-in">
-              <p className="text-xs font-bold text-[#0E0E0E]">
+              <p className="text-xs font-bold text-text-primary">
                 {displayName} sent you an accountability buddy request!
               </p>
               <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export default function OtherUserProfilePage() {
                 <button
                   type="button"
                   onClick={handleIgnoreIncoming}
-                  className="px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#707070] rounded-xl font-bold text-xs hover:text-[#EA2C26] transition-all"
+                  className="px-4 py-2.5 bg-card border border-border text-text-secondary rounded-xl font-bold text-xs hover:text-[#EA2C26] transition-all"
                 >
                   Ignore
                 </button>
@@ -312,7 +312,7 @@ export default function OtherUserProfilePage() {
             <button
               type="button"
               disabled
-              className="w-full bg-[#FAF6EE] border border-[#E5E7EB] text-[#707070] py-3.5 rounded-full font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+              className="w-full bg-surface border border-border text-text-secondary py-3.5 rounded-full font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
             >
               <Check size={16} weight="bold" className="text-emerald-600" />
               <span>Request Sent</span>
@@ -332,22 +332,22 @@ export default function OtherUserProfilePage() {
       </div>
 
       {/* 3. The "FAITH WALK" Section (Abstracted Accountability) */}
-      <div className="faith-card p-5 space-y-3.5 bg-white border border-[#E5E7EB]">
-        <div className="flex items-center justify-between pb-1 border-b border-[#F3F4F6]">
-          <span className="text-[11px] font-black uppercase tracking-wider text-[#0E0E0E]">
+      <div className="faith-card p-5 space-y-3.5 bg-card border border-border">
+        <div className="flex items-center justify-between pb-1 border-b border-border-light">
+          <span className="text-[11px] font-black uppercase tracking-wider text-text-primary">
             FAITH WALK
           </span>
-          <span className="text-[10px] font-bold text-[#707070]">Daily Rhythm</span>
+          <span className="text-[10px] font-bold text-text-secondary">Daily Rhythm</span>
         </div>
 
         <div className="space-y-2.5">
           {/* Row 1: Faithful in Prayer */}
-          <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center text-[#0E0E0E] shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-text-primary shadow-2xs">
                 <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" />
               </div>
-              <span className="text-xs font-black text-[#0E0E0E]">Faithful in Prayer</span>
+              <span className="text-xs font-black text-text-primary">Faithful in Prayer</span>
             </div>
 
             {prayerActiveToday ? (
@@ -356,19 +356,19 @@ export default function OtherUserProfilePage() {
                 <span>Active Today</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold border border-gray-200">
+              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-text-muted text-[10px] font-bold border border-border">
                 Pending
               </span>
             )}
           </div>
 
           {/* Row 2: Student of the Word */}
-          <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-surface border border-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center text-[#0E0E0E] shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-text-primary shadow-2xs">
                 <BookOpen size={16} weight="fill" className="text-[#FBBF24]" />
               </div>
-              <span className="text-xs font-black text-[#0E0E0E]">Student of the Word</span>
+              <span className="text-xs font-black text-text-primary">Student of the Word</span>
             </div>
 
             {studyActiveToday ? (
@@ -377,7 +377,7 @@ export default function OtherUserProfilePage() {
                 <span>Active Today</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold border border-gray-200">
+              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-text-muted text-[10px] font-bold border border-border">
                 Pending
               </span>
             )}

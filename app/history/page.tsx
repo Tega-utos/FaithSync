@@ -181,17 +181,17 @@ export default function HistoryPage() {
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4 print:p-0 print:m-0 print:max-w-full">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB] print:hidden">
+      <div className="flex items-center justify-between pb-2 border-b border-border print:hidden">
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="p-1.5 rounded-xl text-[#707070] hover:text-[#0E0E0E] hover:bg-[#F3F4F6]/50 transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
+          className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
         >
           <CaretLeft size={18} />
           <span>Home</span>
         </button>
 
-        <h1 className="text-sm font-extrabold text-[#0E0E0E] tracking-tight">Devotion Ledger</h1>
+        <h1 className="text-sm font-extrabold text-text-primary tracking-tight">Devotion Ledger</h1>
 
         <button
           type="button"
@@ -207,39 +207,39 @@ export default function HistoryPage() {
       {/* Print Document Header (Visible only when printing) */}
       <div className="hidden print:block mb-6 text-center border-b pb-4">
         <h1 className="text-2xl font-black tracking-tight text-black">FaithSync Devotion Ledger</h1>
-        <p className="text-sm text-gray-700 mt-1">
+        <p className="text-sm text-text-secondary mt-1">
           Spiritual Walk Record for <span className="font-bold">{userName}</span> • Past 30 Days
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-text-muted mt-0.5">
           Printed on {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </div>
 
       {/* Summary Stat Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 print:grid-cols-3">
-        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+        <div className="faith-card p-3.5 bg-card border border-border space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
             Completed Days
           </span>
-          <p className="text-lg font-black text-[#0E0E0E] font-mono-tabular">
-            {completedDays} <span className="text-xs font-normal text-[#707070]">/ 30 days</span>
+          <p className="text-lg font-black text-text-primary font-mono-tabular">
+            {completedDays} <span className="text-xs font-normal text-text-secondary">/ 30 days</span>
           </p>
         </div>
 
-        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+        <div className="faith-card p-3.5 bg-card border border-border space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
             Total Devotion Time
           </span>
-          <p className="text-lg font-black text-[#0E0E0E] font-mono-tabular">
+          <p className="text-lg font-black text-text-primary font-mono-tabular">
             {Math.floor(totalMinsMonth / 60)}h {totalMinsMonth % 60}m
           </p>
         </div>
 
-        <div className="faith-card p-3.5 bg-white border border-[#E5E7EB] space-y-0.5 col-span-2 sm:col-span-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#707070]">
+        <div className="faith-card p-3.5 bg-card border border-border space-y-0.5 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
             Daily Targets Set
           </span>
-          <p className="text-xs font-bold text-[#0E0E0E] pt-1 flex items-center gap-2">
+          <p className="text-xs font-bold text-text-primary pt-1 flex items-center gap-2">
             <span className="text-[#FBBF24]">🙏 {prayerTarget}m Prayer</span>
             <span className="text-[#234537]">📖 {studyTarget}m Study</span>
           </p>
@@ -247,19 +247,19 @@ export default function HistoryPage() {
       </div>
 
       {/* Horizontal Scroll Hint (Mobile only) */}
-      <div className="flex items-center justify-between text-[11px] text-[#707070] px-1 print:hidden">
+      <div className="flex items-center justify-between text-[11px] text-text-secondary px-1 print:hidden">
         <span className="font-medium flex items-center gap-1">
           <FileText size={14} className="text-[#FBBF24]" />
           <span>Spreadsheet Ledger (Past 30 Days)</span>
         </span>
-        <span className="text-[10px] text-[#9095A1] sm:hidden">
+        <span className="text-[10px] text-text-muted sm:hidden">
           👉 Scroll horizontally
         </span>
       </div>
 
       {/* Ledger Spreadsheet or Loading */}
       {loading ? (
-        <div className="py-20 text-center text-xs text-[#707070]">
+        <div className="py-20 text-center text-xs text-text-secondary">
           Loading devotion spreadsheet...
         </div>
       ) : dailySummaries.length === 0 ? (
@@ -267,8 +267,8 @@ export default function HistoryPage() {
           <div className="w-12 h-12 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
             <Clock size={24} />
           </div>
-          <h3 className="text-sm font-bold text-[#0E0E0E]">No logs recorded yet</h3>
-          <p className="text-xs text-[#707070]">
+          <h3 className="text-sm font-bold text-text-primary">No logs recorded yet</h3>
+          <p className="text-xs text-text-secondary">
             Start your first timer session on the Clock-in screen to begin your consistency log.
           </p>
           <Link href="/clock-in" className="inline-block pt-2">
@@ -282,33 +282,33 @@ export default function HistoryPage() {
         </div>
       ) : (
         /* Unified Horizontal-Scroll Excel-Style Spreadsheet Table */
-        <div className="faith-card overflow-hidden shadow-sm bg-white border border-[#E5E7EB] print:border-black print:shadow-none">
+        <div className="faith-card overflow-hidden shadow-sm bg-card border border-border print:border-black print:shadow-none">
           <div className="overflow-x-auto max-w-full">
             <table className="w-full text-left text-xs border-collapse min-w-[580px] print:min-w-full">
               <thead>
-                <tr className="bg-[#FAF6EE] border-b border-[#E5E7EB] text-[10px] uppercase font-black tracking-wider text-[#707070] print:bg-gray-100 print:text-black">
-                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Date</th>
-                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Prayer Time</th>
-                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70">Study Time</th>
-                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70 text-center">Total</th>
-                  <th className="py-3 px-3.5 border-r border-[#E5E7EB]/70 text-center">Daily Status</th>
+                <tr className="bg-surface border-b border-border text-[10px] uppercase font-black tracking-wider text-text-secondary print:bg-gray-100 print:text-black">
+                  <th className="py-3 px-3.5 border-r border-border/70">Date</th>
+                  <th className="py-3 px-3.5 border-r border-border/70">Prayer Time</th>
+                  <th className="py-3 px-3.5 border-r border-border/70">Study Time</th>
+                  <th className="py-3 px-3.5 border-r border-border/70 text-center">Total</th>
+                  <th className="py-3 px-3.5 border-r border-border/70 text-center">Daily Status</th>
                   <th className="py-3 px-3 text-right print:hidden">Action</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#F3F4F6] bg-white print:divide-gray-300">
+              <tbody className="divide-y divide-border-light bg-card print:divide-gray-300">
                 {dailySummaries.map((day, idx) => (
                   <tr
                     key={day.dateKey}
                     onClick={() => router.push(`/session-details/date/${day.dateKey}`)}
-                    className={`hover:bg-[#FAF6EE]/80 transition-colors cursor-pointer group print:hover:bg-transparent ${
-                      idx % 2 === 1 ? 'bg-[#FAF6EE]/20' : 'bg-white'
+                    className={`hover:bg-surface/80 transition-colors cursor-pointer group print:hover:bg-transparent ${
+                      idx % 2 === 1 ? 'bg-surface/20' : 'bg-card'
                     }`}
                   >
                     {/* 1. Date Cell */}
-                    <td className="py-3 px-3.5 whitespace-nowrap font-bold text-[#0E0E0E] border-r border-[#F3F4F6]">
+                    <td className="py-3 px-3.5 whitespace-nowrap font-bold text-text-primary border-r border-border-light">
                       <div className="flex items-center gap-1.5">
-                        <CalendarBlank size={14} className="text-[#9095A1] shrink-0" />
+                        <CalendarBlank size={14} className="text-text-muted shrink-0" />
                         <span>{day.dateDisplay}</span>
                         {day.isToday && (
                           <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] text-white font-bold shrink-0">
@@ -319,14 +319,14 @@ export default function HistoryPage() {
                     </td>
 
                     {/* 2. Prayer Cell */}
-                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6]">
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-border-light">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
                           day.isPrayerMet
                             ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40 font-black'
                             : day.prayerMinutes > 0
-                            ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                            : 'text-[#9095A1]'
+                            ? 'bg-surface text-text-primary border border-border'
+                            : 'text-text-muted'
                         }`}
                       >
                         <HandsPraying size={12} weight="fill" />
@@ -335,14 +335,14 @@ export default function HistoryPage() {
                     </td>
 
                     {/* 3. Study Cell */}
-                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6]">
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-border-light">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
                           day.isStudyMet
                             ? 'bg-[#EBF3EE] text-[#234537] border border-[#234537]/30 font-black'
                             : day.studyMinutes > 0
-                            ? 'bg-[#FAF6EE] text-[#374151] border border-[#E5E7EB]'
-                            : 'text-[#9095A1]'
+                            ? 'bg-surface text-text-primary border border-border'
+                            : 'text-text-muted'
                         }`}
                       >
                         <BookOpen size={12} weight="fill" />
@@ -351,12 +351,12 @@ export default function HistoryPage() {
                     </td>
 
                     {/* 4. Total Minutes Cell */}
-                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6] text-center font-mono-tabular font-bold text-xs text-[#0E0E0E]">
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-border-light text-center font-mono-tabular font-bold text-xs text-text-primary">
                       {day.totalMinutes > 0 ? `${day.totalMinutes}m` : '—'}
                     </td>
 
                     {/* 5. Daily Status Badge */}
-                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-[#F3F4F6] text-center">
+                    <td className="py-3 px-3.5 whitespace-nowrap border-r border-border-light text-center">
                       {day.status === 'Complete' ? (
                         <span className="px-2.5 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] text-[10px] font-black inline-flex items-center gap-1 shadow-2xs">
                           <Check size={11} weight="bold" /> Complete
@@ -374,7 +374,7 @@ export default function HistoryPage() {
 
                     {/* 6. Action Cell */}
                     <td className="py-3 px-3 whitespace-nowrap text-right print:hidden">
-                      <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#0E0E0E] group-hover:text-[#FBBF24] transition-colors">
+                      <span className="inline-flex items-center gap-0.5 text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors">
                         <span>Details</span>
                         <CaretRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                       </span>
