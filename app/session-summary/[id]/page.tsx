@@ -20,6 +20,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
+import { fetchDashboardData } from '@/features/dashboard/services/dashboardService'
 
 export default function SessionSummaryPage() {
   const params = useParams()
@@ -29,6 +30,10 @@ export default function SessionSummaryPage() {
   const [loading, setLoading] = useState(true)
   const [sharing, setSharing] = useState(false)
   const [includeReflection, setIncludeReflection] = useState(false)
+  const [todayPrayerMins, setTodayPrayerMins] = useState(0)
+  const [todayStudyMins, setTodayStudyMins] = useState(0)
+  const [prayerTarget, setPrayerTarget] = useState(15)
+  const [studyTarget, setStudyTarget] = useState(15)
   const [session, setSession] = useState<{
     id: string
     type: string
@@ -72,6 +77,15 @@ export default function SessionSummaryPage() {
             setSession(found as any)
           }
         }
+
+        // Fetch fresh devotion totals & targets
+        const dashData = await fetchDashboardData(true)
+        if (dashData) {
+          setTodayPrayerMins(dashData.prayerMinutes || 0)
+          setTodayStudyMins(dashData.studyMinutes || 0)
+          setPrayerTarget(dashData.prayerTarget || 15)
+          setStudyTarget(dashData.studyTarget || 15)
+        }
       } catch (err) {
         console.error('Session summary load error:', err)
       } finally {
@@ -86,7 +100,12 @@ export default function SessionSummaryPage() {
   const secs = session.duration_seconds % 60
   const formattedDuration = `${mins}m ${secs > 0 ? `${secs}s` : ''}`
 
+  const isPrayerComplete = todayPrayerMins >= prayerTarget
+  const isStudyComplete = todayStudyMins >= studyTarget
+  const isBothComplete = isPrayerComplete && isStudyComplete
+
   const handleShareToSquare = async () => {
+    if (!isBothComplete) return
     setSharing(true)
     try {
       const res = await fetch('/api/session/share', {
@@ -247,8 +266,10 @@ export default function SessionSummaryPage() {
         )}
       </div>
 
-      {/* Privacy-First Reflection Sharing Toggle */}
-      <div className="faith-card p-4 space-y-2 bg-[#FDF9F1] border border-[#E5E7EB]">
+      {/* Privacy-First Reflection Sharing Toggle (Only active if unlocked) */}
+      <div className={`faith-card p-4 space-y-2 border border-[#E5E7EB] transition-opacity ${
+        isBothComplete ? 'bg-[#FDF9F1]' : 'bg-[#F9FAFB] opacity-60'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <p className="text-xs font-bold text-[#0E0E0E]">Include personal reflection on Square</p>
@@ -257,9 +278,10 @@ export default function SessionSummaryPage() {
 
           <input
             type="checkbox"
-            checked={includeReflection}
-            onChange={(e) => setIncludeReflection(e.target.checked)}
-            className="w-4 h-4 rounded text-[#FBBF24] cursor-pointer"
+            disabled={!isBothComplete}
+            checked={includeReflection && isBothComplete}
+            onChange={(e) => isBothComplete && setIncludeReflection(e.target.checked)}
+            className="w-4 h-4 rounded text-[#FBBF24] cursor-pointer disabled:cursor-not-allowed"
           />
         </div>
 
@@ -269,18 +291,42 @@ export default function SessionSummaryPage() {
         </div>
       </div>
 
+      {/* Target Lock Notice */}
+      {!isBothComplete && (
+        <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#E5E7EB] flex items-center gap-3 text-xs text-[#0E0E0E] shadow-xs">
+          <div className="w-8 h-8 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center text-[#707070] shrink-0">
+            <Lock size={16} />
+          </div>
+          <div className="space-y-0.5">
+            <p className="font-bold text-[#0E0E0E]">Sharing Locked</p>
+            <p className="text-[11px] text-[#707070]">
+              Complete both daily targets to unlock sharing: {todayPrayerMins}/{prayerTarget}m Prayer, {todayStudyMins}/{studyTarget}m Study.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="space-y-3 pt-1">
         <button
           type="button"
           onClick={handleShareToSquare}
-          disabled={sharing}
-          className="w-full bg-[#0E0E0E] text-white py-4 px-6 rounded-2xl font-black text-sm shadow-xl hover:bg-[#262626] active:scale-95 transition-all flex items-center justify-center gap-2"
+          disabled={!isBothComplete || sharing}
+          className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
+            !isBothComplete
+              ? 'bg-[#E5E7EB] text-[#9095A1] cursor-not-allowed shadow-none'
+              : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95 cursor-pointer shadow-black/15'
+          }`}
         >
           {sharing ? (
             <>
               <CircleNotch size={16} className="animate-spin" />
               <span>Publishing Record...</span>
+            </>
+          ) : !isBothComplete ? (
+            <>
+              <Lock size={18} className="text-[#9095A1]" />
+              <span>Complete Both Targets to Share</span>
             </>
           ) : (
             <>
@@ -293,7 +339,7 @@ export default function SessionSummaryPage() {
         <Link href="/" className="block">
           <button
             type="button"
-            className="w-full bg-white border border-[#E5E7EB] text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs hover:bg-[#FAF6EE] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-white border border-[#E5E7EB] text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs hover:bg-[#FAF6EE] transition-all flex items-center justify-center gap-2 shadow-2xs"
           >
             <House size={16} className="text-[#707070]" />
             <span>Back to Dashboard</span>
