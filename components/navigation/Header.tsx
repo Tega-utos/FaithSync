@@ -124,7 +124,7 @@ export function Header() {
           {/* User Avatar */}
           <Link
             href="/profile"
-            className="w-8 h-8 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center font-bold text-xs shadow-sm hover:scale-105 transition-transform"
+            className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-border/80 dark:border-white/15 flex items-center justify-center font-bold text-xs shadow-sm hover:scale-105 transition-transform"
           >
             {initial}
           </Link>

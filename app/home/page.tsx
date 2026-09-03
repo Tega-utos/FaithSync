@@ -303,7 +303,7 @@ export default function HomePage() {
       </div>
 
       {/* Interactive Verse of the Day Card */}
-      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white border border-border shadow-xs relative overflow-hidden">
+      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white dark:from-[#1A1A1A] dark:to-[#121212] border border-border dark:border-white/10 shadow-xs relative overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
@@ -311,7 +311,7 @@ export default function HomePage() {
               Verse of the Day
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-md border border-[#FBBF24]/30 dark:border-amber-500/25">
+          <span className="text-[10px] font-mono font-bold text-[#FBBF24] dark:text-amber-400 bg-[#FDF9F1] dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-[#FBBF24]/30 dark:border-amber-500/30">
             Isaiah 40:31 • WEB
           </span>
         </div>
@@ -320,16 +320,16 @@ export default function HomePage() {
           <p className="text-xs sm:text-sm font-semibold text-text-primary leading-relaxed italic">
             &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
           </p>
-          <p className="text-[10px] text-text-secondary font-medium">
+          <p className="text-[10px] text-text-secondary dark:text-neutral-400 font-medium">
             Spiritual Theme: Strength & Endurance in Daily Waiting
           </p>
         </blockquote>
 
         {/* 1-Tap Verse Actions */}
-        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-light">
+        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-light dark:border-white/10">
           <Link
             href="/bible?book=Isaiah&chapter=40"
-            className="p-2 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
+            className="p-2 rounded-xl bg-card dark:bg-neutral-800/80 border border-border dark:border-white/10 hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
           >
             <BookOpen size={13} className="text-[#FBBF24]" weight="bold" />
             <span>Read Bible</span>
@@ -337,7 +337,7 @@ export default function HomePage() {
 
           <Link
             href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
-            className="p-2 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
+            className="p-2 rounded-xl bg-card dark:bg-neutral-800/80 border border-border dark:border-white/10 hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
           >
             <ShareNetwork size={13} className="text-[#234537] dark:text-emerald-400" weight="bold" />
             <span>Share to Square</span>
@@ -349,7 +349,7 @@ export default function HomePage() {
       <Link href="/clock-in" className="block group">
         <button
           type="button"
-          className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 px-6 rounded-2xl flex items-center justify-between font-bold text-base shadow-lg shadow-black/15 group-hover:bg-[#1f1f1f] group-active:scale-[0.99] transition-all"
+          className="w-full bg-[#0E0E0E] dark:bg-neutral-900 border border-transparent dark:border-white/15 text-white py-4 px-6 rounded-2xl flex items-center justify-between font-bold text-base shadow-lg shadow-black/15 group-hover:bg-[#1f1f1f] dark:group-hover:bg-neutral-800 group-active:scale-[0.99] transition-all"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-card/10 flex items-center justify-center">
@@ -404,7 +404,7 @@ export default function HomePage() {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => handleApprove(req.id)}
-                className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80"
+                className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-neutral-800 text-white border border-transparent dark:border-white/15 rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-neutral-700"
               >
                 Approve
               </button>
@@ -438,15 +438,15 @@ export default function HomePage() {
                 <div
                   key={buddy.id}
                   onClick={() => router.push(`/buddy-chat/${buddy.id}`)}
-                  className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 dark:border-amber-500/30 hover:bg-subtle transition-all cursor-pointer"
+                  className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 dark:border-white/15 hover:bg-subtle transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-border/80 dark:border-white/15 font-bold text-xs flex items-center justify-center">
                         {buddy.initial}
                       </div>
                       {buddy.isActiveNow && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-50 dark:bg-emerald-950/300 rounded-full ring-2 ring-surface" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-card" />
                       )}
                     </div>
 
@@ -454,7 +454,7 @@ export default function HomePage() {
                       <p className="text-xs font-bold text-text-primary truncate">{buddy.name}</p>
                       <div className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                         {buddy.bothDone ? (
-                          <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                             <CheckCircle size={12} weight="fill" /> Goals complete
                           </span>
                         ) : (
@@ -481,8 +481,8 @@ export default function HomePage() {
                     disabled={isNudged}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
                       isNudged
-                        ? 'bg-emerald-50 dark:bg-emerald-950/300 text-white animate-nudge'
-                        : `bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 ${
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white animate-nudge'
+                        : `bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 hover:bg-[#262626] dark:hover:bg-neutral-700 active:scale-95 ${
                             vibratingState[buddy.id] ? 'anim-vibrate' : ''
                           }`
                     }`}
@@ -494,7 +494,7 @@ export default function HomePage() {
                       </>
                     ) : (
                       <>
-                        <HandWaving size={12} weight="fill" className="text-[#FBBF24]" />
+                        <HandWaving size={12} weight="fill" className="text-amber-400" />
                         <span>Nudge</span>
                       </>
                     )}
@@ -515,7 +515,7 @@ export default function HomePage() {
                 {dashboard.activeCommunityUsers.slice(0, 3).map((u, idx) => (
                   <div
                     key={u.id || idx}
-                    className="w-7 h-7 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-[10px] flex items-center justify-center ring-2 ring-white"
+                    className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold text-[10px] flex items-center justify-center ring-2 ring-card border border-border/80 dark:border-white/15"
                   >
                     {u.initial}
                   </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Users,
+  User,
   UserPlus,
   Copy,
   Check,
@@ -304,41 +305,43 @@ export default function SyncPage() {
       </div>
 
       {/* 3-Segment Toggle Navigation Bar */}
-      <div className="p-1 rounded-2xl bg-subtle/60 border border-border grid grid-cols-3 gap-1">
+      <div className="p-1 rounded-2xl bg-card border border-border grid grid-cols-3 gap-1 shadow-2xs">
         {/* Personal Tab */}
         <button
           type="button"
           onClick={() => setActiveTab('personal')}
-          className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
+          className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'personal'
-              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+              ? 'bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 shadow-sm'
               : 'text-text-secondary hover:text-text-primary'
           }`}
         >
-          Personal
+          <User size={13} className={activeTab === 'personal' ? 'text-[#FBBF24]' : 'opacity-60'} />
+          <span>Personal</span>
         </button>
 
         {/* Group Tab */}
         <button
           type="button"
           onClick={() => setActiveTab('group')}
-          className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
+          className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'group'
-              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+              ? 'bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 shadow-sm'
               : 'text-text-secondary hover:text-text-primary'
           }`}
         >
-          Groups
+          <Users size={13} className={activeTab === 'group' ? 'text-[#FBBF24]' : 'opacity-60'} />
+          <span>Groups</span>
         </button>
 
         {/* Square Tab Shortcut */}
         <button
           type="button"
           onClick={() => router.push('/square')}
-          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary hover:text-text-primary transition-all flex items-center justify-center gap-1"
+          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary hover:text-text-primary transition-all flex items-center justify-center gap-1.5"
         >
+          <Globe size={13} className="text-[#FBBF24]" />
           <span>Square</span>
-          <Globe size={12} className="text-[#FBBF24]" />
         </button>
       </div>
 
@@ -554,7 +557,7 @@ export default function SyncPage() {
                 setCreateGroupStep('form')
                 setIsCreateGroupOpen(true)
               }}
-              className="p-3.5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all cursor-pointer"
+              className="p-3.5 rounded-2xl bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all cursor-pointer"
             >
               <Plus size={16} className="text-[#FBBF24]" weight="bold" />
               <span>Create Group</span>
@@ -728,7 +731,7 @@ export default function SyncPage() {
               <button
                 type="submit"
                 disabled={!buddyCodeInput.trim() || sendingBuddyRequest}
-                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                className="w-full bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 {sendingBuddyRequest ? (
                   <>
@@ -886,7 +889,7 @@ export default function SyncPage() {
                 <button
                   type="submit"
                   disabled={!newGroupName.trim() || isCreatingGroup}
-                  className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isCreatingGroup ? (
                     <>

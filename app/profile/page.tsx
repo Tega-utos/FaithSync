@@ -786,7 +786,7 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             title="Click to upload profile photo"
           >
-            <div className="w-20 h-20 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center text-2xl font-black shadow-md overflow-hidden border-2 border-white ring-2 ring-[#FBBF24]/35">
+            <div className="w-20 h-20 rounded-full bg-neutral-100 dark:bg-neutral-800 text-text-primary flex items-center justify-center text-2xl font-black shadow-md overflow-hidden border-2 border-border dark:border-neutral-700 ring-2 ring-[#FBBF24]/35">
               {uploadingAvatar ? (
                 <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
               ) : avatarUrl ? (
@@ -798,7 +798,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Small Gold Pencil Badge on Rim */}
-            <div className="absolute bottom-0 right-0 p-1.5 bg-[#FBBF24] text-text-primary rounded-full ring-2 ring-white shadow-sm flex items-center justify-center">
+            <div className="absolute bottom-0 right-0 p-1.5 bg-[#FBBF24] text-black rounded-full ring-2 ring-card shadow-sm flex items-center justify-center">
               <PencilSimple size={12} weight="bold" />
             </div>
 

@@ -920,11 +920,11 @@ export default function GroupChatPage() {
                   onClick={() => {
                     if (isLiveNow) handleJoinGroupSession(msg)
                   }}
-                  className={`w-full max-w-sm rounded-3xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
+                  className={`w-full max-w-sm rounded-3xl bg-[#0E0E0E] dark:bg-neutral-900 text-white border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
                     isLiveNow
-                      ? 'border-[#FBBF24]/50 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.15)]'
+                      ? 'border-[#FBBF24]/50 dark:border-amber-400/50 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.15)]'
                       : isScheduledInFuture
-                      ? 'border-[#FBBF24]/30 dark:border-amber-500/25'
+                      ? 'border-[#FBBF24]/30 dark:border-amber-500/30'
                       : 'border-white/10 opacity-75'
                   }`}
                 >
@@ -945,7 +945,7 @@ export default function GroupChatPage() {
                         <h4 className="text-sm font-black text-white tracking-tight">
                           Group Clock-in Invite
                         </h4>
-                        <span className="text-xs text-white/60 font-mono-tabular">
+                        <span className="text-xs text-white/70 font-mono-tabular">
                           {durationMins} mins • {discipline}
                         </span>
                       </div>
@@ -953,17 +953,17 @@ export default function GroupChatPage() {
 
                     {/* Dynamic Status Pill */}
                     {isScheduledInFuture ? (
-                      <span className="px-2.5 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 text-[#FBBF24] border border-[#FBBF24]/30 dark:border-amber-500/25 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 text-[#FBBF24] dark:text-amber-400 border border-[#FBBF24]/30 dark:border-amber-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                         <CalendarCheck size={11} weight="bold" />
                         <span>{datePrefix} {timeDisplay}</span>
                       </span>
                     ) : isLiveNow ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/300/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-50 dark:bg-emerald-950/300 animate-ping" />
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                         <span>LIVE COHORT</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-card/10 text-white/40 text-[9px] font-black uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/40 text-[9px] font-black uppercase tracking-wider">
                         COMPLETED
                       </span>
                     )}
@@ -971,20 +971,20 @@ export default function GroupChatPage() {
 
                   {/* Shared Focus Intention: Translucent Frosted-Glass Block */}
                   {focusText && (
-                    <div className="p-3.5 rounded-2xl bg-card/10 backdrop-blur-md border border-white/15 text-xs text-white/90 italic flex items-start gap-2 shadow-inner">
-                      <Quotes size={15} className="text-[#FBBF24] shrink-0 mt-0.5" />
+                    <div className="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/15 text-xs text-white/90 italic flex items-start gap-2 shadow-inner">
+                      <Quotes size={15} className="text-[#FBBF24] dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="leading-relaxed">&ldquo;{focusText}&rdquo;</span>
                     </div>
                   )}
 
                   {/* Interactive Button */}
                   {isScheduledInFuture ? (
-                    <div className="w-full py-3 px-4 rounded-2xl bg-card/5 border border-white/15 text-[#FBBF24] font-bold text-xs flex items-center justify-between">
+                    <div className="w-full py-3 px-4 rounded-2xl bg-white/5 border border-white/15 text-[#FBBF24] dark:text-amber-400 font-bold text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Clock size={15} weight="bold" />
                         <span>Starts at {timeDisplay}</span>
                       </div>
-                      <span className="text-[10px] text-white/50 font-mono-tabular">
+                      <span className="text-[10px] text-white/60 font-mono-tabular">
                         in {hoursUntilStart > 0 ? `${hoursUntilStart}h ` : ''}{minsUntilStart % 60}m
                       </span>
                     </div>
@@ -995,7 +995,7 @@ export default function GroupChatPage() {
                         e.stopPropagation()
                         handleJoinGroupSession(msg)
                       }}
-                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] text-text-primary hover:bg-[#F59E0B] active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] text-black hover:bg-[#F59E0B] active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                       <Play size={15} weight="fill" />
                       <span>{isLiveOverlayOpen ? 'View Active Cohort' : 'Join Cohort Room'} ({remainingMins}m left)</span>
@@ -1004,7 +1004,7 @@ export default function GroupChatPage() {
                     <button
                       type="button"
                       disabled
-                      className="w-full py-3 px-4 rounded-2xl bg-card/10 text-white/40 font-bold text-xs cursor-not-allowed text-center"
+                      className="w-full py-3 px-4 rounded-2xl bg-white/5 text-white/40 font-bold text-xs cursor-not-allowed text-center"
                     >
                       Session Ended
                     </button>
@@ -1018,7 +1018,7 @@ export default function GroupChatPage() {
           if (msg.message_type === 'system') {
             return (
               <div key={msg.id} className="w-full flex justify-center my-2">
-                <span className="px-4 py-1.5 rounded-full bg-[#E5E7EB]/80 text-[10px] font-bold text-text-primary max-w-sm text-center shadow-xs">
+                <span className="px-4 py-1.5 rounded-full bg-[#E5E7EB]/80 dark:bg-neutral-800 text-[10px] font-bold text-text-primary dark:text-neutral-200 border border-transparent dark:border-white/10 max-w-sm text-center shadow-xs">
                   {msg.content}
                 </span>
               </div>
@@ -1035,7 +1035,7 @@ export default function GroupChatPage() {
               >
                 {!isMe && (
                   <div className="flex items-center gap-1.5 mb-1 px-1">
-                    <div className="w-5 h-5 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[9px] font-bold flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-border/80 dark:border-white/15 text-[9px] font-bold flex items-center justify-center">
                       {msg.sender_initial}
                     </div>
                     <span className="text-[10px] font-bold text-text-secondary">{msg.sender_name}</span>
@@ -1055,8 +1055,8 @@ export default function GroupChatPage() {
                   <div
                     className={`rounded-2xl overflow-hidden border shadow-xs ${
                       isMe
-                        ? 'border-[#0E0E0E] dark:border-white/20 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-br-xs'
-                        : 'border-border bg-card text-text-primary rounded-bl-xs'
+                        ? 'border-[#0E0E0E] dark:border-white/15 bg-[#0E0E0E] dark:bg-neutral-800 text-white rounded-br-xs'
+                        : 'border-border dark:border-white/10 bg-card text-text-primary rounded-bl-xs'
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1100,7 +1100,7 @@ export default function GroupChatPage() {
             >
               {!isMe && (
                 <div className="flex items-center gap-1.5 mb-1 px-1">
-                  <div className="w-5 h-5 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[9px] font-bold flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-border/80 dark:border-white/15 text-[9px] font-bold flex items-center justify-center">
                     {msg.sender_initial}
                   </div>
                   <span className="text-[10px] font-bold text-text-secondary">{msg.sender_name}</span>
@@ -1120,8 +1120,8 @@ export default function GroupChatPage() {
                 <div
                   className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
                     isMe
-                      ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-br-xs'
-                      : 'bg-card text-text-primary border border-border rounded-bl-xs'
+                      ? 'bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white rounded-br-xs'
+                      : 'bg-card text-text-primary border border-border dark:border-white/10 rounded-bl-xs'
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.content}</p>
