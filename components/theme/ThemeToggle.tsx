@@ -29,7 +29,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
     <button
       type="button"
       onClick={() => setTheme(nextTheme)}
-      className={`relative p-1.5 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-white/10 text-text-secondary dark:text-gray-400 ${className}`}
+      className={`relative p-1.5 rounded-full transition-colors hover:bg-subtle text-text-secondary ${className}`}
       aria-label={`Theme: ${label}. Click for ${nextTheme}`}
       title={`${label} — click for ${nextTheme}`}
     >
