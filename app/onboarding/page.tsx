@@ -39,37 +39,88 @@ export default function OnboardingPage() {
 
   // 1. Authenticate user & extract genuine 6-digit sync code
   useEffect(() => {
+    let isMounted = true
+
+    async function processUser(currentUser: any, supabaseClient: any) {
+      if (!isMounted || !currentUser) return
+      setUserId(currentUser.id)
+
+      let assignedCode = ''
+      try {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('buddy_code')
+          .eq('id', currentUser.id)
+          .maybeSingle()
+
+        if (profile?.buddy_code) {
+          assignedCode = profile.buddy_code
+        } else {
+          assignedCode = currentUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+          await supabaseClient
+            .from('profiles')
+            .upsert({ id: currentUser.id, buddy_code: assignedCode }, { onConflict: 'id' })
+        }
+      } catch (err) {
+        console.error('Error fetching/setting buddy_code:', err)
+        assignedCode = currentUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+      }
+
+      if (isMounted) {
+        setSyncCode(assignedCode)
+      }
+    }
+
     async function initUser() {
       const supabase = createClient()
+
+      // 1. Check active session first
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        await processUser(session.user, supabase)
+        return
+      }
+
+      // 2. Check getUser
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.replace('/welcome')
+      if (user) {
+        await processUser(user, supabase)
         return
       }
 
-      setUserId(user.id)
+      // 3. Listen for auth state change in case of hydration delay
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+        if (newSession?.user) {
+          await processUser(newSession.user, supabase)
+        } else {
+          setTimeout(async () => {
+            if (!isMounted) return
+            const { data: checkData } = await supabase.auth.getUser()
+            if (!checkData?.user && isMounted) {
+              router.replace('/welcome')
+            } else if (checkData?.user) {
+              await processUser(checkData.user, supabase)
+            }
+          }, 600)
+        }
+      })
 
-      let assignedCode = ''
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('buddy_code')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (profile?.buddy_code) {
-        assignedCode = profile.buddy_code
-      } else {
-        assignedCode = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
-        await supabase.from('profiles').update({ buddy_code: assignedCode }).eq('id', user.id)
+      return () => {
+        authListener.subscription.unsubscribe()
       }
-
-      setSyncCode(assignedCode)
     }
 
-    initUser()
+    const cleanupPromise = initUser()
+    return () => {
+      isMounted = false
+      cleanupPromise.then((cleanup) => cleanup && cleanup())
+    }
   }, [router])
 
   // Handle number input clamping for targets (5 - 180 min)

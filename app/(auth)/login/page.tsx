@@ -1,21 +1,36 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Envelope, Lock, CircleNotch, WarningCircle } from '@phosphor-icons/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Envelope, Lock, CircleNotch, WarningCircle, CheckCircle } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { AuthInput } from '@/components/auth/AuthInput'
 import { getAuthErrorMessage } from '@/lib/authErrors'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
+
+  // Capture errors or status passed via URL (e.g. from callback or password reset)
+  useEffect(() => {
+    const urlError = searchParams.get('error')
+    const urlMessage = searchParams.get('message')
+    if (urlError) {
+      setError(decodeURIComponent(urlError))
+    }
+    if (urlMessage) {
+      setInfoMessage(decodeURIComponent(urlMessage))
+    }
+  }, [searchParams])
 
   // Email & Password Sign In
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -27,18 +42,19 @@ export default function LoginPage() {
 
     setLoading(true)
     setError(null)
+    setInfoMessage(null)
 
     try {
       const supabase = createClient()
       const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
       })
 
       if (signInErr) throw signInErr
 
       if (data.session) {
-        // Check if user has completed onboarding
+        // Check if user has completed onboarding preferences
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, preferences')
@@ -57,10 +73,11 @@ export default function LoginPage() {
     }
   }
 
-  // Google OAuth Sign In (with PKCE callback routing to /home or /onboarding)
+  // Google OAuth Sign In (instant account selection without forced consent roadblocks)
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
     setError(null)
+    setInfoMessage(null)
     try {
       const supabase = createClient()
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
@@ -70,7 +87,7 @@ export default function LoginPage() {
           redirectTo: `${origin}/auth/callback?next=/home`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           },
         },
       })
@@ -86,9 +103,17 @@ export default function LoginPage() {
 
   return (
     <AuthCard subtitle="Sync Up!" closeHref="/welcome">
+      {/* Informational Notification */}
+      {infoMessage && (
+        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <CheckCircle size={16} className="shrink-0 text-emerald-600" />
+          <span>{infoMessage}</span>
+        </div>
+      )}
+
       {/* Error Alert */}
       {error && (
-        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <WarningCircle size={16} className="shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
@@ -113,7 +138,7 @@ export default function LoginPage() {
             label="Your password"
             type="password"
             name="password"
-            placeholder="At least 6 characters"
+            placeholder="Your account password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             icon={<Lock size={16} />}
@@ -160,7 +185,7 @@ export default function LoginPage() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-subtle active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />
@@ -200,5 +225,17 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthCard>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <CircleNotch size={28} className="animate-spin text-[#FBBF24]" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

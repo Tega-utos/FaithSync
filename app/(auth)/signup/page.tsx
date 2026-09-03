@@ -3,7 +3,17 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Envelope, Lock, CircleNotch, WarningCircle, CheckCircle, ArrowClockwise } from '@phosphor-icons/react'
+import {
+  User,
+  Envelope,
+  Lock,
+  CircleNotch,
+  WarningCircle,
+  CheckCircle,
+  ArrowClockwise,
+  PencilSimple,
+  ShieldCheck,
+} from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { AuthInput } from '@/components/auth/AuthInput'
@@ -17,13 +27,17 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  
+  // In-app OTP verification states
   const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [resending, setResending] = useState(false)
   const [resendStatus, setResendStatus] = useState<string | null>(null)
 
   const isPasswordValid = password.length >= 6
 
-  // Email & Password Registration with strict duplicate email enforcement
+  // Email & Password Registration
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -58,10 +72,9 @@ export default function SignupPage() {
 
       if (error) throw error
 
-      // CRITICAL: Supabase returns data.user with an EMPTY identities array [] when the email already exists in the database.
-      // We lock this in and block duplicate account creation attempts.
+      // Detect duplicate email if identities array is empty
       if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-        setErrorMessage('An account with this email is already registered and locked in. Please sign in instead.')
+        setErrorMessage('An account with this email is already registered. Please sign in instead.')
         setLoading(false)
         return
       }
@@ -72,7 +85,7 @@ export default function SignupPage() {
         return
       }
 
-      // Try automatic sign in (if auto-confirm is active on this project)
+      // Try automatic sign in (if auto-confirm is active in Supabase)
       try {
         const { data: signInData } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
@@ -84,7 +97,7 @@ export default function SignupPage() {
         }
       } catch {}
 
-      // Confirmation email required for first-time newly registered user
+      // Confirmation email required: prompt user with in-app 6-digit OTP code entry
       setEmailConfirmationRequired(true)
     } catch (err: any) {
       setErrorMessage(getAuthErrorMessage(err))
@@ -93,7 +106,65 @@ export default function SignupPage() {
     }
   }
 
-  // Resend confirmation email
+  // Handle direct in-app 6-digit OTP code verification
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const cleanCode = otpCode.trim().replace(/\D/g, '')
+    if (cleanCode.length < 6) {
+      setResendStatus('Please enter the full 6-digit code.')
+      return
+    }
+
+    setVerifyingOtp(true)
+    setResendStatus(null)
+
+    try {
+      const supabase = createClient()
+      const trimmedEmail = email.trim().toLowerCase()
+
+      // Attempt verification with signup type first, fallback to email type
+      let verifyResult = await supabase.auth.verifyOtp({
+        email: trimmedEmail,
+        token: cleanCode,
+        type: 'signup',
+      })
+
+      if (verifyResult.error) {
+        verifyResult = await supabase.auth.verifyOtp({
+          email: trimmedEmail,
+          token: cleanCode,
+          type: 'email',
+        })
+      }
+
+      if (verifyResult.error) {
+        throw verifyResult.error
+      }
+
+      if (verifyResult.data.session || verifyResult.data.user) {
+        // Successful verification! Provision profile if needed and go straight to onboarding
+        const user = verifyResult.data.session?.user || verifyResult.data.user
+        if (user) {
+          const generatedCode = user.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            display_name: fullName.trim() || user.user_metadata?.full_name || 'Believer',
+            buddy_code: generatedCode,
+            church: 'Local Assembly',
+          }, { onConflict: 'id' })
+        }
+
+        router.replace('/onboarding')
+        return
+      }
+    } catch (err: any) {
+      setResendStatus(getAuthErrorMessage(err) || 'Invalid code. Please check and try again.')
+    } finally {
+      setVerifyingOtp(false)
+    }
+  }
+
+  // Resend confirmation email / code
   const handleResendEmail = async () => {
     if (!email) return
     setResending(true)
@@ -109,7 +180,7 @@ export default function SignupPage() {
         },
       })
       if (error) throw error
-      setResendStatus('Verification link resent! Please check your inbox & spam folder.')
+      setResendStatus('A fresh verification code and link were sent! Check your inbox & spam.')
     } catch (err: any) {
       setResendStatus(getAuthErrorMessage(err))
     } finally {
@@ -117,7 +188,7 @@ export default function SignupPage() {
     }
   }
 
-  // Google OAuth Sign Up (with PKCE callback routing to /onboarding)
+  // Google OAuth Sign Up (seamless without repetitive forced consent screens)
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true)
     setErrorMessage(null)
@@ -130,7 +201,7 @@ export default function SignupPage() {
           redirectTo: `${origin}/auth/callback?next=/onboarding`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           },
         },
       })
@@ -144,51 +215,105 @@ export default function SignupPage() {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IN-APP EMAIL / OTP VERIFICATION SCREEN (NO NAVIGATING AWAY REQUIRED)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (emailConfirmationRequired) {
     return (
-      <AuthCard subtitle="Verify Your Email" closeHref="/welcome">
-        <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
-            <CheckCircle size={32} weight="fill" />
+      <AuthCard subtitle="Confirm Your Email" closeHref="/welcome">
+        <div className="py-2 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+            <ShieldCheck size={30} weight="fill" />
           </div>
+
           <div className="space-y-1">
-            <h3 className="text-base font-black text-text-primary">Verification Link Sent</h3>
+            <h3 className="text-base font-black text-text-primary">Enter Confirmation Code</h3>
             <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
-              We sent a confirmation link to <span className="font-bold text-text-primary">{email}</span>. Click the link in your email to activate your account and complete setup.
+              We sent a 6-digit code to{' '}
+              <span className="font-bold text-text-primary">{email}</span>. Enter it below to activate your account instantly:
             </p>
           </div>
 
-          {resendStatus && (
-            <p className="text-[11px] font-bold text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-              {resendStatus}
-            </p>
-          )}
+          {/* 6-Digit In-App Code Input Form */}
+          <form onSubmit={handleVerifyOtp} className="space-y-3 pt-1">
+            <div className="max-w-[240px] mx-auto">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otpCode}
+                autoFocus
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="••••••"
+                className="w-full text-center tracking-[0.4em] font-mono font-black text-2xl py-3 px-4 rounded-2xl bg-card border-2 border-border focus:border-[#FBBF24] focus:ring-4 focus:ring-[#FBBF24]/20 outline-none text-text-primary transition-all shadow-inner"
+              />
+            </div>
 
-          <div className="space-y-2 pt-2">
+            {resendStatus && (
+              <p
+                className={`text-[11px] font-bold p-2.5 rounded-xl border ${
+                  resendStatus.includes('fresh') || resendStatus.includes('sent')
+                    ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200'
+                    : 'text-amber-700 bg-amber-50 dark:bg-amber-950/30 border-amber-200'
+                }`}
+              >
+                {resendStatus}
+              </p>
+            )}
+
             <button
-              type="button"
-              onClick={handleResendEmail}
-              disabled={resending}
-              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              type="submit"
+              disabled={verifyingOtp || otpCode.trim().length < 6}
+              className="w-full py-3.5 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {resending ? (
+              {verifyingOtp ? (
                 <>
-                  <CircleNotch size={14} className="animate-spin text-text-primary" />
-                  <span>Resending...</span>
+                  <CircleNotch size={16} className="animate-spin text-text-primary" />
+                  <span>Verifying Code...</span>
                 </>
               ) : (
-                <>
-                  <ArrowClockwise size={14} />
-                  <span>Resend Confirmation Email</span>
-                </>
+                <span>Verify & Continue →</span>
               )}
             </button>
+          </form>
+
+          {/* Helpful Options: Resend, Edit Email, or Click Link */}
+          <div className="pt-2 border-t border-border/70 space-y-2.5">
+            <div className="flex items-center justify-between text-xs px-1">
+              <button
+                type="button"
+                onClick={handleResendEmail}
+                disabled={resending}
+                className="font-bold text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <ArrowClockwise size={13} className={resending ? 'animate-spin' : ''} />
+                <span>{resending ? 'Sending...' : 'Resend code'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmailConfirmationRequired(false)
+                  setOtpCode('')
+                  setResendStatus(null)
+                }}
+                className="font-bold text-text-secondary hover:text-text-primary flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <PencilSimple size={13} />
+                <span>Change email</span>
+              </button>
+            </div>
+
+            <p className="text-[11px] text-text-muted">
+              Prefer the link? You can also click the confirmation link in your email.
+            </p>
 
             <Link
               href="/login"
-              className="inline-block w-full py-3 px-6 text-center text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
+              className="inline-block text-xs font-bold text-text-secondary hover:text-text-primary transition-colors pt-1"
             >
-              Already confirmed? Sign in
+              Already activated? Sign in
             </Link>
           </div>
         </div>
@@ -196,6 +321,9 @@ export default function SignupPage() {
     )
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STANDARD SIGN UP FORM
+  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <AuthCard subtitle="Create Account" closeHref="/welcome">
       {/* Error Feedback */}
@@ -206,7 +334,7 @@ export default function SignupPage() {
             <span>{errorMessage}</span>
             {errorMessage.includes('already registered') && (
               <div className="pt-1">
-                <Link href="/login" className="underline font-black text-rose-800">
+                <Link href="/login" className="underline font-black text-rose-800 dark:text-rose-400">
                   Click here to Sign In →
                 </Link>
               </div>
@@ -257,12 +385,12 @@ export default function SignupPage() {
             <div className="flex items-center gap-1.5 px-1 pt-0.5">
               <div
                 className={`h-1 flex-1 rounded-full transition-all ${
-                  isPasswordValid ? 'bg-emerald-50 dark:bg-emerald-950/300' : 'bg-amber-400'
+                  isPasswordValid ? 'bg-emerald-500' : 'bg-amber-400'
                 }`}
               />
               <span
                 className={`text-[10px] font-bold ${
-                  isPasswordValid ? 'text-emerald-600' : 'text-amber-600'
+                  isPasswordValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                 }`}
               >
                 {isPasswordValid ? 'Password meets requirements' : 'Must be at least 6 characters'}
@@ -301,7 +429,7 @@ export default function SignupPage() {
         type="button"
         onClick={handleGoogleSignUp}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-subtle active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />
