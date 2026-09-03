@@ -757,11 +757,11 @@ export default function BuddyChatPage() {
           >
             {/* Circular Avatar */}
             <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-sm flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-neutral-800 text-white dark:text-neutral-100 font-black text-sm flex items-center justify-center border border-border dark:border-neutral-700 ring-1 ring-black/5 dark:ring-white/20 shadow-xs">
                 {buddyInitial}
               </div>
               {buddyStatus === 'online' && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-50 dark:bg-emerald-950/300 ring-2 ring-white" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-card" />
               )}
             </div>
 
@@ -777,7 +777,7 @@ export default function BuddyChatPage() {
               </div>
               {/* Real-time Status Indicator */}
               <p className="text-[10px] text-text-secondary flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>{buddyLastSeen}</span>
                 <span>•</span>
                 <span className="truncate max-w-[100px]">{buddyChurch}</span>
@@ -974,12 +974,12 @@ export default function BuddyChatPage() {
                   onClick={() => {
                     if (isLiveNow) handleJoinSession(msg)
                   }}
-                  className={`w-full max-w-sm rounded-3xl bg-[#0E0E0E] dark:bg-neutral-900 text-white border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
+                  className={`w-full max-w-sm rounded-3xl bg-[#161616] dark:bg-[#1E1E1E] text-white border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
                     isLiveNow
-                      ? 'border-[#FBBF24]/50 dark:border-amber-400/50 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.15)]'
+                      ? 'border-[#FBBF24] dark:border-amber-400 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.2)]'
                       : isScheduledInFuture
-                      ? 'border-[#FBBF24]/30 dark:border-amber-500/30'
-                      : 'border-white/10 opacity-75'
+                      ? 'border-[#FBBF24]/50 dark:border-amber-400/40'
+                      : 'border-white/20 dark:border-neutral-700 opacity-75'
                   }`}
                 >
                   {/* Top: Gold Icon Badge & Details */}
@@ -999,7 +999,7 @@ export default function BuddyChatPage() {
                         <h4 className="text-sm font-black text-white tracking-tight">
                           Clock-in Invite
                         </h4>
-                        <span className="text-xs text-white/70 font-mono-tabular">
+                        <span className="text-xs text-neutral-300 font-mono-tabular">
                           {durationMins} mins • {discipline}
                         </span>
                       </div>
@@ -1007,7 +1007,7 @@ export default function BuddyChatPage() {
 
                     {/* Dynamic Status Pill */}
                     {isScheduledInFuture ? (
-                      <span className="px-2.5 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 text-[#FBBF24] dark:text-amber-400 border border-[#FBBF24]/30 dark:border-amber-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-[#FBBF24] dark:text-amber-300 border border-[#FBBF24]/50 dark:border-amber-400/50 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                         <CalendarCheck size={11} weight="bold" />
                         <span>{datePrefix} {timeDisplay}</span>
                       </span>
@@ -1025,7 +1025,7 @@ export default function BuddyChatPage() {
 
                   {/* Shared Focus Intention: Translucent Frosted-Glass Block */}
                   {focusText && (
-                    <div className="p-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/15 text-xs text-white/90 italic flex items-start gap-2 shadow-inner">
+                    <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/95 italic flex items-start gap-2 shadow-inner">
                       <Quotes size={15} className="text-[#FBBF24] dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="leading-relaxed">&ldquo;{focusText}&rdquo;</span>
                     </div>
@@ -1033,12 +1033,12 @@ export default function BuddyChatPage() {
 
                   {/* Interactive Button Based on Real-Time State */}
                   {isScheduledInFuture ? (
-                    <div className="w-full py-3 px-4 rounded-2xl bg-white/5 border border-white/15 text-[#FBBF24] dark:text-amber-400 font-bold text-xs flex items-center justify-between">
+                    <div className="w-full py-3 px-4 rounded-2xl bg-white/10 dark:bg-neutral-800/80 border border-white/20 dark:border-amber-400/30 text-[#FBBF24] dark:text-amber-300 font-bold text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Clock size={15} weight="bold" />
-                        <span>Starts at {timeDisplay}</span>
+                        <Clock size={16} weight="bold" className="text-[#FBBF24] dark:text-amber-300" />
+                        <span className="text-white dark:text-neutral-100 font-medium">Starts at {timeDisplay}</span>
                       </div>
-                      <span className="text-[10px] text-white/60 font-mono-tabular">
+                      <span className="text-[11px] text-[#FBBF24] dark:text-amber-300 font-mono-tabular font-bold">
                         in {hoursUntilStart > 0 ? `${hoursUntilStart}h ` : ''}{minsUntilStart % 60}m
                       </span>
                     </div>
@@ -1125,13 +1125,13 @@ export default function BuddyChatPage() {
               <div
                 className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
                   isMe
-                    ? 'bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white rounded-br-xs'
-                    : 'bg-card text-text-primary border border-border dark:border-white/10 rounded-bl-xs'
+                    ? 'bg-[#0E0E0E] text-white dark:bg-neutral-800 dark:text-neutral-100 border border-transparent dark:border-neutral-700 rounded-br-xs'
+                    : 'bg-card text-text-primary dark:text-neutral-100 border border-border dark:border-neutral-700/80 rounded-bl-xs'
                 }`}
               >
                 <p className="whitespace-pre-line">{msg.content}</p>
               </div>
-              <span className="text-[9px] text-text-muted mt-0.5 px-1 font-mono-tabular">
+              <span className="text-[10px] text-text-muted dark:text-neutral-400 mt-0.5 px-1 font-mono-tabular">
                 {new Date(msg.created_at).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',

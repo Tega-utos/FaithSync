@@ -224,126 +224,128 @@ export default function HomePage() {
 
         {/* Dual Animated Circular Rings (Separate Side-by-Side) */}
         <div className="grid grid-cols-2 gap-4 py-2">
-          {/* 1. Prayer Ring */}
-          <div className="flex flex-col items-center text-center space-y-2 p-2">
-            <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="#F3F4F6"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="#FBBF24"
-                  strokeWidth="8"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={prayerOffset}
-                  strokeLinecap="round"
-                  fill="none"
-                  style={{
-                    transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <HandsPraying size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-text-primary">Prayer</span>
+            {/* 1. Prayer Ring */}
+            <div className="flex flex-col items-center text-center space-y-2 p-2">
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="currentColor"
+                    className="text-gray-200 dark:text-neutral-800"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#FBBF24"
+                    strokeWidth="8"
+                    strokeDasharray={RING_CIRCUMFERENCE}
+                    strokeDashoffset={prayerOffset}
+                    strokeLinecap="round"
+                    fill="none"
+                    style={{
+                      transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <HandsPraying size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
+                  <span className="text-xs font-bold text-text-primary">Prayer</span>
+                </div>
               </div>
+              <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
+                <Clock size={13} className="text-[#FBBF24]" />
+                <span>{dashboard.prayerMinutes} / {dashboard.prayerTarget} min</span>
+              </span>
             </div>
-            <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
-              <Clock size={13} className="text-[#FBBF24]" />
-              <span>{dashboard.prayerMinutes} / {dashboard.prayerTarget} min</span>
-            </span>
-          </div>
 
-          {/* 2. Study Ring */}
-          <div className="flex flex-col items-center text-center space-y-2 p-2">
-            <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="#F3F4F6"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="#FBBF24"
-                  strokeWidth="8"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={studyOffset}
-                  strokeLinecap="round"
-                  fill="none"
-                  style={{
-                    transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <BookOpen size={18} className="text-[#FBBF24] mb-0.5" />
-                <span className="text-xs font-bold text-text-primary">Study</span>
+            {/* 2. Study Ring */}
+            <div className="flex flex-col items-center text-center space-y-2 p-2">
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="currentColor"
+                    className="text-gray-200 dark:text-neutral-800"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#FBBF24"
+                    strokeWidth="8"
+                    strokeDasharray={RING_CIRCUMFERENCE}
+                    strokeDashoffset={studyOffset}
+                    strokeLinecap="round"
+                    fill="none"
+                    style={{
+                      transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <BookOpen size={18} className="text-[#FBBF24] mb-0.5" />
+                  <span className="text-xs font-bold text-text-primary">Study</span>
+                </div>
               </div>
+              <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
+                <BookOpen size={13} className="text-[#FBBF24]" />
+                <span>{dashboard.studyMinutes} / {dashboard.studyTarget} min</span>
+              </span>
             </div>
-            <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
-              <BookOpen size={13} className="text-[#FBBF24]" />
-              <span>{dashboard.studyMinutes} / {dashboard.studyTarget} min</span>
-            </span>
           </div>
         </div>
-      </div>
 
-      {/* Interactive Verse of the Day Card */}
-      <div className="faith-card p-5 space-y-3.5 bg-gradient-to-br from-[#FAF6EE] to-white dark:from-[#1A1A1A] dark:to-[#121212] border border-border dark:border-white/10 shadow-xs relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
-              Verse of the Day
+        {/* Interactive Verse of the Day Card */}
+        <div className="faith-card p-5 space-y-3.5 bg-card border border-border dark:border-neutral-700/80 shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary dark:text-neutral-400">
+                Verse of the Day
+              </span>
+            </div>
+            <span className="text-xs font-mono font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-400/15 px-2.5 py-0.5 rounded-md border border-amber-500/25 dark:border-amber-400/30">
+              Isaiah 40:31 • WEB
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold text-[#FBBF24] dark:text-amber-400 bg-[#FDF9F1] dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-[#FBBF24]/30 dark:border-amber-500/30">
-            Isaiah 40:31 • WEB
-          </span>
+
+          <blockquote className="space-y-1.5">
+            <p className="text-[14.5px] sm:text-[15.5px] font-normal text-text-primary dark:text-neutral-100 leading-relaxed">
+              &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
+            </p>
+            <p className="text-xs text-text-secondary dark:text-neutral-400 font-normal">
+              Spiritual Theme: Strength &amp; Endurance in Daily Waiting
+            </p>
+          </blockquote>
+
+          {/* 1-Tap Verse Actions */}
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border dark:border-neutral-800">
+            <Link
+              href="/bible?book=Isaiah&chapter=40"
+              className="p-2.5 rounded-xl bg-surface dark:bg-[#1E1E1E] border border-border dark:border-neutral-700 hover:border-[#FBBF24] text-text-primary dark:text-neutral-100 text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:bg-subtle"
+            >
+              <BookOpen size={14} className="text-[#FBBF24]" weight="bold" />
+              <span>Read Bible</span>
+            </Link>
+
+            <Link
+              href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
+              className="p-2.5 rounded-xl bg-surface dark:bg-[#1E1E1E] border border-border dark:border-neutral-700 hover:border-[#FBBF24] text-text-primary dark:text-neutral-100 text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:bg-subtle"
+            >
+              <ShareNetwork size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
+              <span>Share to Square</span>
+            </Link>
+          </div>
         </div>
-
-        <blockquote className="space-y-1">
-          <p className="text-xs sm:text-sm font-semibold text-text-primary leading-relaxed italic">
-            &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
-          </p>
-          <p className="text-[10px] text-text-secondary dark:text-neutral-400 font-medium">
-            Spiritual Theme: Strength & Endurance in Daily Waiting
-          </p>
-        </blockquote>
-
-        {/* 1-Tap Verse Actions */}
-        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-light dark:border-white/10">
-          <Link
-            href="/bible?book=Isaiah&chapter=40"
-            className="p-2 rounded-xl bg-card dark:bg-neutral-800/80 border border-border dark:border-white/10 hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
-          >
-            <BookOpen size={13} className="text-[#FBBF24]" weight="bold" />
-            <span>Read Bible</span>
-          </Link>
-
-          <Link
-            href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
-            className="p-2 rounded-xl bg-card dark:bg-neutral-800/80 border border-border dark:border-white/10 hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
-          >
-            <ShareNetwork size={13} className="text-[#234537] dark:text-emerald-400" weight="bold" />
-            <span>Share to Square</span>
-          </Link>
-        </div>
-      </div>
 
       {/* The Clock In Now CTA */}
       <Link href="/clock-in" className="block group">
@@ -442,7 +444,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-border/80 dark:border-white/15 font-bold text-xs flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 ring-1 ring-black/5 dark:ring-white/20 font-bold text-xs flex items-center justify-center shadow-2xs">
                         {buddy.initial}
                       </div>
                       {buddy.isActiveNow && (
@@ -479,10 +481,10 @@ export default function HomePage() {
                   <button
                     onClick={(e) => handleNudge(e, buddy.id, buddy.connectionId)}
                     disabled={isNudged}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                       isNudged
-                        ? 'bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white animate-nudge'
-                        : `bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 hover:bg-[#262626] dark:hover:bg-neutral-700 active:scale-95 ${
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#0E0E0E] animate-nudge'
+                        : `bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#0E0E0E] dark:hover:bg-[#F59E0B] shadow-sm active:scale-95 ${
                             vibratingState[buddy.id] ? 'anim-vibrate' : ''
                           }`
                     }`}
@@ -494,8 +496,8 @@ export default function HomePage() {
                       </>
                     ) : (
                       <>
-                        <HandWaving size={12} weight="fill" className="text-amber-400" />
-                        <span>Nudge</span>
+                        <HandWaving size={13} weight="fill" className="text-amber-400 dark:text-[#0E0E0E]" />
+                        <span className="font-semibold text-white dark:text-[#0E0E0E]">Nudge</span>
                       </>
                     )}
                   </button>

@@ -312,11 +312,11 @@ export default function SyncPage() {
           onClick={() => setActiveTab('personal')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'personal'
-              ? 'bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 shadow-sm'
-              : 'text-text-secondary hover:text-text-primary'
+              ? 'bg-[#0E0E0E] text-white dark:bg-white dark:text-[#0E0E0E] shadow-sm'
+              : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
           }`}
         >
-          <User size={13} className={activeTab === 'personal' ? 'text-[#FBBF24]' : 'opacity-60'} />
+          <User size={13} className={activeTab === 'personal' ? 'text-[#FBBF24] dark:text-[#0E0E0E]' : 'opacity-60'} />
           <span>Personal</span>
         </button>
 
@@ -326,11 +326,11 @@ export default function SyncPage() {
           onClick={() => setActiveTab('group')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'group'
-              ? 'bg-[#0E0E0E] dark:bg-neutral-800 text-white dark:text-white border border-transparent dark:border-white/15 shadow-sm'
-              : 'text-text-secondary hover:text-text-primary'
+              ? 'bg-[#0E0E0E] text-white dark:bg-white dark:text-[#0E0E0E] shadow-sm'
+              : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
           }`}
         >
-          <Users size={13} className={activeTab === 'group' ? 'text-[#FBBF24]' : 'opacity-60'} />
+          <Users size={13} className={activeTab === 'group' ? 'text-[#FBBF24] dark:text-[#0E0E0E]' : 'opacity-60'} />
           <span>Groups</span>
         </button>
 
@@ -338,7 +338,7 @@ export default function SyncPage() {
         <button
           type="button"
           onClick={() => router.push('/square')}
-          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary hover:text-text-primary transition-all flex items-center justify-center gap-1.5"
+          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white transition-all flex items-center justify-center gap-1.5"
         >
           <Globe size={13} className="text-[#FBBF24]" />
           <span>Square</span>
@@ -557,9 +557,9 @@ export default function SyncPage() {
                 setCreateGroupStep('form')
                 setIsCreateGroupOpen(true)
               }}
-              className="p-3.5 rounded-2xl bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all cursor-pointer"
+              className="p-3.5 rounded-2xl bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#0E0E0E] dark:hover:bg-[#F59E0B] flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] transition-all cursor-pointer"
             >
-              <Plus size={16} className="text-[#FBBF24]" weight="bold" />
+              <Plus size={16} className="text-[#FBBF24] dark:text-[#0E0E0E]" weight="bold" />
               <span>Create Group</span>
             </button>
 
@@ -874,7 +874,7 @@ export default function SyncPage() {
                     type="button"
                     onClick={() => setNewGroupIsPrivate((p) => !p)}
                     className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                      newGroupIsPrivate ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                      newGroupIsPrivate ? 'bg-[#0E0E0E] dark:bg-amber-400' : 'bg-gray-300 dark:bg-neutral-700'
                     }`}
                   >
                     <div
@@ -889,11 +889,11 @@ export default function SyncPage() {
                 <button
                   type="submit"
                   disabled={!newGroupName.trim() || isCreatingGroup}
-                  className="w-full bg-[#0E0E0E] dark:bg-neutral-800 border border-transparent dark:border-white/15 text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#0E0E0E] dark:hover:bg-[#F59E0B] py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isCreatingGroup ? (
                     <>
-                      <CircleNotch size={16} className="animate-spin text-[#FBBF24]" />
+                      <CircleNotch size={16} className="animate-spin text-[#FBBF24] dark:text-[#0E0E0E]" />
                       <span>Creating Group...</span>
                     </>
                   ) : (
