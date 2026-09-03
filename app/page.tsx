@@ -40,9 +40,16 @@ export default function SplashPage() {
               .eq('id', currentUser.id)
               .maybeSingle()
 
+            const localDone =
+              typeof window !== 'undefined' &&
+              (localStorage.getItem('faithsync_onboarding_completed') === 'true' ||
+                localStorage.getItem(`faithsync_onboarding_${currentUser.id}`) === 'true')
+
             const hasCompletedOnboarding =
+              localDone ||
+              currentUser.user_metadata?.onboarding_completed === true ||
               profile?.preferences?.onboarding_completed === true ||
-              (profile?.preferences?.targets?.prayer && profile?.preferences?.targets?.study)
+              Boolean(profile?.preferences?.targets?.prayer || profile?.preferences?.targets?.study)
 
             if (hasCompletedOnboarding) {
               router.replace('/home')

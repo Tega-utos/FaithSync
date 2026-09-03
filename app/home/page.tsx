@@ -59,19 +59,35 @@ export default function HomePage() {
         } = await supabase.auth.getUser()
 
         if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('preferences')
-            .eq('id', user.id)
-            .maybeSingle()
+          // Check localStorage first for instant client truth
+          const localDone =
+            typeof window !== 'undefined' &&
+            (localStorage.getItem('faithsync_onboarding_completed') === 'true' ||
+              localStorage.getItem(`faithsync_onboarding_${user.id}`) === 'true')
 
-          const hasCompletedOnboarding =
-            profile?.preferences?.onboarding_completed === true ||
-            (profile?.preferences?.targets?.prayer && profile?.preferences?.targets?.study)
+          // Check user metadata
+          const metaDone =
+            user.user_metadata?.onboarding_completed === true ||
+            Boolean(user.user_metadata?.prayer_target || user.user_metadata?.study_target)
 
-          if (!hasCompletedOnboarding) {
-            router.replace('/onboarding')
-            return
+          if (!localDone && !metaDone) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('preferences')
+              .eq('id', user.id)
+              .maybeSingle()
+
+            const profileDone =
+              profile?.preferences?.onboarding_completed === true ||
+              Boolean(profile?.preferences?.targets?.prayer || profile?.preferences?.targets?.study)
+
+            if (!profileDone) {
+              router.replace('/onboarding')
+              return
+            } else if (typeof window !== 'undefined') {
+              localStorage.setItem('faithsync_onboarding_completed', 'true')
+              localStorage.setItem(`faithsync_onboarding_${user.id}`, 'true')
+            }
           }
         }
       } catch (err) {

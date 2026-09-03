@@ -211,57 +211,91 @@ export default function OnboardingPage() {
     const finalDisplayName = displayName.trim() || 'Believer'
     const finalChurch = church.trim() || 'Local Assembly'
 
-    const updatePayload: Record<string, any> = {
-      id: userId,
-      display_name: finalDisplayName,
-      church: finalChurch,
-      preferred_bible_version: preferredBibleVersion,
-      buddy_code: syncCode,
-      preferences: {
-        onboarding_completed: true,
-        completed_at: new Date().toISOString(),
-        targets: {
-          prayer: prayerTarget,
-          study: studyTarget,
-          prayer_minutes: prayerTarget,
-          study_minutes: studyTarget,
-        },
-        prayerTarget,
-        studyTarget,
-        reminderTimes: {
-          daily: scheduledTime,
-          prayer: scheduledTime,
-          study: '20:00',
-        },
-        daily_reminder_time: scheduledTime,
-        church: finalChurch,
-        preferred_bible_version: preferredBibleVersion,
-        notifDailyReminders: allowNotifications,
-        notifBuddyNudges: true,
-        notifGroupActivity: true,
-        publicStreak: true,
-        publicMilestones: true,
-      },
-      updated_at: new Date().toISOString(),
+    // 1. Mark in localStorage immediately so client guards recognize onboarding is complete
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('faithsync_onboarding_completed', 'true')
+      localStorage.setItem(`faithsync_onboarding_${userId}`, 'true')
+      localStorage.setItem('faithsync_prayer_target', String(prayerTarget))
+      localStorage.setItem('faithsync_study_target', String(studyTarget))
     }
 
-    // 1. Persist to profiles table
-    await (supabase.from('profiles') as any).upsert(updatePayload, { onConflict: 'id' })
+    // 2. Keep Auth user metadata in sync (Always succeeds for authenticated user)
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          full_name: finalDisplayName,
+          display_name: finalDisplayName,
+          onboarding_completed: true,
+          prayer_target: prayerTarget,
+          study_target: studyTarget,
+          buddy_code: syncCode,
+          church: finalChurch,
+          preferred_bible_version: preferredBibleVersion,
+          targets: {
+            prayer: prayerTarget,
+            study: studyTarget,
+          },
+        },
+      })
+    } catch (authErr) {
+      console.warn('Auth updateUser notice:', authErr)
+    }
 
-    // 2. Keep Auth user metadata in sync
-    await supabase.auth.updateUser({
-      data: {
-        full_name: finalDisplayName,
-        display_name: finalDisplayName,
-        prayer_target: prayerTarget,
-        study_target: studyTarget,
-        buddy_code: syncCode,
-        church: finalChurch,
-        preferred_bible_version: preferredBibleVersion,
+    // 3. Persist to profiles table safely
+    const preferencesData = {
+      onboarding_completed: true,
+      completed_at: new Date().toISOString(),
+      targets: {
+        prayer: prayerTarget,
+        study: studyTarget,
+        prayer_minutes: prayerTarget,
+        study_minutes: studyTarget,
       },
-    })
+      prayerTarget,
+      studyTarget,
+      reminderTimes: {
+        daily: scheduledTime,
+        prayer: scheduledTime,
+        study: '20:00',
+      },
+      daily_reminder_time: scheduledTime,
+      church: finalChurch,
+      preferred_bible_version: preferredBibleVersion,
+      notifDailyReminders: allowNotifications,
+      notifBuddyNudges: true,
+      notifGroupActivity: true,
+      publicStreak: true,
+      publicMilestones: true,
+    }
 
-    // 3. Optional Buddy connection
+    try {
+      const { error: fullErr } = await (supabase.from('profiles') as any).upsert(
+        {
+          id: userId,
+          display_name: finalDisplayName,
+          buddy_code: syncCode,
+          church: finalChurch,
+          preferences: preferencesData,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      )
+
+      if (fullErr) {
+        console.warn('Full upsert notice, trying safe update:', fullErr)
+        await (supabase.from('profiles') as any)
+          .update({
+            display_name: finalDisplayName,
+            preferences: preferencesData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId)
+      }
+    } catch (profileErr) {
+      console.warn('Profile save notice:', profileErr)
+    }
+
+    // 4. Optional Buddy connection
     if (customFriendCode && customFriendCode.trim()) {
       try {
         const { sendBuddyCodeConnect } = await import('@/features/buddies/services/buddyService')
@@ -290,38 +324,53 @@ export default function OnboardingPage() {
   const handleSkip = async () => {
     setSaving(true)
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('faithsync_onboarding_completed', 'true')
+        if (userId) localStorage.setItem(`faithsync_onboarding_${userId}`, 'true')
+      }
+
       if (userId) {
         const supabase = createClient()
         const finalDisplayName = displayName.trim() || 'Believer'
         const finalChurch = church.trim() || 'Local Assembly'
 
-        await (supabase.from('profiles') as any).upsert(
-          {
-            id: userId,
-            display_name: finalDisplayName,
-            church: finalChurch,
-            preferred_bible_version: preferredBibleVersion,
-            buddy_code: syncCode,
-            preferences: {
+        try {
+          await supabase.auth.updateUser({
+            data: {
               onboarding_completed: true,
-              completed_at: new Date().toISOString(),
-              targets: { prayer: 15, study: 15, prayer_minutes: 15, study_minutes: 15 },
-              prayerTarget: 15,
-              studyTarget: 15,
-              reminderTimes: { daily: '07:00', prayer: '07:00', study: '20:00' },
-              daily_reminder_time: '07:00',
-              church: finalChurch,
-              preferred_bible_version: preferredBibleVersion,
-              notifDailyReminders: true,
-              notifBuddyNudges: true,
-              notifGroupActivity: true,
-              publicStreak: true,
-              publicMilestones: true,
+              prayer_target: 15,
+              study_target: 15,
             },
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'id' }
-        )
+          })
+        } catch {}
+
+        try {
+          await (supabase.from('profiles') as any).upsert(
+            {
+              id: userId,
+              display_name: finalDisplayName,
+              buddy_code: syncCode,
+              preferences: {
+                onboarding_completed: true,
+                completed_at: new Date().toISOString(),
+                targets: { prayer: 15, study: 15, prayer_minutes: 15, study_minutes: 15 },
+                prayerTarget: 15,
+                studyTarget: 15,
+                reminderTimes: { daily: '07:00', prayer: '07:00', study: '20:00' },
+                daily_reminder_time: '07:00',
+                church: finalChurch,
+                preferred_bible_version: preferredBibleVersion,
+                notifDailyReminders: true,
+                notifBuddyNudges: true,
+                notifGroupActivity: true,
+                publicStreak: true,
+                publicMilestones: true,
+              },
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'id' }
+          )
+        } catch {}
       }
       router.replace('/home')
     } catch {
