@@ -32,7 +32,7 @@ export function AuthInput({
       {label && (
         <label
           htmlFor={inputId}
-          className={`block text-[11px] font-bold tracking-tight ${
+          className={`block text-[12px] font-medium tracking-normal ${
             hasError ? 'text-[#EA2C26] dark:text-red-400' : 'text-text-secondary'
           }`}
         >
@@ -41,14 +41,14 @@ export function AuthInput({
       )}
 
       <div
-        className={`relative flex items-center rounded-2xl bg-card border transition-all shadow-2xs ${
+        className={`relative flex items-center rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border transition-all ${
           hasError
             ? 'border-[#EA2C26] ring-2 ring-[#EA2C26]/10'
-            : 'border-border focus-within:border-[#0E0E0E] dark:border-white/20 focus-within:ring-1 focus-within:ring-black/10'
+            : 'border-border/80 dark:border-white/15 focus-within:border-border focus-within:ring-2 focus-within:ring-black/5 dark:focus-within:ring-white/10'
         } ${className}`}
       >
         {icon && (
-          <div className="pl-3.5 pr-2 text-text-muted shrink-0 flex items-center justify-center">
+          <div className="pl-3.5 pr-2 text-text-muted/70 shrink-0 flex items-center justify-center">
             {icon}
           </div>
         )}
@@ -56,7 +56,7 @@ export function AuthInput({
         <input
           id={inputId}
           type={computedType}
-          className={`w-full bg-transparent px-3.5 py-3 text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none ${
+          className={`w-full bg-transparent px-3.5 py-3 text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal outline-none antialiased tracking-normal ${
             icon ? 'pl-1' : ''
           } ${isPassword ? 'pr-10' : ''}`}
           {...rest}
@@ -66,7 +66,7 @@ export function AuthInput({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            className="absolute right-3 p-1.5 text-text-muted/70 hover:text-text-primary transition-colors cursor-pointer"
             tabIndex={-1}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
@@ -77,7 +77,7 @@ export function AuthInput({
 
       {(hasError || helperText) && (
         <p
-          className={`text-[10px] font-bold px-1 ${
+          className={`text-[11px] font-medium px-1 ${
             hasError ? 'text-[#EA2C26] dark:text-red-400' : 'text-text-muted'
           }`}
         >

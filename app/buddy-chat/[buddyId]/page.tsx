@@ -1171,7 +1171,7 @@ export default function BuddyChatPage() {
               ? 'Daily limit reached (3/3 messages for Square Connections)'
               : `Message ${buddyName}...`
           }
-          className="flex-1 px-3.5 py-2.5 bg-surface border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all shadow-xs disabled:opacity-50"
+          className="flex-1 px-3.5 py-2.5 bg-surface/80 dark:bg-neutral-900/80 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all shadow-xs disabled:opacity-50"
         />
 
         {/* Picture / Image Picker Input & Button */}

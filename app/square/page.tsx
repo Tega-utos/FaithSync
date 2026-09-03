@@ -1323,7 +1323,7 @@ function SquarePageContent() {
                               }))
                             }
                             placeholder="Write an encouraging comment or prayer..."
-                            className="flex-1 px-3.5 py-2 rounded-xl bg-card border border-border text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-xs"
+                            className="flex-1 px-3.5 py-2 rounded-xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
                           />
                           <button
                             type="submit"
@@ -1560,7 +1560,7 @@ function SquarePageContent() {
                     value={postTitle}
                     onChange={(e) => setPostTitle(e.target.value)}
                     placeholder="e.g. Medical exam tomorrow"
-                    className="w-full px-3.5 py-2.5 bg-card border border-border rounded-xl text-xs font-bold text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                    className="w-full px-3.5 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
                   />
                 </div>
 
@@ -1594,7 +1594,7 @@ function SquarePageContent() {
                         ? 'What difficulty or challenge are you bringing before God and the church?'
                         : 'How has God moved in your life and answered prayer?'
                     }
-                    className="w-full p-3.5 bg-card border border-border rounded-2xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] transition-all resize-none shadow-sm font-normal"
+                    className="w-full p-3.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all resize-none shadow-xs"
                   />
                 </div>
 
@@ -1728,7 +1728,7 @@ function SquarePageContent() {
                   value={connectMessage}
                   onChange={(e) => setConnectMessage(e.target.value)}
                   placeholder="I saw your prayer request about your family and wanted to reach out. Can we connect?"
-                  className="w-full p-3 bg-card border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] resize-none shadow-sm"
+                  className="w-full p-3 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 resize-none shadow-xs"
                 />
 
                 <button

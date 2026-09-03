@@ -348,7 +348,7 @@ export default function ClockInPage() {
                 value={focusInput}
                 onChange={(e) => setFocusInput(e.target.value)}
                 placeholder="What is your focus? (e.g. Romans 12)"
-                className="w-full px-4 py-2.5 bg-card border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-xs text-center"
+                className="w-full px-4 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs text-center"
               />
             ) : (
               /* Timeline Builder Trigger Card */

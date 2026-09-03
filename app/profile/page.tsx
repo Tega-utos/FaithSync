@@ -1337,31 +1337,31 @@ export default function ProfilePage() {
             <form onSubmit={handleSaveIdentity} className="space-y-3.5">
               {/* Display Name Input Wrap */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-text-secondary block">Display Name</label>
-                <div className="p-3 rounded-2xl bg-card border border-border flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <User size={18} className="text-text-muted shrink-0" />
+                <label className="text-[12px] font-medium text-text-secondary block">Display Name</label>
+                <div className="p-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 flex items-center gap-3 shadow-xs focus-within:border-border focus-within:ring-2 focus-within:ring-black/5 dark:focus-within:ring-white/10 transition-all">
+                  <User size={18} className="text-text-muted/70 shrink-0" />
                   <input
                     type="text"
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder="Your Name"
-                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-bold placeholder-[#9095A1]"
+                    className="bg-transparent border-none outline-none text-[13.5px] text-text-primary w-full font-normal placeholder:text-text-muted/60 placeholder:font-normal"
                   />
                 </div>
               </div>
 
               {/* Local Assembly (Church) Input Wrap */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-text-secondary block">Local Assembly (Church)</label>
-                <div className="p-3 rounded-2xl bg-card border border-border flex items-center gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <Church size={18} className="text-text-muted shrink-0" />
+                <label className="text-[12px] font-medium text-text-secondary block">Local Assembly (Church)</label>
+                <div className="p-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 flex items-center gap-3 shadow-xs focus-within:border-border focus-within:ring-2 focus-within:ring-black/5 dark:focus-within:ring-white/10 transition-all">
+                  <Church size={18} className="text-text-muted/70 shrink-0" />
                   <input
                     type="text"
                     value={editChurch}
                     onChange={(e) => setEditChurch(e.target.value)}
                     placeholder="e.g. Grace Assembly"
-                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-bold placeholder-[#9095A1]"
+                    className="bg-transparent border-none outline-none text-[13.5px] text-text-primary w-full font-normal placeholder:text-text-muted/60 placeholder:font-normal"
                   />
                 </div>
               </div>
@@ -1369,18 +1369,18 @@ export default function ProfilePage() {
               {/* Short Bio Input Wrap */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-text-secondary">Short Bio / Life Verse</label>
+                  <label className="text-[12px] font-medium text-text-secondary">Short Bio / Life Verse</label>
                   <span className="text-[10px] text-text-muted font-mono-tabular">{editBio.length}/150</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-card border border-border flex items-start gap-3 shadow-xs focus-within:border-[#FBBF24] focus-within:ring-2 focus-within:ring-[#FBBF24]/20 transition-all">
-                  <Quotes size={18} className="text-text-muted shrink-0 mt-0.5" />
+                <div className="p-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 flex items-start gap-3 shadow-xs focus-within:border-border focus-within:ring-2 focus-within:ring-black/5 dark:focus-within:ring-white/10 transition-all">
+                  <Quotes size={18} className="text-text-muted/70 shrink-0 mt-0.5" />
                   <textarea
                     rows={2}
                     maxLength={150}
                     value={editBio}
                     onChange={(e) => setEditBio(e.target.value)}
                     placeholder="Standing firm in faith..."
-                    className="bg-transparent border-none outline-none text-xs text-text-primary w-full font-medium placeholder-[#9095A1] resize-none leading-relaxed"
+                    className="bg-transparent border-none outline-none text-[13.5px] text-text-primary w-full font-normal placeholder:text-text-muted/60 placeholder:font-normal resize-none leading-relaxed"
                   />
                 </div>
               </div>

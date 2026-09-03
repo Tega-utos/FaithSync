@@ -471,7 +471,7 @@ export default function FindBuddyPage() {
                 setCodeLookupSuccess(null)
               }}
               placeholder="e.g. SYNC26"
-              className="flex-1 px-3.5 py-2.5 bg-card border border-border rounded-xl font-mono font-bold text-xs uppercase tracking-widest text-text-primary focus:outline-none focus:border-[#FBBF24] shadow-sm"
+              className="flex-1 px-3.5 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl font-mono font-medium text-[13px] uppercase tracking-widest text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
             />
             <button
               type="submit"
@@ -518,7 +518,7 @@ export default function FindBuddyPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Name, Sync Code, or Church..."
-                className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
               />
             </div>
             <button

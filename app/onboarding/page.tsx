@@ -409,7 +409,7 @@ export default function OnboardingPage() {
           <div className="bg-surface rounded-3xl p-5 border border-border space-y-3.5 shadow-2xs">
             {/* Display Name Input */}
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-text-secondary">
+              <label className="block text-[12px] font-medium text-text-secondary">
                 Display Name / How Buddies See You
               </label>
               <input
@@ -417,13 +417,13 @@ export default function OnboardingPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. Brother David, Sarah M."
-                className="w-full px-3.5 py-3 rounded-2xl bg-card border border-border text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all shadow-2xs"
+                className="w-full px-3.5 py-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all"
               />
             </div>
 
             {/* Local Church Assembly */}
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-text-secondary flex items-center gap-1.5">
+              <label className="block text-[12px] font-medium text-text-secondary flex items-center gap-1.5">
                 <Church size={14} className="text-[#FBBF24]" />
                 <span>Local Assembly / Church (Optional)</span>
               </label>
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
                 value={church}
                 onChange={(e) => setChurch(e.target.value)}
                 placeholder="e.g. Grace Fellowship, City Assembly"
-                className="w-full px-3.5 py-3 rounded-2xl bg-card border border-border text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all shadow-2xs"
+                className="w-full px-3.5 py-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all"
               />
             </div>
 
@@ -658,7 +658,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
                 placeholder="Have a buddy's code? (Optional)"
                 maxLength={12}
-                className="flex-1 px-4 py-3.5 rounded-2xl bg-surface border border-border font-mono text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 uppercase transition-all shadow-2xs"
+                className="flex-1 px-4 py-3 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 font-mono text-[13px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 uppercase transition-all"
               />
             </div>
           </div>

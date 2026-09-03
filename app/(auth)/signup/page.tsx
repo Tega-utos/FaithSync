@@ -246,7 +246,7 @@ export default function SignupPage() {
                 autoFocus
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="••••••"
-                className="w-full text-center tracking-[0.4em] font-mono font-black text-2xl py-3 px-4 rounded-2xl bg-card border-2 border-border focus:border-[#FBBF24] focus:ring-4 focus:ring-[#FBBF24]/20 outline-none text-text-primary transition-all shadow-inner"
+                className="w-full text-center tracking-[0.35em] font-mono font-medium text-xl py-3 px-4 rounded-2xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 outline-none text-text-primary transition-all"
               />
             </div>
 

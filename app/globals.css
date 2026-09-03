@@ -448,19 +448,45 @@ html.modal-open .faithsync-bottom-nav {
   pointer-events: none !important;
 }
 
-/* Mobile Modal Stability & Input Zoom Suppression */
+/* ═══════════════════════════════════════════════════════════
+   Instagram-Style Soft, Refined Typography for Input Fields
+   ═══════════════════════════════════════════════════════════ */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace timer inputs preserve tabular clarity */
+input.font-mono,
+input.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-weight: 600 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-weight: 400 !important;
+  letter-spacing: normal;
+  opacity: 0.6;
+}
+
+/* Mobile Modal Stability & Input Comfort */
 @media screen and (max-width: 768px) {
-  /* Prevent iOS Safari auto-zoom when tapping inputs inside modals */
   input[type="text"],
   input[type="password"],
   input[type="email"],
-  input[type="number"],
   input[type="search"],
   input[type="tel"],
   input[type="url"],
   textarea,
   select {
-    font-size: 16px !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
   }
 }
 
