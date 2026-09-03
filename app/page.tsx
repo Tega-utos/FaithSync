@@ -26,12 +26,32 @@ export default function SplashPage() {
         }
       })()
 
-      // 3. Await both concurrently: routes as soon as auth check resolves past the minimum 800ms
+      // 3. Await both concurrently
       const [_, currentUser] = await Promise.all([minDisplayPromise, authCheckPromise])
 
       if (isMounted) {
         if (currentUser) {
-          router.replace('/home')
+          // Check if the user has completed onboarding
+          try {
+            const supabase = createClient()
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('preferences')
+              .eq('id', currentUser.id)
+              .maybeSingle()
+
+            const hasCompletedOnboarding =
+              profile?.preferences?.onboarding_completed === true ||
+              (profile?.preferences?.targets?.prayer && profile?.preferences?.targets?.study)
+
+            if (hasCompletedOnboarding) {
+              router.replace('/home')
+            } else {
+              router.replace('/onboarding')
+            }
+          } catch {
+            router.replace('/onboarding')
+          }
         } else {
           router.replace('/welcome')
         }

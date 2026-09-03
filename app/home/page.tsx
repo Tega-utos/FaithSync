@@ -51,11 +51,38 @@ export default function HomePage() {
   const [vibratingState, setVibratingState] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    async function loadData() {
+    async function checkOnboardingAndLoad() {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('preferences')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          const hasCompletedOnboarding =
+            profile?.preferences?.onboarding_completed === true ||
+            (profile?.preferences?.targets?.prayer && profile?.preferences?.targets?.study)
+
+          if (!hasCompletedOnboarding) {
+            router.replace('/onboarding')
+            return
+          }
+        }
+      } catch (err) {
+        console.error('Home onboarding check error:', err)
+      }
+
       const data = await fetchDashboardData()
       if (data) setDashboard(data)
     }
-    loadData()
+
+    checkOnboardingAndLoad()
 
     // 4. Push Notification Permissions (The "Silent Ask")
     // On-Load Bootstrapping: Silently request notification permissions if not yet granted

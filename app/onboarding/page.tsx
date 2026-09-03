@@ -5,15 +5,19 @@ import { useRouter } from 'next/navigation'
 import {
   HandsPraying,
   BookOpen,
-  Timer,
+  Church,
+  User,
+  Bell,
   Copy,
   Check,
   MagnifyingGlass,
   CircleNotch,
+  Sparkle,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/Logo'
-import { searchUserBySyncCode, sendBuddyRequest } from '@/features/buddies/services/buddyService'
+
+const BIBLE_VERSIONS = ['WEB', 'KJV', 'ASV', 'BBE']
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -21,15 +25,21 @@ export default function OnboardingPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Targets (Bounded 5 to 180 min)
+  // 1. Identity & Assembly Details
+  const [displayName, setDisplayName] = useState('')
+  const [church, setChurch] = useState('')
+  const [preferredBibleVersion, setPreferredBibleVersion] = useState('WEB')
+
+  // 2. Targets (Bounded 5 to 180 min)
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
 
-  // Schedule (24-hour custom time selector HH:MM)
+  // 3. Schedule (24-hour custom time selector HH:MM)
   const [hourInput, setHourInput] = useState('07')
   const [minuteInput, setMinuteInput] = useState('00')
+  const [allowNotifications, setAllowNotifications] = useState(true)
 
-  // Buddy Code (6-digit UID uppercase)
+  // 4. Buddy Code (6-digit UID uppercase)
   const [syncCode, setSyncCode] = useState('')
   const [friendCode, setFriendCode] = useState('')
 
@@ -37,7 +47,7 @@ export default function OnboardingPage() {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('Invite code copied to clipboard!')
 
-  // 1. Authenticate user & extract genuine 6-digit sync code
+  // 1. Authenticate user & prefill details from profile/metadata
   useEffect(() => {
     let isMounted = true
 
@@ -45,24 +55,48 @@ export default function OnboardingPage() {
       if (!isMounted || !currentUser) return
       setUserId(currentUser.id)
 
+      const fallbackName =
+        currentUser.user_metadata?.full_name ||
+        currentUser.user_metadata?.name ||
+        currentUser.email?.split('@')[0] ||
+        'Believer'
+
       let assignedCode = ''
       try {
         const { data: profile } = await supabaseClient
           .from('profiles')
-          .select('buddy_code')
+          .select('display_name, church, preferred_bible_version, buddy_code, preferences')
           .eq('id', currentUser.id)
           .maybeSingle()
 
-        if (profile?.buddy_code) {
-          assignedCode = profile.buddy_code
+        if (profile) {
+          if (profile.display_name) setDisplayName(profile.display_name)
+          else setDisplayName(fallbackName)
+
+          if (profile.church) setChurch(profile.church)
+          if (profile.preferred_bible_version) setPreferredBibleVersion(profile.preferred_bible_version)
+
+          if (profile.preferences?.targets?.prayer) setPrayerTarget(profile.preferences.targets.prayer)
+          if (profile.preferences?.targets?.study) setStudyTarget(profile.preferences.targets.study)
+
+          if (profile.buddy_code) {
+            assignedCode = profile.buddy_code
+          } else {
+            assignedCode = currentUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+            await supabaseClient
+              .from('profiles')
+              .upsert({ id: currentUser.id, buddy_code: assignedCode }, { onConflict: 'id' })
+          }
         } else {
+          setDisplayName(fallbackName)
           assignedCode = currentUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
           await supabaseClient
             .from('profiles')
-            .upsert({ id: currentUser.id, buddy_code: assignedCode }, { onConflict: 'id' })
+            .upsert({ id: currentUser.id, buddy_code: assignedCode, display_name: fallbackName }, { onConflict: 'id' })
         }
       } catch (err) {
-        console.error('Error fetching/setting buddy_code:', err)
+        console.error('Error fetching/setting onboarding profile:', err)
+        setDisplayName(fallbackName)
         assignedCode = currentUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
       }
 
@@ -168,25 +202,41 @@ export default function OnboardingPage() {
     }
   }
 
-  // Save targets & profile to Supabase
+  // Save all inputted details to Supabase Database
   const savePreferences = async (customFriendCode?: string) => {
     if (!userId) return
 
     const supabase = createClient()
     const scheduledTime = `${hourInput}:${minuteInput}`
+    const finalDisplayName = displayName.trim() || 'Believer'
+    const finalChurch = church.trim() || 'Local Assembly'
 
     const updatePayload: Record<string, any> = {
       id: userId,
+      display_name: finalDisplayName,
+      church: finalChurch,
+      preferred_bible_version: preferredBibleVersion,
+      buddy_code: syncCode,
       preferences: {
+        onboarding_completed: true,
+        completed_at: new Date().toISOString(),
         targets: {
           prayer: prayerTarget,
           study: studyTarget,
+          prayer_minutes: prayerTarget,
+          study_minutes: studyTarget,
         },
+        prayerTarget,
+        studyTarget,
         reminderTimes: {
           daily: scheduledTime,
           prayer: scheduledTime,
+          study: '20:00',
         },
-        notifDailyReminders: true,
+        daily_reminder_time: scheduledTime,
+        church: finalChurch,
+        preferred_bible_version: preferredBibleVersion,
+        notifDailyReminders: allowNotifications,
         notifBuddyNudges: true,
         notifGroupActivity: true,
         publicStreak: true,
@@ -195,20 +245,23 @@ export default function OnboardingPage() {
       updated_at: new Date().toISOString(),
     }
 
-    if (syncCode) {
-      updatePayload.buddy_code = syncCode
-    }
-
+    // 1. Persist to profiles table
     await (supabase.from('profiles') as any).upsert(updatePayload, { onConflict: 'id' })
 
+    // 2. Keep Auth user metadata in sync
     await supabase.auth.updateUser({
       data: {
+        full_name: finalDisplayName,
+        display_name: finalDisplayName,
         prayer_target: prayerTarget,
         study_target: studyTarget,
         buddy_code: syncCode,
+        church: finalChurch,
+        preferred_bible_version: preferredBibleVersion,
       },
     })
 
+    // 3. Optional Buddy connection
     if (customFriendCode && customFriendCode.trim()) {
       try {
         const { sendBuddyCodeConnect } = await import('@/features/buddies/services/buddyService')
@@ -219,7 +272,7 @@ export default function OnboardingPage() {
     }
   }
 
-  // Complete Setup
+  // Complete Setup and Proceed to Homepage
   const handleCompleteSetup = async () => {
     setSaving(true)
     try {
@@ -233,22 +286,37 @@ export default function OnboardingPage() {
     }
   }
 
-  // Skip Setup (Accept 15 min defaults)
+  // Skip Setup (Accept baseline 15 min defaults)
   const handleSkip = async () => {
     setSaving(true)
     try {
       if (userId) {
         const supabase = createClient()
+        const finalDisplayName = displayName.trim() || 'Believer'
+        const finalChurch = church.trim() || 'Local Assembly'
+
         await (supabase.from('profiles') as any).upsert(
           {
             id: userId,
+            display_name: finalDisplayName,
+            church: finalChurch,
+            preferred_bible_version: preferredBibleVersion,
             buddy_code: syncCode,
             preferences: {
-              targets: { prayer: 15, study: 15 },
-              reminderTimes: { daily: '07:00', prayer: '07:00' },
+              onboarding_completed: true,
+              completed_at: new Date().toISOString(),
+              targets: { prayer: 15, study: 15, prayer_minutes: 15, study_minutes: 15 },
+              prayerTarget: 15,
+              studyTarget: 15,
+              reminderTimes: { daily: '07:00', prayer: '07:00', study: '20:00' },
+              daily_reminder_time: '07:00',
+              church: finalChurch,
+              preferred_bible_version: preferredBibleVersion,
               notifDailyReminders: true,
               notifBuddyNudges: true,
               notifGroupActivity: true,
+              publicStreak: true,
+              publicMilestones: true,
             },
             updated_at: new Date().toISOString(),
           },
@@ -263,42 +331,94 @@ export default function OnboardingPage() {
     }
   }
 
-  // Join Existing Buddy
-  const handleFindBuddy = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!friendCode.trim()) return
-
-    setSaving(true)
-    try {
-      await savePreferences(friendCode)
-      router.replace(`/find-buddy?search=${encodeURIComponent(friendCode.trim().toUpperCase())}`)
-    } catch {
-      router.replace('/home')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <div className="command-center-container min-h-screen min-h-[100dvh] bg-card relative select-none">
       {/* 1. Vertically Scrollable Content */}
       <div className="scrollable-content max-w-[440px] mx-auto px-5 pt-8 pb-44 space-y-7">
         {/* Header */}
         <div className="text-center space-y-2 pt-2 animate-fade-up">
+          <div className="flex justify-center mb-1">
+            <Logo height={28} priority />
+          </div>
           <h1 className="text-2xl font-black tracking-tight text-text-primary">
-            Set your intention.
+            Set your spiritual walk.
           </h1>
           <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto font-medium">
-            Let&apos;s build your habit. Configure your targets, schedule, and buddy.
+            Fill in your baseline details. These configure your daily habits and database profile.
           </p>
         </div>
 
         {/* ========================================================================= */}
-        {/* Section 1: Set Targets (Dual Input System: Inset Box + Range Slider)     */}
+        {/* Section 1: Profile & Assembly Details                                    */}
+        {/* ========================================================================= */}
+        <div className="space-y-3.5 animate-fade-up" style={{ animationDelay: '0.05s' }}>
+          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1 flex items-center gap-1.5">
+            <User size={14} className="text-[#FBBF24]" />
+            <span>1. Your Profile & Assembly</span>
+          </h2>
+
+          <div className="bg-surface rounded-3xl p-5 border border-border space-y-3.5 shadow-2xs">
+            {/* Display Name Input */}
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-text-secondary">
+                Display Name / How Buddies See You
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Brother David, Sarah M."
+                className="w-full px-3.5 py-3 rounded-2xl bg-card border border-border text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all shadow-2xs"
+              />
+            </div>
+
+            {/* Local Church Assembly */}
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-text-secondary flex items-center gap-1.5">
+                <Church size={14} className="text-[#FBBF24]" />
+                <span>Local Assembly / Church (Optional)</span>
+              </label>
+              <input
+                type="text"
+                value={church}
+                onChange={(e) => setChurch(e.target.value)}
+                placeholder="e.g. Grace Fellowship, City Assembly"
+                className="w-full px-3.5 py-3 rounded-2xl bg-card border border-border text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all shadow-2xs"
+              />
+            </div>
+
+            {/* Preferred Bible Version Chips */}
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-[11px] font-bold text-text-secondary">
+                Preferred Bible Version
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {BIBLE_VERSIONS.map((ver) => (
+                  <button
+                    key={ver}
+                    type="button"
+                    onClick={() => setPreferredBibleVersion(ver)}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      preferredBibleVersion === ver
+                        ? 'bg-[#FBBF24] text-text-primary shadow-xs'
+                        : 'bg-card text-text-secondary border border-border hover:bg-subtle'
+                    }`}
+                  >
+                    {ver}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* Section 2: Daily Targets (Prayer & Study)                                */}
         {/* ========================================================================= */}
         <div className="space-y-3.5 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1">
-            1. Set Targets
+          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1 flex items-center gap-1.5">
+            <HandsPraying size={14} className="text-[#FBBF24]" />
+            <span>2. Set Daily Targets</span>
           </h2>
 
           {/* Daily Prayer Card */}
@@ -399,31 +519,26 @@ export default function OnboardingPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* Section 2: Review Schedule (Custom Large 24-hr Time Selector)             */}
+        {/* Section 3: Reminder Schedule                                              */}
         {/* ========================================================================= */}
-        <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1">
-            2. Review Schedule
+        <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1 flex items-center gap-1.5">
+            <Bell size={14} className="text-[#FBBF24]" />
+            <span>3. Reminder Schedule</span>
           </h2>
 
           <div className="custom-time-selector bg-card border border-border rounded-3xl p-5 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-surface border border-border flex items-center justify-center shadow-2xs">
-                <svg width="22" height="22" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15.1342 2.09154L10.1343 2.06104" stroke="#0E0E0E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M4.06384 13.524C4.09248 8.82968 7.92121 5.04739 12.6155 5.07603C14.9627 5.09036 17.0819 6.0547 18.6106 7.60225M18.6106 7.60225C20.1394 9.14981 21.0778 11.2806 21.0635 13.6277C21.0349 18.3221 17.2061 22.1044 12.5118 22.0757L3.01199 22.0178M18.6106 7.60225L20.1093 6.12178" stroke="#0E0E0E" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M8.03018 19.0486L3.03027 19.0181" stroke="#EA2C26" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6.04877 16.0364L3.04883 16.0181" stroke="#234537" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12.5641 13.5761L16.0854 10.0975" stroke="#FBBF24" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <Bell size={20} className="text-[#FBBF24]" weight="fill" />
               </div>
               <div>
                 <h3 className="text-xs font-black text-text-primary">Daily Reminder</h3>
-                <p className="text-[10px] text-text-secondary">Push notification nudge</p>
+                <p className="text-[10px] text-text-secondary">Gentle nudge to maintain consistency</p>
               </div>
             </div>
 
-            {/* Massive Bold HH : MM 24-Hour Input Pill */}
+            {/* HH : MM 24-Hour Input Pill */}
             <div className="flex items-center gap-1.5 bg-surface border border-border px-3.5 py-2 rounded-2xl shadow-2xs">
               <input
                 type="text"
@@ -447,14 +562,15 @@ export default function OnboardingPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* Section 3: Find a Buddy (Bittersweet Red Invite Card + Search Input)      */}
+        {/* Section 4: Accountability SynC Code & Connect Buddy                      */}
         {/* ========================================================================= */}
-        <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1">
-            3. Find a Buddy
+        <div className="space-y-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h2 className="text-xs font-black uppercase tracking-wider text-text-secondary px-1 flex items-center gap-1.5">
+            <Sparkle size={14} className="text-[#FBBF24]" />
+            <span>4. SynC Code & Accountability</span>
           </h2>
 
-          {/* Bittersweet #FF6B66 Invite Card */}
+          {/* SynC Code Card */}
           <div className="bg-[#FF6B66] text-white rounded-3xl p-5 space-y-3.5 shadow-md">
             <div className="flex items-start justify-between">
               <div className="space-y-0.5">
@@ -462,22 +578,22 @@ export default function OnboardingPage() {
                   Your SynC Code
                 </span>
                 <h3 className="text-2xl font-black font-mono tracking-widest text-white">
-                  {syncCode}
+                  {syncCode || 'SYNC-BELIEVER'}
                 </h3>
               </div>
               <span className="text-[10px] font-bold bg-card/20 text-white px-2.5 py-1 rounded-full backdrop-blur-xs">
-                2x Accountability
+                Accountability
               </span>
             </div>
 
             <p className="text-[11px] text-white/90 leading-relaxed font-medium">
-              Users with a buddy are twice as likely to stay consistent. Share your link to sync together.
+              Share your SynC code with friends or enter a buddy&apos;s code below to stay accountable together.
             </p>
 
             <button
               type="button"
               onClick={handleCopyInvite}
-              className="w-full py-3 px-4 rounded-2xl bg-card text-text-primary font-black text-xs shadow-sm hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-card text-text-primary font-black text-xs shadow-sm hover:bg-subtle active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Copy size={16} className="text-[#FF6B66]" weight="bold" />
               <span>Copy Invite Link</span>
@@ -485,46 +601,40 @@ export default function OnboardingPage() {
           </div>
 
           {/* Join Existing Buddy Code Box */}
-          <form onSubmit={handleFindBuddy} className="flex items-center gap-2 pt-0.5">
-            <input
-              type="text"
-              value={friendCode}
-              onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-              placeholder="Enter buddy code (e.g. SYNC99)"
-              maxLength={12}
-              className="flex-1 px-4 py-3.5 rounded-2xl bg-surface border border-border font-mono text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 uppercase transition-all shadow-2xs"
-            />
-            <button
-              type="submit"
-              disabled={!friendCode.trim() || saving}
-              className="py-3.5 px-5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-xs hover:bg-black/90 active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shadow-2xs"
-            >
-              <MagnifyingGlass size={14} weight="bold" />
-              <span>Find</span>
-            </button>
-          </form>
+          <div className="pt-0.5">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={friendCode}
+                onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
+                placeholder="Have a buddy's code? (Optional)"
+                maxLength={12}
+                className="flex-1 px-4 py-3.5 rounded-2xl bg-surface border border-border font-mono text-xs font-bold text-text-primary placeholder-[#9095A1] outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 uppercase transition-all shadow-2xs"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 5. Permanent Sticky Bottom Action Bar                                      */}
+      {/* 5. Sticky Bottom Action Bar                                               */}
       {/* ========================================================================= */}
       <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center">
-        <div className="w-full max-w-[440px] pointer-events-auto bg-gradient-to-t from-white via-white/95 to-transparent pt-6 pb-6 px-5 space-y-2.5 text-center">
-          {/* Primary Action: Complete Setup with Glowing Orange Drop Shadow */}
+        <div className="w-full max-w-[440px] pointer-events-auto bg-gradient-to-t from-card via-card/95 to-transparent pt-6 pb-6 px-5 space-y-2.5 text-center">
+          {/* Primary Action: Complete Setup & Proceed to Homepage */}
           <button
             type="button"
             onClick={handleCompleteSetup}
             disabled={saving}
-            className="w-full py-4 px-6 rounded-full bg-card border-2 border-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(255,152,0,0.4)] hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            className="w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
           >
             {saving ? (
               <>
-                <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />
-                <span>Completing Setup...</span>
+                <CircleNotch size={18} className="animate-spin text-text-primary" />
+                <span>Saving to Database...</span>
               </>
             ) : (
-              <span>Complete Setup</span>
+              <span>Proceed to Homepage →</span>
             )}
           </button>
 
@@ -536,15 +646,13 @@ export default function OnboardingPage() {
               disabled={saving}
               className="text-xs font-bold text-text-secondary hover:text-text-primary transition-colors cursor-pointer py-1"
             >
-              Skip for now
+              Skip for now (Accept defaults)
             </button>
           </div>
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* Floating Pill Toast Notification (Animated slideUp)                        */}
-      {/* ========================================================================= */}
+      {/* Floating Pill Toast Notification */}
       {showToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-slide-up pointer-events-none">
           <div className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-5 py-2.5 rounded-full text-xs font-bold shadow-xl flex items-center gap-2 border border-white/10">
