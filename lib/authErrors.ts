@@ -18,6 +18,8 @@ export function getAuthErrorMessage(error: any): string {
     return 'Your session has expired. Please sign in again.'
   if (message.includes('Auth session missing') || message.includes('recovery'))
     return 'This reset link is invalid or has expired.'
+  if (message.includes('Database error') || message.includes('database error'))
+    return 'Database trigger error saving new user. Please run the provided SQL migration in your Supabase SQL Editor.'
 
   return message.length < 100 ? message : 'Something went wrong. Please try again.'
 }
