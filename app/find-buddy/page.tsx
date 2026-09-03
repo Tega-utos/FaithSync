@@ -388,13 +388,13 @@ export default function FindBuddyPage() {
             {pendingRequests.map((req) => (
               <div
                 key={req.id}
-                className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1]"
+                className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1] dark:bg-amber-950/30"
               >
                 <Link
                   href={`/profile/${req.senderId}`}
                   className="flex items-center gap-3 flex-1 min-w-0 group hover:opacity-85 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center shrink-0">
                     {req.initial}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -409,14 +409,14 @@ export default function FindBuddyPage() {
                   <button
                     type="button"
                     onClick={() => handleApprove(req.id)}
-                    className="bg-[#0E0E0E] text-white py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626]"
+                    className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80"
                   >
                     Approve
                   </button>
                   <button
                     type="button"
                     onClick={() => handleIgnore(req.id)}
-                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
+                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26] dark:text-red-400"
                   >
                     Ignore
                   </button>
@@ -430,7 +430,7 @@ export default function FindBuddyPage() {
       {/* Search Modalities */}
       <div className="space-y-4">
         {/* A. Join by Sync Code */}
-        <div className="faith-card p-4 space-y-2.5 bg-[#FDF9F1]">
+        <div className="faith-card p-4 space-y-2.5 bg-[#FDF9F1] dark:bg-amber-950/30">
           <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
             A. Add by Sync Code (Exact Match)
           </span>
@@ -449,7 +449,7 @@ export default function FindBuddyPage() {
           )}
 
           {codeLookupSuccess && (
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between gap-2 animate-in fade-in">
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between gap-2 animate-in fade-in">
               <span>{codeLookupSuccess}</span>
               <button
                 type="button"
@@ -476,7 +476,7 @@ export default function FindBuddyPage() {
             <button
               type="submit"
               disabled={!codeQuery.trim() || searchingCode}
-              className="bg-[#0E0E0E] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
+              className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
             >
               {searchingCode ? <CircleNotch size={14} className="animate-spin" /> : 'Add'}
             </button>
@@ -524,7 +524,7 @@ export default function FindBuddyPage() {
             <button
               type="submit"
               disabled={searchingDirectory}
-              className="bg-[#0E0E0E] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all flex items-center gap-1 shrink-0"
+              className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1 shrink-0"
             >
               {searchingDirectory ? <CircleNotch size={14} className="animate-spin" /> : 'Search'}
             </button>
@@ -540,7 +540,7 @@ export default function FindBuddyPage() {
           </span>
 
           {filterScope === 'my_church' && myChurch && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/40 text-text-primary flex items-center gap-1">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary flex items-center gap-1">
               <Church size={11} className="text-[#FBBF24]" />
               <span>{myChurch}</span>
             </span>
@@ -549,7 +549,7 @@ export default function FindBuddyPage() {
 
         {filteredUsers.length === 0 ? (
           <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3 my-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/35 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/35 flex items-center justify-center">
               <Users size={24} />
             </div>
             <div className="space-y-1 max-w-xs">
@@ -561,7 +561,7 @@ export default function FindBuddyPage() {
             <button
               type="button"
               onClick={() => setIsInviteModalOpen(true)}
-              className="bg-[#0E0E0E] text-white py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center gap-1.5"
+              className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1.5"
             >
               <ShareNetwork size={14} className="text-[#FBBF24]" />
               <span>Share Invite Link</span>
@@ -573,13 +573,13 @@ export default function FindBuddyPage() {
               return (
                 <div
                   key={userItem.id}
-                  className="faith-card p-4 flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 transition-colors"
+                  className="faith-card p-4 flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors"
                 >
                   <Link
                     href={`/profile/${userItem.id}`}
                     className="flex items-center gap-3 flex-1 min-w-0 group"
                   >
-                    <div className="w-11 h-11 rounded-full bg-[#0E0E0E] text-white font-bold text-sm flex items-center justify-center shadow-sm overflow-hidden shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-sm flex items-center justify-center shadow-sm overflow-hidden shrink-0">
                       {userItem.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -597,7 +597,7 @@ export default function FindBuddyPage() {
                         <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
                           {userItem.name}
                         </p>
-                        <span className="px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-700 text-[9px] font-bold shrink-0">
+                        <span className="px-2 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[9px] font-bold shrink-0">
                           {userItem.activityLevel}
                         </span>
                       </div>
@@ -608,8 +608,8 @@ export default function FindBuddyPage() {
                           <span className="truncate">{userItem.church}</span>
                         </span>
                         <span>•</span>
-                        <span className="flex items-center gap-0.5 text-[#234537] font-bold shrink-0">
-                          <Fire size={12} weight="fill" className="text-[#234537]" />
+                        <span className="flex items-center gap-0.5 text-[#234537] dark:text-emerald-400 font-bold shrink-0">
+                          <Fire size={12} weight="fill" className="text-[#234537] dark:text-emerald-400" />
                           {userItem.streakDays}d Streak
                         </span>
                       </div>
@@ -622,19 +622,19 @@ export default function FindBuddyPage() {
                         This is you
                       </span>
                     ) : userItem.connectionStatus === 'accepted' ? (
-                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-700 text-xs font-bold flex items-center gap-1">
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-xs font-bold flex items-center gap-1">
                         <Check size={14} weight="bold" />
                         <span>Buddies</span>
                       </span>
                     ) : userItem.connectionStatus === 'pending' ? (
-                      <span className="px-3 py-1.5 rounded-xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/35 text-xs font-bold block cursor-not-allowed">
+                      <span className="px-3 py-1.5 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/35 text-xs font-bold block cursor-not-allowed">
                         Request Sent
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleSendConnect(userItem)}
-                        className="px-3.5 py-1.5 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold shadow-sm hover:bg-[#262626] active:scale-95 transition-all flex items-center gap-1.5"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center gap-1.5"
                       >
                         <UserPlus size={14} className="text-[#FBBF24]" />
                         <span>Connect</span>
@@ -672,7 +672,7 @@ export default function FindBuddyPage() {
                     onClick={() => setFilterScope('global')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterScope === 'global'
-                        ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
                         : 'bg-card text-text-secondary border-border'
                     }`}
                   >
@@ -683,7 +683,7 @@ export default function FindBuddyPage() {
                     onClick={() => setFilterScope('my_church')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterScope === 'my_church'
-                        ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
                         : 'bg-card text-text-secondary border-border'
                     }`}
                   >
@@ -713,7 +713,7 @@ export default function FindBuddyPage() {
                     onClick={() => setFilterActivity('all')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterActivity === 'all'
-                        ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
                         : 'bg-card text-text-secondary border-border'
                     }`}
                   >
@@ -724,7 +724,7 @@ export default function FindBuddyPage() {
                     onClick={() => setFilterActivity('daily')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
                       filterActivity === 'daily'
-                        ? 'bg-[#0E0E0E] text-white border-[#0E0E0E]'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
                         : 'bg-card text-text-secondary border-border'
                     }`}
                   >
@@ -736,7 +736,7 @@ export default function FindBuddyPage() {
               <button
                 type="button"
                 onClick={() => setIsFilterModalOpen(false)}
-                className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-xl font-bold text-xs shadow-md mt-2"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-xl font-bold text-xs shadow-md mt-2"
               >
                 Apply Filters
               </button>
@@ -778,7 +778,7 @@ export default function FindBuddyPage() {
               <button
                 type="button"
                 onClick={handleShareInvite}
-                className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2"
               >
                 <ShareNetwork size={16} />
                 <span>Share Invite via Message / Apps</span>

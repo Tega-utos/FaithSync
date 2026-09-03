@@ -27,11 +27,11 @@ export function Button({
 
   const variants = {
     primary:
-      'bg-[#0E0E0E] hover:bg-[#262626] text-white shadow-md',
+      'bg-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 text-white shadow-md',
     secondary:
-      'bg-[#234537] hover:bg-[#183329] text-white shadow-md shadow-[#234537]/20 border border-[#234537]/30',
+      'bg-[#234537] hover:bg-[#183329] text-white shadow-md shadow-[#234537]/20 border border-[#234537]/30 dark:border-emerald-700/35',
     outline:
-      'border border-border hover:border-[#234537] text-text-primary hover:bg-[#EBF3EE]',
+      'border border-border hover:border-[#234537] dark:border-emerald-700 text-text-primary hover:bg-[#EBF3EE] dark:bg-emerald-950/30',
     ghost:
       'text-text-secondary hover:text-text-primary hover:bg-subtle/60',
     danger:

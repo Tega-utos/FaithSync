@@ -236,7 +236,7 @@ export function PrayerFocusTimelineBuilder({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-[#0E0E0E] text-white flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center shadow-xs">
               <Clock size={18} weight="bold" />
             </div>
             <div>
@@ -276,7 +276,7 @@ export function PrayerFocusTimelineBuilder({
         </div>
 
         {/* Total Duration Banner */}
-        <div className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center justify-between shrink-0">
+        <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Sparkle size={18} weight="fill" className="text-[#FBBF24]" />
             <div>
@@ -312,14 +312,14 @@ export function PrayerFocusTimelineBuilder({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-[#0E0E0E] text-white text-[10px] font-bold flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[10px] font-bold flex items-center justify-center">
                         {idx + 1}
                       </span>
                       <span
                         className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
                           isScripture
-                            ? 'bg-[#FDF9F1] text-[#FBBF24] border-[#FBBF24]/30'
-                            : 'bg-rose-50 text-rose-600 border-rose-200'
+                            ? 'bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border-[#FBBF24]/30 dark:border-amber-500/25'
+                            : 'bg-rose-50 dark:bg-red-950/30 text-rose-600 border-rose-200'
                         }`}
                       >
                         {isScripture ? 'Scripture' : 'Reflection'}
@@ -365,7 +365,7 @@ export function PrayerFocusTimelineBuilder({
                       <button
                         type="button"
                         onClick={() => handleRemoveSegment(seg.id)}
-                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:bg-red-950/30 transition-colors"
                         title="Remove Segment"
                       >
                         <Trash size={14} />
@@ -429,7 +429,7 @@ export function PrayerFocusTimelineBuilder({
             type="button"
             onClick={handleApply}
             disabled={segments.length === 0}
-            className="w-full py-3 rounded-2xl bg-[#0E0E0E] text-white font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Check size={16} weight="bold" />
             <span>Apply Timeline ({totalMinutes} Mins)</span>
@@ -469,7 +469,7 @@ export function PrayerFocusTimelineBuilder({
                 <div
                   key={prompt}
                   onClick={() => handleAddReflection(prompt)}
-                  className="p-3 rounded-xl bg-card border border-border text-xs text-text-primary font-medium hover:border-rose-400 hover:bg-rose-50/40 cursor-pointer transition-all"
+                  className="p-3 rounded-xl bg-card border border-border text-xs text-text-primary font-medium hover:border-rose-400 hover:bg-rose-50 dark:bg-red-950/30/40 cursor-pointer transition-all"
                 >
                   &ldquo;{prompt}&rdquo;
                 </div>
@@ -491,7 +491,7 @@ export function PrayerFocusTimelineBuilder({
                 type="button"
                 onClick={() => handleAddReflection(customPromptInput)}
                 disabled={!customPromptInput.trim()}
-                className="w-full py-2 bg-[#0E0E0E] text-white font-bold text-xs rounded-xl hover:bg-[#262626] disabled:opacity-40 transition-colors"
+                className="w-full py-2 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs rounded-xl hover:bg-[#262626] dark:hover:bg-white/80 disabled:opacity-40 transition-colors"
               >
                 Add Custom Prompt
               </button>
@@ -528,7 +528,7 @@ export function PrayerFocusTimelineBuilder({
               type="button"
               onClick={handleSaveTemplate}
               disabled={!templateName.trim() || savingTemplate}
-              className="w-full py-2.5 rounded-xl bg-[#0E0E0E] text-white font-bold text-xs hover:bg-[#262626] disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs hover:bg-[#262626] dark:hover:bg-white/80 disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
             >
               {savingTemplate ? (
                 <CircleNotch size={14} className="animate-spin text-[#FBBF24]" />

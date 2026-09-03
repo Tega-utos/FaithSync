@@ -284,7 +284,7 @@ export default function ClockInPage() {
               onClick={() => setSelectedDiscipline('prayer')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'prayer'
-                  ? 'bg-[#0E0E0E] text-white shadow-md'
+                  ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -301,7 +301,7 @@ export default function ClockInPage() {
               onClick={() => setSelectedDiscipline('study')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'study'
-                  ? 'bg-[#0E0E0E] text-white shadow-md'
+                  ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -354,7 +354,7 @@ export default function ClockInPage() {
               /* Timeline Builder Trigger Card */
               <div
                 onClick={() => setIsTimelineBuilderOpen(true)}
-                className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 hover:border-[#FBBF24] cursor-pointer transition-all flex items-center justify-between shadow-xs"
+                className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 hover:border-[#FBBF24] cursor-pointer transition-all flex items-center justify-between shadow-xs"
               >
                 <div className="flex items-center gap-2">
                   <Sparkle size={16} weight="fill" className="text-[#FBBF24]" />
@@ -380,7 +380,7 @@ export default function ClockInPage() {
         <div className="px-4 py-2 max-w-sm mx-auto w-full">
           {isTimelineSession ? (
             isFreePrayerPastTimeline ? (
-              <div className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/30 text-center space-y-1 animate-in fade-in">
+              <div className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/30 dark:border-amber-500/25 text-center space-y-1 animate-in fade-in">
                 <span className="text-[10px] font-bold uppercase text-[#FBBF24] tracking-wider">
                   Timeline Complete
                 </span>
@@ -482,7 +482,7 @@ export default function ClockInPage() {
           {/* Center Digits with Fraunces Display Font */}
           <div className="absolute flex flex-col items-center space-y-1 text-center">
             {isPastLap1 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#FBBF24] text-[10px] font-extrabold tracking-wider animate-bounce">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] text-[10px] font-extrabold tracking-wider animate-bounce">
                 LAP {lapNumber}
               </span>
             )}
@@ -510,7 +510,7 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={handleStart}
-              className="w-full bg-[#0E0E0E] text-white py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all"
             >
               <Play size={20} weight="fill" />
               <span>Start Session</span>

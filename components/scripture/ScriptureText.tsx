@@ -92,7 +92,7 @@ export function ScriptureText({
   if (display === 'card') {
     return (
       <div
-        className={`p-4 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/30 shadow-xs space-y-2.5 ${className}`}
+        className={`p-4 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/30 dark:border-amber-500/25 shadow-xs space-y-2.5 ${className}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#FBBF24]">

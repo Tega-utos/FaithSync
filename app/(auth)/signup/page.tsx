@@ -148,7 +148,7 @@ export default function SignupPage() {
     return (
       <AuthCard subtitle="Verify Your Email" closeHref="/welcome">
         <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
@@ -169,7 +169,7 @@ export default function SignupPage() {
               type="button"
               onClick={handleResendEmail}
               disabled={resending}
-              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] text-text-primary font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {resending ? (
                 <>
@@ -200,7 +200,7 @@ export default function SignupPage() {
     <AuthCard subtitle="Create Account" closeHref="/welcome">
       {/* Error Feedback */}
       {errorMessage && (
-        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <WarningCircle size={18} className="shrink-0 text-rose-500" />
           <div className="flex-1">
             <span>{errorMessage}</span>
@@ -257,7 +257,7 @@ export default function SignupPage() {
             <div className="flex items-center gap-1.5 px-1 pt-0.5">
               <div
                 className={`h-1 flex-1 rounded-full transition-all ${
-                  isPasswordValid ? 'bg-emerald-500' : 'bg-amber-400'
+                  isPasswordValid ? 'bg-emerald-50 dark:bg-emerald-950/300' : 'bg-amber-400'
                 }`}
               />
               <span
@@ -301,7 +301,7 @@ export default function SignupPage() {
         type="button"
         onClick={handleGoogleSignUp}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />

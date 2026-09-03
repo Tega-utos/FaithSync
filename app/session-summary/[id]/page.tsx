@@ -147,7 +147,7 @@ export default function SessionSummaryPage() {
 
       {/* Success Badge */}
       <div className="text-center space-y-2 pt-2">
-        <div className="w-16 h-16 rounded-full bg-[#FDF9F1] border-2 border-[#FBBF24] text-[#FBBF24] flex items-center justify-center mx-auto shadow-md">
+        <div className="w-16 h-16 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border-2 border-[#FBBF24] text-[#FBBF24] flex items-center justify-center mx-auto shadow-md">
           <Check size={28} weight="bold" />
         </div>
         <div className="space-y-1">
@@ -164,7 +164,7 @@ export default function SessionSummaryPage() {
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center gap-2">
             {session.type === 'prayer' ? (
-              <div className="w-9 h-9 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/30 flex items-center justify-center font-bold">
+              <div className="w-9 h-9 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/30 dark:border-amber-500/25 flex items-center justify-center font-bold">
                 <HandsPraying size={20} weight="fill" />
               </div>
             ) : (
@@ -189,7 +189,7 @@ export default function SessionSummaryPage() {
             <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
               <Quotes size={14} className="text-[#FBBF24]" /> Your Reflection (Private)
             </span>
-            <div className="p-3.5 bg-card rounded-2xl border-l-4 border-[#234537] text-xs text-text-primary italic leading-relaxed shadow-sm">
+            <div className="p-3.5 bg-card rounded-2xl border-l-4 border-[#234537] dark:border-emerald-700 text-xs text-text-primary italic leading-relaxed shadow-sm">
               &ldquo;{session.reflection}&rdquo;
             </div>
           </div>
@@ -211,7 +211,7 @@ export default function SessionSummaryPage() {
                 <Clock size={13} className="text-[#FBBF24]" />
                 Prayer Focus Timeline ({session.focus_timeline.length} Segments)
               </span>
-              <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-lg border border-[#FBBF24]/30">
+              <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-lg border border-[#FBBF24]/30 dark:border-amber-500/25">
                 {session.focus_timeline.reduce((sum, seg) => sum + (seg.durationMinutes || 1), 0)}m Guided
               </span>
             </div>
@@ -268,7 +268,7 @@ export default function SessionSummaryPage() {
 
       {/* Privacy-First Reflection Sharing Toggle (Only active if unlocked) */}
       <div className={`faith-card p-4 space-y-2 border border-border transition-opacity ${
-        isBothComplete ? 'bg-[#FDF9F1]' : 'bg-card-hover opacity-60'
+        isBothComplete ? 'bg-[#FDF9F1] dark:bg-amber-950/30' : 'bg-card-hover opacity-60'
       }`}>
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
@@ -315,7 +315,7 @@ export default function SessionSummaryPage() {
           className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
             !isBothComplete
               ? 'bg-[#E5E7EB] text-text-muted cursor-not-allowed shadow-none'
-              : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95 cursor-pointer shadow-black/15'
+              : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 cursor-pointer shadow-black/15'
           }`}
         >
           {sharing ? (

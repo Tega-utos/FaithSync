@@ -139,7 +139,7 @@ export function LiveSessionBibleReader({
                 type="button"
                 onClick={() => setFontSize('sm')}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${
-                  fontSize === 'sm' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
+                  fontSize === 'sm' ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]' : 'text-text-secondary'
                 }`}
               >
                 A-
@@ -148,7 +148,7 @@ export function LiveSessionBibleReader({
                 type="button"
                 onClick={() => setFontSize('base')}
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                  fontSize === 'base' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
+                  fontSize === 'base' ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]' : 'text-text-secondary'
                 }`}
               >
                 A
@@ -157,7 +157,7 @@ export function LiveSessionBibleReader({
                 type="button"
                 onClick={() => setFontSize('lg')}
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                  fontSize === 'lg' ? 'bg-[#0E0E0E] text-white' : 'text-text-secondary'
+                  fontSize === 'lg' ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]' : 'text-text-secondary'
                 }`}
               >
                 A+
@@ -193,7 +193,7 @@ export function LiveSessionBibleReader({
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#0E0E0E] text-white rounded-xl text-xs font-bold hover:bg-[#262626] transition-all shadow-xs"
+              className="px-4 py-2 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-xl text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all shadow-xs"
             >
               Read
             </button>
@@ -297,7 +297,7 @@ export function LiveSessionBibleReader({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#0E0E0E] text-white rounded-xl text-xs font-bold hover:bg-[#262626] transition-all"
+            className="px-4 py-1.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-xl text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all"
           >
             Done Reading
           </button>

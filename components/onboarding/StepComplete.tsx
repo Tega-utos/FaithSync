@@ -25,7 +25,7 @@ export function StepComplete({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="text-center space-y-2">
-        <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
           <CheckCircle size={36} weight="fill" />
         </div>
         <div>
@@ -81,7 +81,7 @@ export function StepComplete({
           type="button"
           onClick={onBack}
           disabled={saving}
-          className="py-4 px-5 rounded-2xl bg-card border border-border text-text-primary font-bold text-xs hover:bg-[#FDF9F1] transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="py-4 px-5 rounded-2xl bg-card border border-border text-text-primary font-bold text-xs hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           <CaretLeft size={16} />
           <span>Back</span>

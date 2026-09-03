@@ -383,7 +383,7 @@ export default function ReviewDigestPage() {
         </div>
 
         {detectedThemes.length > 0 ? (
-          <div className="p-4 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 space-y-2.5">
+          <div className="p-4 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 space-y-2.5">
             <p className="text-xs text-text-primary leading-relaxed">
               <span className="font-bold">Consistent Themes:</span> Over the last 7 days, your
               reflections frequently centered around spiritual growth, steady endurance, and seeking
@@ -395,7 +395,7 @@ export default function ReviewDigestPage() {
               {detectedThemes.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 rounded-full bg-card border border-[#FBBF24]/40 text-text-primary text-[10px] font-black tracking-wide shadow-xs"
+                  className="px-2.5 py-1 rounded-full bg-card border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary text-[10px] font-black tracking-wide shadow-xs"
                 >
                   #{tag}
                 </span>
@@ -418,7 +418,7 @@ export default function ReviewDigestPage() {
         <div className="faith-card p-5 bg-card border border-border rounded-3xl shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Quotes size={18} weight="fill" className="text-[#EA2C26]" />
+              <Quotes size={18} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
               <h2 className="text-xs font-black uppercase tracking-wider text-text-primary">
                 Top Reflection of the Week
               </h2>
@@ -447,7 +447,7 @@ export default function ReviewDigestPage() {
             className={`w-full py-3.5 px-5 rounded-2xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 ${
               sharedSuccess
                 ? 'bg-emerald-600 text-white'
-                : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95'
+                : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95'
             }`}
           >
             {sharing ? (

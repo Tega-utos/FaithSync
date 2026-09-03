@@ -138,7 +138,7 @@ export function ScripturePicker({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#FBBF24] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] flex items-center justify-center">
               <BookOpen size={18} weight="fill" />
             </div>
             <div>
@@ -167,7 +167,7 @@ export function ScripturePicker({
                 onClick={() => setSelectedVersion(v.id)}
                 className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
                   selectedVersion === v.id
-                    ? 'bg-[#0E0E0E] text-white shadow-xs'
+                    ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-xs'
                     : 'text-text-secondary hover:text-text-primary hover:bg-subtle'
                 }`}
               >
@@ -217,7 +217,7 @@ export function ScripturePicker({
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-[#0E0E0E] text-white hover:bg-[#262626] transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 transition-colors"
                   title="Search Reference"
                 >
                   <MagnifyingGlass size={14} weight="bold" />
@@ -297,7 +297,7 @@ export function ScripturePicker({
               <button
                 type="button"
                 onClick={handleApplyBrowse}
-                className="w-full py-2 bg-[#0E0E0E] text-white font-bold text-xs rounded-xl hover:bg-[#262626] transition-colors"
+                className="w-full py-2 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs rounded-xl hover:bg-[#262626] dark:hover:bg-white/80 transition-colors"
               >
                 Inspect Selection
               </button>

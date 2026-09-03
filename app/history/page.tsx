@@ -196,7 +196,7 @@ export default function HistoryPage() {
         <button
           type="button"
           onClick={handlePrint}
-          className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] text-white hover:bg-[#262626] transition-all flex items-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-95"
+          className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer active:scale-95"
           title="Print Devotion Ledger / Export PDF"
         >
           <Printer size={15} className="text-[#FBBF24]" weight="bold" />
@@ -241,7 +241,7 @@ export default function HistoryPage() {
           </span>
           <p className="text-xs font-bold text-text-primary pt-1 flex items-center gap-2">
             <span className="text-[#FBBF24]">🙏 {prayerTarget}m Prayer</span>
-            <span className="text-[#234537]">📖 {studyTarget}m Study</span>
+            <span className="text-[#234537] dark:text-emerald-400">📖 {studyTarget}m Study</span>
           </p>
         </div>
       </div>
@@ -264,7 +264,7 @@ export default function HistoryPage() {
         </div>
       ) : dailySummaries.length === 0 ? (
         <div className="faith-card p-8 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center mx-auto">
             <Clock size={24} />
           </div>
           <h3 className="text-sm font-bold text-text-primary">No logs recorded yet</h3>
@@ -274,7 +274,7 @@ export default function HistoryPage() {
           <Link href="/clock-in" className="inline-block pt-2">
             <button
               type="button"
-              className="px-4 py-2 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold"
+              className="px-4 py-2 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold"
             >
               Clock In Now
             </button>
@@ -311,7 +311,7 @@ export default function HistoryPage() {
                         <CalendarBlank size={14} className="text-text-muted shrink-0" />
                         <span>{day.dateDisplay}</span>
                         {day.isToday && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] text-white font-bold shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold shrink-0">
                             Today
                           </span>
                         )}
@@ -323,7 +323,7 @@ export default function HistoryPage() {
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
                           day.isPrayerMet
-                            ? 'bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/40 font-black'
+                            ? 'bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/40 dark:border-amber-500/30 font-black'
                             : day.prayerMinutes > 0
                             ? 'bg-surface text-text-primary border border-border'
                             : 'text-text-muted'
@@ -339,7 +339,7 @@ export default function HistoryPage() {
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold ${
                           day.isStudyMet
-                            ? 'bg-[#EBF3EE] text-[#234537] border border-[#234537]/30 font-black'
+                            ? 'bg-[#EBF3EE] dark:bg-emerald-950/30 text-[#234537] dark:text-emerald-400 border border-[#234537]/30 dark:border-emerald-700/35 font-black'
                             : day.studyMinutes > 0
                             ? 'bg-surface text-text-primary border border-border'
                             : 'text-text-muted'

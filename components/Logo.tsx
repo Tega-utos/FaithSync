@@ -32,7 +32,7 @@ export function Logo({
           width: computedWidth ? (typeof computedWidth === 'number' ? `${computedWidth}px` : computedWidth) : 'auto',
           imageRendering: '-webkit-optimize-contrast',
         }}
-        className="object-contain drop-shadow-2xs"
+        className="object-contain drop-shadow-2xs dark:brightness-0 dark:invert"
       />
     </div>
   )

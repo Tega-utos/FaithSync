@@ -256,7 +256,7 @@ export default function GroupInfoPage() {
       <div className="faith-card p-6 text-center space-y-3 bg-card border border-border">
         {/* Massive Centered Group Avatar */}
         <div className="relative flex items-center justify-center mx-auto">
-          <div className="w-20 h-20 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center text-2xl font-black border-4 border-white shadow-xl ring-2 ring-[#FBBF24]/40">
+          <div className="w-20 h-20 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center text-2xl font-black border-4 border-white shadow-xl ring-2 ring-[#FBBF24]/40">
             <Users size={36} className="text-[#FBBF24]" />
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function GroupInfoPage() {
             <span>{group.category}</span>
             <span>•</span>
             <span className="flex items-center gap-1 text-text-primary">
-              <MapPin size={13} weight="fill" className="text-[#EA2C26]" />
+              <MapPin size={13} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
               <span>{group.church}</span>
             </span>
           </div>
@@ -323,7 +323,7 @@ export default function GroupInfoPage() {
               className="faith-card p-3.5 flex items-center justify-between bg-card border border-border"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white text-xs font-black flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-black flex items-center justify-center shadow-xs">
                   {member.initial}
                 </div>
 
@@ -332,7 +332,7 @@ export default function GroupInfoPage() {
                     <p className="text-xs font-black text-text-primary">{member.name}</p>
                     {/* The Gold Pill Badge for Admins */}
                     {member.role === 'admin' && (
-                      <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/60 text-[#B45309] text-[9px] font-black uppercase flex items-center gap-0.5">
+                      <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/60 text-[#B45309] text-[9px] font-black uppercase flex items-center gap-0.5">
                         <Crown size={10} weight="fill" className="text-[#FBBF24]" />
                         ADMIN
                       </span>
@@ -363,7 +363,7 @@ export default function GroupInfoPage() {
                   <button
                     type="button"
                     onClick={() => handleKickMember(member.id)}
-                    className="px-2 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] bg-[#FFF0F0] border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors"
+                    className="px-2 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] dark:text-red-400 bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors"
                   >
                     Remove
                   </button>
@@ -381,7 +381,7 @@ export default function GroupInfoPage() {
             <button
               type="button"
               onClick={handleCopy}
-              className="flex-1 py-3.5 px-4 rounded-2xl bg-[#0E0E0E] text-white font-black text-xs shadow-md hover:bg-[#262626] active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               {copied ? (
                 <>
@@ -399,7 +399,7 @@ export default function GroupInfoPage() {
             <button
               type="button"
               onClick={handleShare}
-              className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-text-primary hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs"
+              className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs"
               title="Share Group Invite"
             >
               <ShareNetwork size={18} />
@@ -409,7 +409,7 @@ export default function GroupInfoPage() {
               <button
                 type="button"
                 onClick={handleLeaveGroup}
-                className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-[#EA2C26] hover:bg-rose-100 transition-all shadow-xs"
+                className="p-3.5 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-[#EA2C26] dark:text-red-400 hover:bg-rose-100 transition-all shadow-xs"
                 title="Leave Group"
               >
                 <SignOut size={18} />
@@ -450,7 +450,7 @@ export default function GroupInfoPage() {
               <button
                 type="button"
                 onClick={handleSaveRules}
-                className="flex-1 py-2.5 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold"
+                className="flex-1 py-2.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold"
               >
                 Save
               </button>

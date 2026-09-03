@@ -196,19 +196,19 @@ export function NotificationDropdown({
 
   const renderIcon = (type: NotificationItem['type'] | string, icon_type?: string) => {
     if (icon_type === 'fire' || icon_type === 'flame' || type === 'streak_milestone' || type === 'buddy_clockin_completed') {
-      return <Fire size={16} weight="fill" className="text-[#EA2C26]" />
+      return <Fire size={16} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
     }
     if (icon_type === 'clock' || type === 'timer_invite' || type === 'buddy_scheduled_clockin') {
       return <Clock size={16} weight="bold" className="text-[#FBBF24]" />
     }
     if (icon_type === 'timer' || type === 'buddy_clockin_started') {
-      return <Clock size={16} weight="fill" className="text-[#234537]" />
+      return <Clock size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
     }
     if (icon_type === 'reaction' || type === 'square_reaction') {
       return <Smiley size={16} weight="bold" className="text-amber-600" />
     }
     if (type === 'buddy_request' || type === 'nudge' || icon_type === 'hand_waving') {
-      return <UserPlus size={16} weight="bold" className="text-[#234537]" />
+      return <UserPlus size={16} weight="bold" className="text-[#234537] dark:text-emerald-400" />
     }
     return <Bell size={16} weight="fill" className="text-[#FBBF24]" />
   }

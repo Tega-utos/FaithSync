@@ -85,7 +85,7 @@ export function BottomNav() {
               alt="Home"
               width={22}
               height={22}
-              className={`transition-transform duration-200 ${
+              className={`transition-transform duration-200 dark:invert ${
                 isHome ? 'scale-110' : 'opacity-70 group-hover:opacity-100'
               }`}
             />
@@ -119,7 +119,7 @@ export function BottomNav() {
               alt="Clock-In"
               width={22}
               height={22}
-              className={`transition-transform duration-200 ${
+              className={`transition-transform duration-200 dark:invert ${
                 isClockIn || session?.isActive
                   ? 'scale-110'
                   : 'opacity-70 group-hover:opacity-100'
@@ -154,7 +154,7 @@ export function BottomNav() {
               alt="SynC"
               width={22}
               height={22}
-              className={`transition-transform duration-200 ${
+              className={`transition-transform duration-200 dark:invert ${
                 isSync ? 'scale-110' : 'opacity-70 group-hover:opacity-100'
               }`}
             />

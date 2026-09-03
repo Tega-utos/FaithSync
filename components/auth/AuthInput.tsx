@@ -33,7 +33,7 @@ export function AuthInput({
         <label
           htmlFor={inputId}
           className={`block text-[11px] font-bold tracking-tight ${
-            hasError ? 'text-[#EA2C26]' : 'text-text-secondary'
+            hasError ? 'text-[#EA2C26] dark:text-red-400' : 'text-text-secondary'
           }`}
         >
           {label}
@@ -44,7 +44,7 @@ export function AuthInput({
         className={`relative flex items-center rounded-2xl bg-card border transition-all shadow-2xs ${
           hasError
             ? 'border-[#EA2C26] ring-2 ring-[#EA2C26]/10'
-            : 'border-border focus-within:border-[#0E0E0E] focus-within:ring-1 focus-within:ring-black/10'
+            : 'border-border focus-within:border-[#0E0E0E] dark:border-white/20 focus-within:ring-1 focus-within:ring-black/10'
         } ${className}`}
       >
         {icon && (
@@ -78,7 +78,7 @@ export function AuthInput({
       {(hasError || helperText) && (
         <p
           className={`text-[10px] font-bold px-1 ${
-            hasError ? 'text-[#EA2C26]' : 'text-text-muted'
+            hasError ? 'text-[#EA2C26] dark:text-red-400' : 'text-text-muted'
           }`}
         >
           {typeof error === 'string' ? error : helperText}

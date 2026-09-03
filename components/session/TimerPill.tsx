@@ -42,13 +42,13 @@ export function TimerPill({ onEndSession }: TimerPillProps) {
     <div className="fixed bottom-24 right-5 sm:right-8 z-40">
       <div
         onClick={handleNavigateToTimer}
-        className="flex items-center gap-2.5 bg-[#0E0E0E] text-white px-3.5 py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.35)] border border-white/15 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
+        className="flex items-center gap-2.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-3.5 py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.35)] border border-white/15 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
       >
         {/* LED Indicator */}
         <span
           className={`w-2.5 h-2.5 rounded-full ${
             isRunning
-              ? 'bg-rose-500 animate-ping'
+              ? 'bg-rose-50 dark:bg-red-950/300 animate-ping'
               : isPaused
               ? 'bg-amber-400'
               : 'bg-emerald-400'
@@ -84,7 +84,7 @@ export function TimerPill({ onEndSession }: TimerPillProps) {
           <button
             type="button"
             onClick={handleEnd}
-            className="p-1 rounded-full text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-colors"
+            className="p-1 rounded-full text-rose-400 hover:text-rose-300 hover:bg-rose-50 dark:bg-red-950/300/20 transition-colors"
             title="End Session"
           >
             <Square size={12} weight="fill" />

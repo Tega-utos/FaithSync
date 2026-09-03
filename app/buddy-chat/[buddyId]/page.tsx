@@ -757,11 +757,11 @@ export default function BuddyChatPage() {
           >
             {/* Circular Avatar */}
             <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white font-black text-sm flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-sm flex items-center justify-center border-2 border-white ring-1 ring-[#E5E7EB] shadow-xs">
                 {buddyInitial}
               </div>
               {buddyStatus === 'online' && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-50 dark:bg-emerald-950/300 ring-2 ring-white" />
               )}
             </div>
 
@@ -770,14 +770,14 @@ export default function BuddyChatPage() {
                 <h2 className="text-sm font-black text-text-primary truncate max-w-[140px] sm:max-w-[200px]">
                   {buddyName}
                 </h2>
-                <span className="flex items-center gap-0.5 text-[10px] font-black font-mono-tabular text-[#234537] bg-[#EBF3EE] px-1.5 py-0.5 rounded-md border border-[#234537]/25 shrink-0">
-                  <Fire size={11} weight="fill" className="text-[#234537]" />
+                <span className="flex items-center gap-0.5 text-[10px] font-black font-mono-tabular text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-md border border-[#234537]/25 dark:border-emerald-700/30 shrink-0">
+                  <Fire size={11} weight="fill" className="text-[#234537] dark:text-emerald-400" />
                   {buddyStreak}
                 </span>
               </div>
               {/* Real-time Status Indicator */}
               <p className="text-[10px] text-text-secondary flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300" />
                 <span>{buddyLastSeen}</span>
                 <span>•</span>
                 <span className="truncate max-w-[100px]">{buddyChurch}</span>
@@ -789,14 +789,14 @@ export default function BuddyChatPage() {
         {/* Action Buttons: Timer Capsule Pill (Hidden for Square Connections) & Three-Dots Menu */}
         <div className="flex items-center gap-2 shrink-0">
           {isSquareConnection ? (
-            <span className="px-2.5 py-1 rounded-full bg-[#EBF3EE] text-[#234537] text-[10px] font-extrabold border border-[#234537]/20 shrink-0">
+            <span className="px-2.5 py-1 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 text-[#234537] dark:text-emerald-400 text-[10px] font-extrabold border border-[#234537]/20 dark:border-emerald-700/25 shrink-0">
               Square Connection
             </span>
           ) : (
             <button
               type="button"
               onClick={() => setIsInviteModalOpen(true)}
-              className="flex items-center gap-1.5 bg-[#0E0E0E] text-white px-3.5 py-1.5 rounded-full shadow-sm border border-white/15 hover:bg-[#262626] active:scale-95 transition-all text-xs font-black shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-3.5 py-1.5 rounded-full shadow-sm border border-white/15 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all text-xs font-black shrink-0 cursor-pointer"
               title="Clock-In Together"
             >
               <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-pulse shrink-0" />
@@ -836,7 +836,7 @@ export default function BuddyChatPage() {
                   <button
                     type="button"
                     onClick={handleSendNudge}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#FDF9F1] flex items-center gap-2.5"
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#FDF9F1] dark:bg-amber-950/30 flex items-center gap-2.5"
                   >
                     <HandWaving size={16} weight="fill" className="text-[#FBBF24]" />
                     <span>Send Nudge</span>
@@ -874,7 +874,7 @@ export default function BuddyChatPage() {
                     setIsMenuOpen(false)
                     setIsRemoveBuddyConfirmOpen(true)
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 text-rose-600 flex items-center gap-2.5"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 dark:bg-red-950/30 text-rose-600 flex items-center gap-2.5"
                 >
                   <UserMinus size={16} />
                   <span>Remove Buddy</span>
@@ -887,7 +887,7 @@ export default function BuddyChatPage() {
                     setIsMenuOpen(false)
                     setIsReportModalOpen(true)
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 text-rose-600 flex items-center gap-2.5"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 dark:bg-red-950/30 text-rose-600 flex items-center gap-2.5"
                 >
                   <Flag size={16} />
                   <span>Report User</span>
@@ -900,9 +900,9 @@ export default function BuddyChatPage() {
 
       {/* Anchored Banner for Square Connections */}
       {isSquareConnection && (
-        <div className="bg-[#EBF3EE] border-b border-[#234537]/20 px-4 py-2 flex items-center justify-between text-xs text-[#234537] font-semibold shrink-0">
+        <div className="bg-[#EBF3EE] dark:bg-emerald-950/30 border-b border-[#234537]/20 dark:border-emerald-700/25 px-4 py-2 flex items-center justify-between text-xs text-[#234537] dark:text-emerald-400 font-semibold shrink-0">
           <div className="flex items-center gap-1.5">
-            <Globe size={14} className="text-[#234537] shrink-0" />
+            <Globe size={14} className="text-[#234537] dark:text-emerald-400 shrink-0" />
             <span>
               Square Connection • {remainingSquareMessages} message{remainingSquareMessages === 1 ? '' : 's'} remaining today
             </span>
@@ -913,7 +913,7 @@ export default function BuddyChatPage() {
 
       {/* Top Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[#0E0E0E] text-white border border-[#FBBF24]/40 shadow-xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top duration-200">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border border-[#FBBF24]/40 dark:border-amber-500/30 shadow-xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top duration-200">
           <HandWaving size={15} weight="fill" className="text-[#FBBF24]" />
           <span>{toastMessage}</span>
         </div>
@@ -974,11 +974,11 @@ export default function BuddyChatPage() {
                   onClick={() => {
                     if (isLiveNow) handleJoinSession(msg)
                   }}
-                  className={`w-full max-w-sm rounded-3xl bg-[#0E0E0E] text-white border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
+                  className={`w-full max-w-sm rounded-3xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
                     isLiveNow
                       ? 'border-[#FBBF24]/50 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.15)]'
                       : isScheduledInFuture
-                      ? 'border-[#FBBF24]/30'
+                      ? 'border-[#FBBF24]/30 dark:border-amber-500/25'
                       : 'border-white/10 opacity-75'
                   }`}
                 >
@@ -1007,13 +1007,13 @@ export default function BuddyChatPage() {
 
                     {/* Dynamic Status Pill */}
                     {isScheduledInFuture ? (
-                      <span className="px-2.5 py-1 rounded-full bg-[#FBBF24]/15 text-[#FBBF24] border border-[#FBBF24]/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 text-[#FBBF24] border border-[#FBBF24]/30 dark:border-amber-500/25 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                         <CalendarCheck size={11} weight="bold" />
                         <span>{datePrefix} {timeDisplay}</span>
                       </span>
                     ) : isLiveNow ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/300/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-50 dark:bg-emerald-950/300 animate-ping" />
                         <span>LIVE NOW</span>
                       </span>
                     ) : (
@@ -1090,7 +1090,7 @@ export default function BuddyChatPage() {
                 <div
                   className={`max-w-[78%] rounded-2xl overflow-hidden border shadow-xs ${
                     isMe
-                      ? 'border-[#0E0E0E] bg-[#0E0E0E] text-white rounded-br-xs'
+                      ? 'border-[#0E0E0E] dark:border-white/20 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-br-xs'
                       : 'border-border bg-card text-text-primary rounded-bl-xs'
                   }`}
                 >
@@ -1125,7 +1125,7 @@ export default function BuddyChatPage() {
               <div
                 className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
                   isMe
-                    ? 'bg-[#0E0E0E] text-white rounded-br-xs'
+                    ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-br-xs'
                     : 'bg-card text-text-primary border border-border rounded-bl-xs'
                 }`}
               >
@@ -1153,7 +1153,7 @@ export default function BuddyChatPage() {
           <button
             type="button"
             onClick={() => setIsInviteModalOpen(true)}
-            className="p-2.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/50 text-[#FBBF24] hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs shrink-0 cursor-pointer"
+            className="p-2.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/50 text-[#FBBF24] hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs shrink-0 cursor-pointer"
             title="Setup Clock-In Timer"
           >
             <Clock size={20} weight="bold" />
@@ -1195,7 +1195,7 @@ export default function BuddyChatPage() {
         <button
           type="submit"
           disabled={!inputContent.trim() || (isSquareConnection && remainingSquareMessages <= 0)}
-          className="p-2.5 rounded-2xl bg-[#0E0E0E] text-white hover:bg-[#262626] disabled:opacity-30 transition-all shrink-0 cursor-pointer"
+          className="p-2.5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 disabled:opacity-30 transition-all shrink-0 cursor-pointer"
         >
           <PaperPlaneTilt size={16} weight="fill" />
         </button>
@@ -1238,7 +1238,7 @@ export default function BuddyChatPage() {
                 type="button"
                 disabled={isUploadingImage}
                 onClick={handleSendImage}
-                className="py-3 px-4 rounded-2xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5"
+                className="py-3 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
               >
                 {isUploadingImage ? (
                   <>
@@ -1300,7 +1300,7 @@ export default function BuddyChatPage() {
                     onClick={() => setInviteDiscipline('prayer')}
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'prayer'
-                        ? 'bg-[#0E0E0E] text-white shadow-md'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
                         : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
@@ -1312,7 +1312,7 @@ export default function BuddyChatPage() {
                     onClick={() => setInviteDiscipline('study')}
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'study'
-                        ? 'bg-[#0E0E0E] text-white shadow-md'
+                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
                         : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
@@ -1335,7 +1335,7 @@ export default function BuddyChatPage() {
                         onClick={() => setPrayerFocusMode('plain')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           prayerFocusMode === 'plain'
-                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-2xs'
                             : 'text-text-secondary'
                         }`}
                       >
@@ -1346,7 +1346,7 @@ export default function BuddyChatPage() {
                         onClick={() => setPrayerFocusMode('timeline')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
                           prayerFocusMode === 'timeline'
-                            ? 'bg-[#0E0E0E] text-white shadow-2xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-2xs'
                             : 'text-text-secondary'
                         }`}
                       >
@@ -1382,7 +1382,7 @@ export default function BuddyChatPage() {
                       <button
                         type="button"
                         onClick={() => setIsTimelineBuilderOpen(true)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <Sliders size={14} weight="bold" className="text-[#FBBF24]" />
                         <span>Customize Guided Timeline</span>
@@ -1412,7 +1412,7 @@ export default function BuddyChatPage() {
                     <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
                       Scripture Study Passage
                     </label>
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md">
                       In-App Bible Ready
                     </span>
                   </div>
@@ -1515,7 +1515,7 @@ export default function BuddyChatPage() {
                         onClick={() => setSchedulePreset('tomorrow_6am')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_6am'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1528,7 +1528,7 @@ export default function BuddyChatPage() {
                         onClick={() => setSchedulePreset('tomorrow_7am')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_7am'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1541,7 +1541,7 @@ export default function BuddyChatPage() {
                         onClick={() => setSchedulePreset('today_8pm')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'today_8pm'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1554,7 +1554,7 @@ export default function BuddyChatPage() {
                         onClick={() => setSchedulePreset('custom')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'custom'
-                            ? 'bg-[#0E0E0E] text-white border-[#0E0E0E] font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1578,7 +1578,7 @@ export default function BuddyChatPage() {
               {/* Submit CTA */}
               <button
                 type="submit"
-                className="w-full bg-[#0E0E0E] text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/15 hover:bg-[#262626] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/15 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isScheduleEnabled ? (
                   <>
@@ -1643,11 +1643,11 @@ export default function BuddyChatPage() {
         }
 
         return (
-          <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
+          <div className="fixed inset-0 z-50 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
             {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/300/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   <span>LIVE 2-WAY SYNC</span>
                 </span>
@@ -1661,7 +1661,7 @@ export default function BuddyChatPage() {
                   }}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     !isAmbientMuted
-                      ? 'bg-[#FBBF24]/20 border-[#FBBF24]/40 text-[#FBBF24]'
+                      ? 'bg-[#FBBF24]/20 border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24]'
                       : 'bg-card/10 border-white/20 text-white/50 hover:text-white'
                   }`}
                   title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
@@ -1675,13 +1675,13 @@ export default function BuddyChatPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center -space-x-2">
                   <div
-                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
                     title="You (Present)"
                   >
                     Me
                   </div>
                   <div
-                    className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] ring-2 ring-emerald-400 shadow-md"
+                    className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
                     title={`${buddyName} (Present)`}
                   >
                     {buddyInitial}
@@ -1815,7 +1815,7 @@ export default function BuddyChatPage() {
               <button
                 type="button"
                 onClick={handleConfirmEndSession}
-                className="py-2.5 px-3 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold"
+                className="py-2.5 px-3 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold"
               >
                 End & Save
               </button>

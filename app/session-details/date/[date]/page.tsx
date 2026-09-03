@@ -182,7 +182,7 @@ export default function DateSessionsPage() {
         </div>
       ) : sessions.length === 0 ? (
         <div className="faith-card p-8 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center mx-auto">
             <Clock size={24} />
           </div>
           <h3 className="text-sm font-bold text-text-primary">No timer activity logged on this day</h3>
@@ -192,7 +192,7 @@ export default function DateSessionsPage() {
           <Link href="/clock-in" className="inline-block pt-2">
             <button
               type="button"
-              className="px-4 py-2.5 rounded-xl bg-[#0E0E0E] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#262626] transition-all"
+              className="px-4 py-2.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -215,17 +215,17 @@ export default function DateSessionsPage() {
           {sessions.map((s, index) => (
             <div
               key={s.id}
-              className="faith-card p-4 space-y-3 border border-border hover:border-[#FBBF24]/40 transition-colors"
+              className="faith-card p-4 space-y-3 border border-border hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-2 border-b border-border-light">
                 <div className="flex items-center gap-2">
                   {s.type === 'prayer' ? (
-                    <div className="w-7 h-7 rounded-lg bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center font-bold text-xs border border-[#FBBF24]/30">
+                    <div className="w-7 h-7 rounded-lg bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center font-bold text-xs border border-[#FBBF24]/30 dark:border-amber-500/25">
                       <HandsPraying size={16} weight="fill" />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-lg bg-[#FBBF24]/15 text-[#FBBF24] flex items-center justify-center font-bold text-xs">
+                    <div className="w-7 h-7 rounded-lg bg-[#FBBF24]/15 dark:bg-amber-500/20 text-[#FBBF24] flex items-center justify-center font-bold text-xs">
                       <BookOpen size={16} />
                     </div>
                   )}
@@ -253,7 +253,7 @@ export default function DateSessionsPage() {
 
               {/* Verse Reference */}
               {s.verse_reference && (
-                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-lg border border-[#FBBF24]/30">
+                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-lg border border-[#FBBF24]/30 dark:border-amber-500/25">
                   <BookOpen size={12} />
                   <span>{s.verse_reference}</span>
                 </div>
@@ -267,7 +267,7 @@ export default function DateSessionsPage() {
                       <Clock size={12} className="text-[#FBBF24]" />
                       Prayer Focus Timeline ({s.focus_timeline.length} Segments)
                     </span>
-                    <span className="text-[9px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-1.5 py-0.5 rounded border border-[#FBBF24]/30">
+                    <span className="text-[9px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-[#FBBF24]/30 dark:border-amber-500/25">
                       {s.focus_timeline.reduce((sum, seg) => sum + (seg.durationMinutes || 1), 0)}m Guided
                     </span>
                   </div>

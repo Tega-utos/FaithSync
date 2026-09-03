@@ -173,8 +173,8 @@ export default function HomePage() {
             <p className="text-[11px] text-text-secondary">Prayer & Scripture Study</p>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] text-xs font-extrabold shadow-2xs">
-            <Fire size={14} weight="fill" className="text-[#234537]" />
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-xs font-extrabold shadow-2xs">
+            <Fire size={14} weight="fill" className="text-[#234537] dark:text-emerald-400" />
             <span>{dashboard.streakDays} Day Streak</span>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function HomePage() {
               Verse of the Day
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-md border border-[#FBBF24]/30">
+          <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-md border border-[#FBBF24]/30 dark:border-amber-500/25">
             Isaiah 40:31 • WEB
           </span>
         </div>
@@ -296,7 +296,7 @@ export default function HomePage() {
             href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
             className="p-2 rounded-xl bg-card border border-border hover:border-[#FBBF24] text-text-primary text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-2xs hover:bg-surface"
           >
-            <ShareNetwork size={13} className="text-[#234537]" weight="bold" />
+            <ShareNetwork size={13} className="text-[#234537] dark:text-emerald-400" weight="bold" />
             <span>Share to Square</span>
           </Link>
         </div>
@@ -306,7 +306,7 @@ export default function HomePage() {
       <Link href="/clock-in" className="block group">
         <button
           type="button"
-          className="w-full bg-[#0E0E0E] text-white py-4 px-6 rounded-2xl flex items-center justify-between font-bold text-base shadow-lg shadow-black/15 group-hover:bg-[#1f1f1f] group-active:scale-[0.99] transition-all"
+          className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 px-6 rounded-2xl flex items-center justify-between font-bold text-base shadow-lg shadow-black/15 group-hover:bg-[#1f1f1f] group-active:scale-[0.99] transition-all"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-card/10 flex items-center justify-center">
@@ -341,7 +341,7 @@ export default function HomePage() {
         {dashboard.pendingRequests.map((req) => (
           <div
             key={req.id}
-            className="p-3 rounded-xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center justify-between gap-3 animate-in fade-in"
+            className="p-3 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex items-center justify-between gap-3 animate-in fade-in"
           >
             <Link
               href={`/profile/${req.senderId}`}
@@ -361,13 +361,13 @@ export default function HomePage() {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => handleApprove(req.id)}
-                className="px-2.5 py-1 bg-[#0E0E0E] text-white rounded-lg text-xs font-bold hover:bg-[#262626]"
+                className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80"
               >
                 Approve
               </button>
               <button
                 onClick={() => handleIgnore(req.id)}
-                className="p-1 text-text-secondary hover:text-[#EA2C26] rounded-lg"
+                className="p-1 text-text-secondary hover:text-[#EA2C26] dark:text-red-400 rounded-lg"
               >
                 <X size={16} />
               </button>
@@ -395,15 +395,15 @@ export default function HomePage() {
                 <div
                   key={buddy.id}
                   onClick={() => router.push(`/buddy-chat/${buddy.id}`)}
-                  className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 hover:bg-subtle transition-all cursor-pointer"
+                  className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 dark:border-amber-500/30 hover:bg-subtle transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
                         {buddy.initial}
                       </div>
                       {buddy.isActiveNow && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-surface" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-50 dark:bg-emerald-950/300 rounded-full ring-2 ring-surface" />
                       )}
                     </div>
 
@@ -438,8 +438,8 @@ export default function HomePage() {
                     disabled={isNudged}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
                       isNudged
-                        ? 'bg-emerald-500 text-white animate-nudge'
-                        : `bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95 ${
+                        ? 'bg-emerald-50 dark:bg-emerald-950/300 text-white animate-nudge'
+                        : `bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 ${
                             vibratingState[buddy.id] ? 'anim-vibrate' : ''
                           }`
                     }`}
@@ -465,14 +465,14 @@ export default function HomePage() {
 
       {/* Global Community Attendance */}
       <Link href="/square" className="block group">
-        <div className="faith-card p-4 flex items-center justify-between gap-4 group-hover:border-[#FBBF24]/40 transition-all cursor-pointer">
+        <div className="faith-card p-4 flex items-center justify-between gap-4 group-hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-all cursor-pointer">
           <div className="flex items-center gap-3">
             {dashboard.activeCommunityUsers.length > 0 ? (
               <div className="flex -space-x-2 shrink-0">
                 {dashboard.activeCommunityUsers.slice(0, 3).map((u, idx) => (
                   <div
                     key={u.id || idx}
-                    className="w-7 h-7 rounded-full bg-[#0E0E0E] text-white font-bold text-[10px] flex items-center justify-center ring-2 ring-white"
+                    className="w-7 h-7 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-[10px] flex items-center justify-center ring-2 ring-white"
                   >
                     {u.initial}
                   </div>
@@ -484,8 +484,8 @@ export default function HomePage() {
                 )}
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] flex items-center justify-center shrink-0">
-                <Fire size={16} weight="fill" className="text-[#234537]" />
+              <div className="w-8 h-8 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
               </div>
             )}
 

@@ -284,7 +284,7 @@ export function SessionSummaryModal({
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-red-950/300/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
             <WarningCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
@@ -328,11 +328,11 @@ export function SessionSummaryModal({
             </div>
 
             {isPrayerComplete ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
                 <Check size={12} weight="bold" /> Done
               </span>
             ) : todayPrayerMins > 0 ? (
-              <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/30 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/30 dark:border-amber-500/25 text-[10px] font-bold">
                 Partial
               </span>
             ) : (
@@ -351,11 +351,11 @@ export function SessionSummaryModal({
             </div>
 
             {isStudyComplete ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
                 <Check size={12} weight="bold" /> Done
               </span>
             ) : todayStudyMins > 0 ? (
-              <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/30 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/30 dark:border-amber-500/25 text-[10px] font-bold">
                 Partial
               </span>
             ) : (
@@ -390,7 +390,7 @@ export function SessionSummaryModal({
         {/* Accountability Buddy Reciprocity Trigger */}
         <div className="space-y-2">
           {primaryBuddy && (
-            <div className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 flex items-center justify-between gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 truncate">
                 <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
                   {primaryBuddy.name.charAt(0)}
@@ -408,7 +408,7 @@ export function SessionSummaryModal({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
                   nudged
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95'
+                    : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95'
                 }`}
               >
                 {nudged ? (
@@ -473,7 +473,7 @@ export function SessionSummaryModal({
           type="button"
           disabled={saving}
           onClick={handleComplete}
-          className="w-full bg-[#0E0E0E] text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 rounded-2xl font-bold text-sm shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
           {saving ? (
             <>

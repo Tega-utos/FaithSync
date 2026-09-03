@@ -41,8 +41,8 @@ type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
 type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
 
 export const FAITH_REACTIONS = [
-  { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537]' },
-  { key: 'fire', label: 'Spirit', Icon: Fire, color: 'text-[#234537]' },
+  { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537] dark:text-emerald-400' },
+  { key: 'fire', label: 'Spirit', Icon: Fire, color: 'text-[#234537] dark:text-emerald-400' },
   { key: 'heart', label: 'Love', Icon: Heart, color: 'text-rose-500' },
   { key: 'praise', label: 'Praise', Icon: Sparkle, color: 'text-[#FBBF24]' },
   { key: 'peace', label: 'Peace', Icon: Sun, color: 'text-amber-500' },
@@ -861,7 +861,7 @@ function SquarePageContent() {
         <div className="py-20 text-center text-xs text-text-secondary">Loading reflections...</div>
       ) : filteredPosts.length === 0 ? (
         <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3 my-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 text-[#FBBF24] flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 text-[#FBBF24] flex items-center justify-center">
             <Globe size={28} />
           </div>
           <div className="space-y-1 max-w-xs">
@@ -873,7 +873,7 @@ function SquarePageContent() {
           <button
             type="button"
             onClick={handleOpenCompose}
-            className="bg-[#0E0E0E] text-white py-3 px-6 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all"
+            className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 px-6 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all"
           >
             Write a Post
           </button>
@@ -921,7 +921,7 @@ function SquarePageContent() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center border border-white shadow-sm overflow-hidden">
+                      <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center border border-white shadow-sm overflow-hidden">
                         {post.authorAvatar ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -946,7 +946,7 @@ function SquarePageContent() {
 
                   <div className="flex items-center gap-2">
                     {isPrayer ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] text-[10px] font-bold inline-flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
                         <HandsPraying size={12} weight="fill" />
                         <span>Prayer</span>
                       </span>
@@ -956,7 +956,7 @@ function SquarePageContent() {
                         <span>Struggle</span>
                       </span>
                     ) : isTestimony ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] border border-[#FBBF24]/35 text-[#FBBF24] text-[10px] font-bold inline-flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 text-[#FBBF24] text-[10px] font-bold inline-flex items-center gap-1">
                         <Sparkle size={12} weight="fill" />
                         <span>Testimony</span>
                       </span>
@@ -997,7 +997,7 @@ function SquarePageContent() {
                                 </>
                               ) : (
                                 <>
-                                  <EyeSlash size={14} className="text-[#234537]" />
+                                  <EyeSlash size={14} className="text-[#234537] dark:text-emerald-400" />
                                   <span>Make Anonymous</span>
                                 </>
                               )}
@@ -1006,7 +1006,7 @@ function SquarePageContent() {
                             <button
                               type="button"
                               onClick={() => handleDeletePost(post.id)}
-                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
+                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 dark:bg-red-950/30 flex items-center gap-2 transition-colors"
                             >
                               <Trash size={14} />
                               <span>Delete Post</span>
@@ -1026,7 +1026,7 @@ function SquarePageContent() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
                           Daily Clock-In Proof
                         </span>
-                        <span className="text-[10px] font-bold text-[#234537] bg-[#EBF3EE] px-2 py-0.5 rounded-full border border-[#234537]/20">
+                        <span className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-[#234537]/20 dark:border-emerald-700/25">
                           Verified Altar ✓
                         </span>
                       </div>
@@ -1054,8 +1054,8 @@ function SquarePageContent() {
                           All-Time Days Active
                         </span>
                         <div className="flex items-center gap-1">
-                          <Fire size={16} weight="fill" className="text-[#234537]" />
-                          <span className="text-base font-black font-mono text-[#234537]">
+                          <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+                          <span className="text-base font-black font-mono text-[#234537] dark:text-emerald-400">
                             {post.authorStreak || 1} Days &amp; Counting
                           </span>
                         </div>
@@ -1082,7 +1082,7 @@ function SquarePageContent() {
                           <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">
                             Daily Devotion Reflection
                           </span>
-                          <div className="border-l-4 border-[#234537] pl-3 py-1 space-y-1 bg-surface/40 rounded-r-xl">
+                          <div className="border-l-4 border-[#234537] dark:border-emerald-700 pl-3 py-1 space-y-1 bg-surface/40 rounded-r-xl">
                             {title && (
                               <h2 className="text-sm font-extrabold text-text-primary tracking-tight not-italic">
                                 {title}
@@ -1142,7 +1142,7 @@ function SquarePageContent() {
                             onClick={() => handleToggleReaction(post.id, r.key)}
                             className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 ${
                               reactionData.userReacted
-                                ? 'bg-[#EBF3EE] border border-[#234537] text-[#234537] font-bold shadow-xs'
+                                ? 'bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537] dark:border-emerald-700 text-[#234537] dark:text-emerald-400 font-bold shadow-xs'
                                 : 'bg-card-hover border border-border text-text-secondary hover:bg-subtle font-medium'
                             }`}
                             title={`React with ${r.label}`}
@@ -1182,7 +1182,7 @@ function SquarePageContent() {
                                   type="button"
                                   onClick={() => handleToggleReaction(post.id, r.key)}
                                   className={`p-2 rounded-xl hover:scale-125 transition-transform flex flex-col items-center gap-1 ${
-                                    isSelected ? 'bg-[#EBF3EE]' : 'hover:bg-card-hover'
+                                    isSelected ? 'bg-[#EBF3EE] dark:bg-emerald-950/30' : 'hover:bg-card-hover'
                                   }`}
                                   title={r.label}
                                 >
@@ -1227,7 +1227,7 @@ function SquarePageContent() {
                           onClick={() => handleToggleComments(post.id)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
                             openCommentsPostId === post.id
-                              ? 'bg-[#0E0E0E] text-white'
+                              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]'
                               : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-subtle'
                           }`}
                         >
@@ -1266,7 +1266,7 @@ function SquarePageContent() {
                             >
                               <div className="flex items-center justify-between text-[11px]">
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-5 h-5 rounded-full bg-[#0E0E0E] text-white text-[10px] font-bold flex items-center justify-center overflow-hidden shrink-0">
+                                  <div className="w-5 h-5 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[10px] font-bold flex items-center justify-center overflow-hidden shrink-0">
                                     {comment.is_anonymous ? (
                                       <User size={12} weight="bold" />
                                     ) : comment.authorAvatar ? (
@@ -1423,14 +1423,14 @@ function SquarePageContent() {
                     setSelectedIntent('prayer')
                     setComposeStep('draft')
                   }}
-                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] transition-all group"
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] dark:border-emerald-700 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] border border-[#234537]/30 text-[#234537] flex items-center justify-center font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/30 dark:border-emerald-700/35 text-[#234537] dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
                       <HandsPraying size={20} weight="fill" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] dark:text-emerald-400 transition-colors">
                         Request Prayer
                       </p>
                       <p className="text-[10px] text-text-secondary">
@@ -1474,7 +1474,7 @@ function SquarePageContent() {
                   className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#FBBF24] transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 text-[#FBBF24] flex items-center justify-center font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] flex items-center justify-center font-bold shrink-0">
                       <Sparkle size={20} weight="fill" />
                     </div>
                     <div>
@@ -1495,14 +1495,14 @@ function SquarePageContent() {
                     setSelectedIntent('record')
                     setComposeStep('draft')
                   }}
-                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] transition-all group"
+                  className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] dark:border-emerald-700 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] border border-[#234537]/30 text-[#234537] flex items-center justify-center font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/30 dark:border-emerald-700/35 text-[#234537] dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
                       <BookOpen size={20} weight="bold" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] transition-colors">
+                      <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] dark:text-emerald-400 transition-colors">
                         Scripture & Devotion Reflection
                       </p>
                       <p className="text-[10px] text-text-secondary">
@@ -1516,7 +1516,7 @@ function SquarePageContent() {
             ) : (
               <form onSubmit={handleSubmitPost} className="space-y-3.5 pt-1">
                 {postError && (
-                  <div className="p-3 rounded-xl bg-[#EBF3EE] border border-[#234537]/20 text-[#234537] text-xs font-semibold flex items-center gap-2">
+                  <div className="p-3 rounded-xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/20 dark:border-emerald-700/25 text-[#234537] dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
                     <WarningCircle size={16} className="shrink-0" />
                     <span>{postError}</span>
                   </div>
@@ -1540,7 +1540,7 @@ function SquarePageContent() {
                           onClick={() => setSelectedIntent(cat.id as IntentType)}
                           className={`py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all text-center ${
                             isSel
-                              ? 'bg-[#0E0E0E] text-white shadow-xs'
+                              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-xs'
                               : 'text-text-secondary hover:text-text-primary hover:bg-surface'
                           }`}
                         >
@@ -1575,7 +1575,7 @@ function SquarePageContent() {
                     </label>
                     <span
                       className={`text-[10px] font-mono font-bold ${
-                        charsRemaining < 15 ? 'text-[#234537] font-black' : 'text-text-secondary'
+                        charsRemaining < 15 ? 'text-[#234537] dark:text-emerald-400 font-black' : 'text-text-secondary'
                       }`}
                     >
                       {postContent.length}/{charLimit}
@@ -1611,7 +1611,7 @@ function SquarePageContent() {
                       <button
                         type="button"
                         onClick={() => setAttachedScripture(null)}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-card/90 border border-border text-text-secondary hover:text-[#234537] transition-colors"
+                        className="absolute top-2 right-2 p-1 rounded-full bg-card/90 border border-border text-text-secondary hover:text-[#234537] dark:text-emerald-400 transition-colors"
                         title="Remove scripture"
                       >
                         <X size={14} />
@@ -1734,7 +1734,7 @@ function SquarePageContent() {
                 <button
                   type="submit"
                   disabled={!connectMessage.trim() || sendingConnectRequest}
-                  className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                 >
                   {sendingConnectRequest ? (
                     <>
@@ -1762,7 +1762,7 @@ export default function SquarePage() {
     <React.Suspense
       fallback={
         <div className="min-h-screen bg-surface flex items-center justify-center">
-          <CircleNotch size={32} className="animate-spin text-[#234537]" />
+          <CircleNotch size={32} className="animate-spin text-[#234537] dark:text-emerald-400" />
         </div>
       }
     >

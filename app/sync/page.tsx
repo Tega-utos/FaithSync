@@ -311,7 +311,7 @@ export default function SyncPage() {
           onClick={() => setActiveTab('personal')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
             activeTab === 'personal'
-              ? 'bg-[#0E0E0E] text-white shadow-md'
+              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
               : 'text-text-secondary hover:text-text-primary'
           }`}
         >
@@ -324,7 +324,7 @@ export default function SyncPage() {
           onClick={() => setActiveTab('group')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all ${
             activeTab === 'group'
-              ? 'bg-[#0E0E0E] text-white shadow-md'
+              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
               : 'text-text-secondary hover:text-text-primary'
           }`}
         >
@@ -355,13 +355,13 @@ export default function SyncPage() {
                 {incomingRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1]"
+                    className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1] dark:bg-amber-950/30"
                   >
                     <Link
                       href={`/profile/${req.senderId}`}
                       className="flex items-center gap-3 flex-1 min-w-0 group hover:opacity-85 transition-all"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center shrink-0">
                         {req.senderInitial}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -376,14 +376,14 @@ export default function SyncPage() {
                       <button
                         type="button"
                         onClick={() => handleApproveRequest(req.id)}
-                        className="bg-[#0E0E0E] text-white py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626]"
+                        className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80"
                       >
                         Approve
                       </button>
                       <button
                         type="button"
                         onClick={() => handleIgnoreRequest(req.id)}
-                        className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:border-[#EA2C26] hover:text-[#EA2C26]"
+                        className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:border-[#EA2C26] hover:text-[#EA2C26] dark:text-red-400"
                       >
                         Ignore
                       </button>
@@ -407,7 +407,7 @@ export default function SyncPage() {
               <div className="py-12 text-center text-xs text-text-secondary">Loading buddies...</div>
             ) : buddies.length === 0 ? (
               <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] text-[#FBBF24] border border-[#FBBF24]/35 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/35 flex items-center justify-center">
                   <Users size={24} />
                 </div>
                 <div className="space-y-1 max-w-xs">
@@ -419,7 +419,7 @@ export default function SyncPage() {
                 <Link href="/find-buddy">
                   <button
                     type="button"
-                    className="bg-[#0E0E0E] text-white py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center gap-1.5"
+                    className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1.5"
                   >
                     <UserPlus size={14} className="text-[#FBBF24]" />
                     <span>Add via Buddy Code</span>
@@ -437,7 +437,7 @@ export default function SyncPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
                             {buddy.initial}
                           </div>
                           {buddy.isOnline && (
@@ -465,7 +465,7 @@ export default function SyncPage() {
 
                 <Link
                   href="/find-buddy"
-                  className="block text-center p-2.5 rounded-xl border border-dashed border-[#FBBF24]/50 text-xs font-bold text-[#FBBF24] hover:bg-[#FDF9F1] transition-colors"
+                  className="block text-center p-2.5 rounded-xl border border-dashed border-[#FBBF24]/50 text-xs font-bold text-[#FBBF24] hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-colors"
                 >
                   + Find More Buddies
                 </Link>
@@ -509,7 +509,7 @@ export default function SyncPage() {
                             setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
                             router.push('/buddy-chat/sq-partner')
                           }}
-                          className="px-2.5 py-1 bg-[#0E0E0E] text-white rounded-lg text-xs font-bold hover:bg-[#262626]"
+                          className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80"
                         >
                           Accept & Chat
                         </button>
@@ -522,7 +522,7 @@ export default function SyncPage() {
                             } catch {}
                             setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
                           }}
-                          className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26]"
+                          className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26] dark:text-red-400"
                         >
                           Decline
                         </button>
@@ -554,7 +554,7 @@ export default function SyncPage() {
                 setCreateGroupStep('form')
                 setIsCreateGroupOpen(true)
               }}
-              className="p-3.5 rounded-2xl bg-[#0E0E0E] text-white flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] transition-all cursor-pointer"
+              className="p-3.5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all cursor-pointer"
             >
               <Plus size={16} className="text-[#FBBF24]" weight="bold" />
               <span>Create Group</span>
@@ -579,7 +579,7 @@ export default function SyncPage() {
           <div className="space-y-3">
             {groups.length === 0 ? (
               <div className="faith-card p-6 text-center space-y-2.5 bg-surface border border-border">
-                <div className="w-10 h-10 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
+                <div className="w-10 h-10 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center mx-auto">
                   <Users size={20} />
                 </div>
                 <p className="text-xs font-bold text-text-primary">No groups joined yet</p>
@@ -601,8 +601,8 @@ export default function SyncPage() {
                           {group.name}
                         </h3>
                         {group.isLive && (
-                          <span className="px-2 py-0.2 rounded-full bg-rose-500/15 text-rose-600 text-[9px] font-extrabold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                          <span className="px-2 py-0.2 rounded-full bg-rose-50 dark:bg-red-950/300/15 text-rose-600 text-[9px] font-extrabold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-50 dark:bg-red-950/300 animate-ping" />
                             Live
                           </span>
                         )}
@@ -612,7 +612,7 @@ export default function SyncPage() {
                       </p>
                     </div>
 
-                    <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] px-2 py-0.5 rounded-md border border-[#FBBF24]/35">
+                    <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-md border border-[#FBBF24]/35">
                       {group.code || 'SYNC GROUP'}
                     </span>
                   </div>
@@ -728,7 +728,7 @@ export default function SyncPage() {
               <button
                 type="submit"
                 disabled={!buddyCodeInput.trim() || sendingBuddyRequest}
-                className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 {sendingBuddyRequest ? (
                   <>
@@ -886,7 +886,7 @@ export default function SyncPage() {
                 <button
                   type="submit"
                   disabled={!newGroupName.trim() || isCreatingGroup}
-                  className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isCreatingGroup ? (
                     <>
@@ -902,7 +902,7 @@ export default function SyncPage() {
               /* Success Screen */
               <div className="py-4 text-center space-y-4 animate-in zoom-in-95">
                 {/* Large Green Checkmark */}
-                <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
                   <CheckCircle size={38} weight="fill" />
                 </div>
 
@@ -916,7 +916,7 @@ export default function SyncPage() {
                 {/* Massive Spaced-out Code in Dashed Box */}
                 <div
                   onClick={handleCopyInviteCode}
-                  className="p-5 rounded-3xl bg-card border-2 border-dashed border-[#FBBF24] cursor-pointer hover:bg-[#FDF9F1] transition-all group shadow-sm"
+                  className="p-5 rounded-3xl bg-card border-2 border-dashed border-[#FBBF24] cursor-pointer hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-all group shadow-sm"
                 >
                   <p className="text-2xl sm:text-3xl font-black font-mono tracking-[0.35em] text-text-primary">
                     {createdInviteCode.split('').join(' ')}
@@ -954,7 +954,7 @@ export default function SyncPage() {
                       setIsCreateGroupOpen(false)
                       router.push(`/group-chat/${createdGroupId || 'new'}`)
                     }}
-                    className="py-3 px-3 rounded-2xl bg-[#0E0E0E] text-white text-xs font-bold hover:bg-[#262626] transition-colors shadow-sm"
+                    className="py-3 px-3 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-colors shadow-sm"
                   >
                     Open Group Chat
                   </button>
@@ -983,7 +983,7 @@ export default function SyncPage() {
               </p>
 
               {joinError && (
-                <p className="text-[11px] font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                <p className="text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-red-950/30 p-2.5 rounded-xl border border-rose-200">
                   {joinError}
                 </p>
               )}
@@ -1001,7 +1001,7 @@ export default function SyncPage() {
               <button
                 type="submit"
                 disabled={!joinCodeInput.trim() || joining}
-                className="w-full bg-[#0E0E0E] text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all disabled:opacity-40 cursor-pointer"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all disabled:opacity-40 cursor-pointer"
               >
                 {joining ? 'Joining Group...' : 'Join Group'}
               </button>

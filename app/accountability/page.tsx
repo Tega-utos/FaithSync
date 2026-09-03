@@ -239,13 +239,13 @@ export default function AccountabilityPage() {
             {pendingRequests.map((req) => (
               <div
                 key={req.id}
-                className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1]"
+                className="faith-card p-3.5 flex items-center justify-between gap-3 bg-[#FDF9F1] dark:bg-amber-950/30"
               >
                 <Link
                   href={`/profile/${req.senderId}`}
                   className="flex items-center gap-3 flex-1 min-w-0 group hover:opacity-85 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center shrink-0">
                     {req.initial}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -260,14 +260,14 @@ export default function AccountabilityPage() {
                   <button
                     type="button"
                     onClick={() => handleApprove(req.id)}
-                    className="bg-[#0E0E0E] text-white py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626]"
+                    className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-1.5 px-3 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80"
                   >
                     Approve
                   </button>
                   <button
                     type="button"
                     onClick={() => handleIgnore(req.id)}
-                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26]"
+                    className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded-xl font-bold text-xs hover:text-[#EA2C26] dark:text-red-400"
                   >
                     Ignore
                   </button>
@@ -302,7 +302,7 @@ export default function AccountabilityPage() {
           <Link href="/find-buddy" className="w-full max-w-xs">
             <button
               type="button"
-              className="w-full bg-[#0E0E0E] text-white py-3.5 px-6 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 px-6 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <UserPlus size={16} className="text-[#FBBF24]" />
               <span>Find Your Buddy</span>
@@ -331,13 +331,13 @@ export default function AccountabilityPage() {
               return (
                 <div
                   key={buddy.id}
-                  className="faith-card p-4 sm:p-5 space-y-4 hover:border-[#FBBF24]/40 transition-colors"
+                  className="faith-card p-4 sm:p-5 space-y-4 hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors"
                 >
                   {/* Top Row */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-[#0E0E0E] text-white font-black text-sm flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-sm flex items-center justify-center shadow-sm">
                           {buddy.initial}
                         </div>
                         {buddy.isActiveNow && (
@@ -353,9 +353,9 @@ export default function AccountabilityPage() {
                       </div>
                     </div>
 
-                    <div className="px-2.5 py-1 rounded-full bg-[#EBF3EE] border border-[#234537]/25 flex items-center gap-1 shadow-2xs">
-                      <Fire size={14} weight="fill" className="text-[#234537]" />
-                      <span className="text-xs font-mono font-bold text-[#234537]">
+                    <div className="px-2.5 py-1 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 flex items-center gap-1 shadow-2xs">
+                      <Fire size={14} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+                      <span className="text-xs font-mono font-bold text-[#234537] dark:text-emerald-400">
                         {buddy.streakCount} days
                       </span>
                     </div>
@@ -414,7 +414,7 @@ export default function AccountabilityPage() {
                       disabled={isNudged}
                       className={`py-2.5 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
                         isNudged
-                          ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 border-emerald-500/30'
                           : 'bg-subtle text-[#262626] border-[#DCD6C8] hover:bg-[#E5E7EB]'
                       }`}
                     >
@@ -434,7 +434,7 @@ export default function AccountabilityPage() {
                     <Link href={`/buddy-chat/${buddy.id}`} className="block">
                       <button
                         type="button"
-                        className="w-full bg-[#0E0E0E] text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5"
+                        className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-4 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
                       >
                         <ChatCircle size={14} className="text-[#FBBF24]" />
                         <span>SynC</span>

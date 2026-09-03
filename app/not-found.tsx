@@ -22,7 +22,7 @@ export default function NotFound() {
         <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
           <Link
             href="/home"
-            className="px-5 py-3 rounded-2xl bg-[#0E0E0E] text-white text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#234537] transition-colors shadow-sm"
+            className="px-5 py-3 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#234537] transition-colors shadow-sm"
           >
             <House size={16} weight="bold" />
             <span>Go to Home</span>

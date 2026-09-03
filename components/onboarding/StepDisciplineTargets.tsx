@@ -59,7 +59,7 @@ export function StepDisciplineTargets({
                 className={`py-2 rounded-xl text-xs font-bold font-mono-tabular transition-all cursor-pointer ${
                   prayerTarget === mins
                     ? 'bg-[#FBBF24] text-text-primary shadow-xs scale-[1.02]'
-                    : 'bg-card text-text-secondary border border-border hover:bg-[#FDF9F1]'
+                    : 'bg-card text-text-secondary border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30'
                 }`}
               >
                 {mins}m
@@ -95,7 +95,7 @@ export function StepDisciplineTargets({
                 className={`py-2 rounded-xl text-xs font-bold font-mono-tabular transition-all cursor-pointer ${
                   studyTarget === mins
                     ? 'bg-[#FBBF24] text-text-primary shadow-xs scale-[1.02]'
-                    : 'bg-card text-text-secondary border border-border hover:bg-[#FDF9F1]'
+                    : 'bg-card text-text-secondary border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30'
                 }`}
               >
                 {mins}m

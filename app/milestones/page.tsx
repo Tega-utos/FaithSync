@@ -237,12 +237,12 @@ export default function MilestonesPage() {
         {/* Bottom Section (The Breakdown) */}
         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
           {/* Prayer Breakdown */}
-          <div className="p-3 rounded-2xl bg-[#FFF0F0] border border-[#EA2C26]/20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-card text-[#EA2C26] flex items-center justify-center shrink-0 shadow-sm">
+          <div className="p-3 rounded-2xl bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-card text-[#EA2C26] dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm">
               <Fire size={20} weight="fill" />
             </div>
             <div className="truncate">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#EA2C26] block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#EA2C26] dark:text-red-400 block">
                 Prayer
               </span>
               <span className="text-sm font-black font-mono-tabular text-text-primary">
@@ -252,7 +252,7 @@ export default function MilestonesPage() {
           </div>
 
           {/* Study Breakdown */}
-          <div className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-card text-[#FBBF24] flex items-center justify-center shrink-0 shadow-sm">
               <BookOpen size={20} />
             </div>
@@ -301,13 +301,13 @@ export default function MilestonesPage() {
                 return (
                   <div
                     key={badge.id}
-                    className="p-4 rounded-2xl bg-[#0E0E0E] text-white border border-[#262626] shadow-lg relative overflow-hidden flex items-center gap-3.5 group"
+                    className="p-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border border-[#262626] shadow-lg relative overflow-hidden flex items-center gap-3.5 group"
                   >
                     {/* Subtle Gold Radial Gradient Glow */}
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#FBBF24]/20 via-transparent to-transparent pointer-events-none" />
 
                     {/* Gold-Filtered Icon Slot */}
-                    <div className="w-12 h-12 rounded-xl bg-card/10 border border-[#FBBF24]/40 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-card/10 border border-[#FBBF24]/40 dark:border-amber-500/30 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner relative z-10">
                       <IconComponent size={24} weight="fill" />
                     </div>
 
@@ -316,7 +316,7 @@ export default function MilestonesPage() {
                         <h3 className="text-xs font-black text-white tracking-tight">
                           {badge.title}
                         </h3>
-                        <span className="px-2 py-0.5 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 text-[#FBBF24] text-[9px] font-extrabold uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] text-[9px] font-extrabold uppercase">
                           Earned
                         </span>
                       </div>

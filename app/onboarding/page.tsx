@@ -426,7 +426,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={handleCopyInvite}
-              className="w-full py-3 px-4 rounded-2xl bg-card text-text-primary font-black text-xs shadow-sm hover:bg-[#FDF9F1] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-card text-text-primary font-black text-xs shadow-sm hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Copy size={16} className="text-[#FF6B66]" weight="bold" />
               <span>Copy Invite Link</span>
@@ -446,7 +446,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={!friendCode.trim() || saving}
-              className="py-3.5 px-5 rounded-2xl bg-[#0E0E0E] text-white font-black text-xs hover:bg-black/90 active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              className="py-3.5 px-5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-xs hover:bg-black/90 active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               <MagnifyingGlass size={14} weight="bold" />
               <span>Find</span>
@@ -465,7 +465,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={handleCompleteSetup}
             disabled={saving}
-            className="w-full py-4 px-6 rounded-full bg-card border-2 border-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(255,152,0,0.4)] hover:bg-[#FDF9F1] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            className="w-full py-4 px-6 rounded-full bg-card border-2 border-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(255,152,0,0.4)] hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
           >
             {saving ? (
               <>
@@ -496,7 +496,7 @@ export default function OnboardingPage() {
       {/* ========================================================================= */}
       {showToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-slide-up pointer-events-none">
-          <div className="bg-[#0E0E0E] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xl flex items-center gap-2 border border-white/10">
+          <div className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-5 py-2.5 rounded-full text-xs font-bold shadow-xl flex items-center gap-2 border border-white/10">
             <Check size={16} className="text-emerald-400 font-bold" />
             <span>{toastMessage}</span>
           </div>

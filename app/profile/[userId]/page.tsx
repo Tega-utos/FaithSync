@@ -278,14 +278,14 @@ export default function OtherUserProfilePage() {
             <Link href={`/buddy-chat/${targetUserId}`} className="block">
               <button
                 type="button"
-                className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-full font-bold text-xs shadow-md flex items-center justify-center gap-2 hover:bg-[#262626] active:scale-95 transition-all"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-full font-bold text-xs shadow-md flex items-center justify-center gap-2 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all"
               >
                 <ChatCircle size={16} />
                 <span>Open Buddy Chat</span>
               </button>
             </Link>
           ) : connectionStatus === 'incoming_pending' ? (
-            <div className="p-4 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 space-y-2.5 animate-in fade-in">
+            <div className="p-4 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 space-y-2.5 animate-in fade-in">
               <p className="text-xs font-bold text-text-primary">
                 {displayName} sent you an accountability buddy request!
               </p>
@@ -294,7 +294,7 @@ export default function OtherUserProfilePage() {
                   type="button"
                   onClick={handleApproveIncoming}
                   disabled={sendingRequest}
-                  className="flex-1 bg-[#0E0E0E] text-white py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Check size={14} weight="bold" className="text-[#FBBF24]" />
                   <span>{sendingRequest ? 'Approving...' : 'Approve Request'}</span>
@@ -302,7 +302,7 @@ export default function OtherUserProfilePage() {
                 <button
                   type="button"
                   onClick={handleIgnoreIncoming}
-                  className="px-4 py-2.5 bg-card border border-border text-text-secondary rounded-xl font-bold text-xs hover:text-[#EA2C26] transition-all"
+                  className="px-4 py-2.5 bg-card border border-border text-text-secondary rounded-xl font-bold text-xs hover:text-[#EA2C26] dark:text-red-400 transition-all"
                 >
                   Ignore
                 </button>
@@ -322,7 +322,7 @@ export default function OtherUserProfilePage() {
               type="button"
               onClick={sendBuddyRequest}
               disabled={sendingRequest}
-              className="w-full bg-[#0E0E0E] text-white py-3.5 rounded-full font-bold text-xs shadow-lg shadow-black/15 flex items-center justify-center gap-2 hover:bg-[#262626] active:scale-95 transition-all cursor-pointer"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-full font-bold text-xs shadow-lg shadow-black/15 flex items-center justify-center gap-2 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all cursor-pointer"
             >
               <UserPlus size={16} weight="bold" />
               <span>{sendingRequest ? 'Sending Request...' : 'Connect as Buddy'}</span>

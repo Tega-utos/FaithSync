@@ -55,7 +55,7 @@ export function StepBuddyCode({
             <button
               type="button"
               onClick={handleCopy}
-              className="p-3 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] text-text-primary transition-colors shadow-2xs cursor-pointer"
+              className="p-3 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary transition-colors shadow-2xs cursor-pointer"
               title="Copy SynC Code"
             >
               {copied ? (
@@ -94,7 +94,7 @@ export function StepBuddyCode({
           <button
             type="button"
             onClick={onBack}
-            className="py-4 px-5 rounded-2xl bg-card border border-border text-text-primary font-bold text-xs hover:bg-[#FDF9F1] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="py-4 px-5 rounded-2xl bg-card border border-border text-text-primary font-bold text-xs hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <CaretLeft size={16} />
             <span>Back</span>

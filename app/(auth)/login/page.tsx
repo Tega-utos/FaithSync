@@ -88,7 +88,7 @@ export default function LoginPage() {
     <AuthCard subtitle="Sync Up!" closeHref="/welcome">
       {/* Error Alert */}
       {error && (
-        <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <WarningCircle size={16} className="shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={googleLoading || loading}
-        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
+        className="w-full py-3.5 px-4 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-2xs font-bold text-xs text-text-primary cursor-pointer disabled:opacity-60"
       >
         {googleLoading ? (
           <CircleNotch size={18} className="animate-spin text-[#FBBF24]" />

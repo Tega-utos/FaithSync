@@ -57,7 +57,7 @@ export default function WelcomePage() {
           <Link href="/login" className="block w-full">
             <button
               type="button"
-              className="w-full py-3.5 px-6 rounded-[30px] bg-transparent border-2 border-dashed border-[#FBBF24] text-text-primary font-black text-sm hover:bg-[#FDF9F1] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-[30px] bg-transparent border-2 border-dashed border-[#FBBF24] text-text-primary font-black text-sm hover:bg-[#FDF9F1] dark:bg-amber-950/30 active:scale-[0.98] transition-all cursor-pointer"
             >
               I Already Have an Account
             </button>

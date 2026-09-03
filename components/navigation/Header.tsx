@@ -77,7 +77,7 @@ export function Header() {
         {session?.isActive && (
           <Link
             href="/clock-in"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/15 border border-[#FBBF24]/40 text-[#B38F24] animate-pulse"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#B38F24] dark:text-amber-400 animate-pulse"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] animate-ping" />
             <span className="text-xs font-mono font-bold">{formattedTime}</span>
@@ -88,8 +88,8 @@ export function Header() {
         {/* Right Section: Streak, Notification Bell & User Avatar */}
         <div className="flex items-center gap-2.5 relative">
           {streak > 0 && (
-            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#EBF3EE] border border-[#234537]/25 text-[#234537] text-xs font-bold shadow-2xs">
-              <Fire size={14} weight="fill" className="text-[#234537]" />
+            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-xs font-bold shadow-2xs">
+              <Fire size={14} weight="fill" className="text-[#234537] dark:text-emerald-400" />
               <span>{streak}</span>
             </div>
           )}
@@ -124,7 +124,7 @@ export function Header() {
           {/* User Avatar */}
           <Link
             href="/profile"
-            className="w-8 h-8 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center font-bold text-xs shadow-sm hover:scale-105 transition-transform"
+            className="w-8 h-8 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center font-bold text-xs shadow-sm hover:scale-105 transition-transform"
           >
             {initial}
           </Link>

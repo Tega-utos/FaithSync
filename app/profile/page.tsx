@@ -786,7 +786,7 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             title="Click to upload profile photo"
           >
-            <div className="w-20 h-20 rounded-full bg-[#0E0E0E] text-white flex items-center justify-center text-2xl font-black shadow-md overflow-hidden border-2 border-white ring-2 ring-[#FBBF24]/35">
+            <div className="w-20 h-20 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex items-center justify-center text-2xl font-black shadow-md overflow-hidden border-2 border-white ring-2 ring-[#FBBF24]/35">
               {uploadingAvatar ? (
                 <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
               ) : avatarUrl ? (
@@ -835,7 +835,7 @@ export default function ProfilePage() {
         {/* Sync Code Badge (1-Tap Copy) */}
         <div
           onClick={handleCopyCode}
-          className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/40 flex items-center justify-between cursor-pointer hover:bg-[#FDF9F1] transition-all group"
+          className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 flex items-center justify-between cursor-pointer hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-all group"
         >
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
@@ -863,7 +863,7 @@ export default function ProfilePage() {
 
         {/* Shared Records Shortcut */}
         <Link href="/square" className="block pt-0.5">
-          <div className="p-2.5 rounded-xl bg-surface border border-border flex items-center justify-between hover:border-[#FBBF24]/40 transition-colors">
+          <div className="p-2.5 rounded-xl bg-surface border border-border flex items-center justify-between hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors">
             <div className="flex items-center gap-2 text-xs font-bold text-text-primary">
               <ShareNetwork size={15} className="text-[#FBBF24]" />
               <span>{squareShareCount} Public Square Post{squareShareCount === 1 ? '' : 's'}</span>
@@ -883,7 +883,7 @@ export default function ProfilePage() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
               Streak
             </span>
-            <Fire size={18} weight="fill" className="text-[#234537]" />
+            <Fire size={18} weight="fill" className="text-[#234537] dark:text-emerald-400" />
           </div>
           <div>
             <p className="text-xl font-black text-text-primary font-mono-tabular">{streakDays} Days</p>
@@ -933,7 +933,7 @@ export default function ProfilePage() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs font-bold">
             <span className="flex items-center gap-1.5 text-text-primary">
-              <Fire size={14} weight="fill" className="text-[#EA2C26]" />
+              <Fire size={14} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
               <span>Prayer</span>
             </span>
             <span className="font-mono-tabular text-[11px] text-text-secondary">
@@ -986,8 +986,8 @@ export default function ProfilePage() {
         {earnedBadges.length === 0 ? (
           /* Premium Dashed Empty State */
           <Link href="/clock-in" className="block">
-            <div className="p-4 rounded-2xl border-2 border-dashed border-border bg-surface/50 hover:bg-[#FDF9F1] hover:border-[#FBBF24]/40 transition-all text-center space-y-1.5 cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center mx-auto">
+            <div className="p-4 rounded-2xl border-2 border-dashed border-border bg-surface/50 hover:bg-[#FDF9F1] dark:bg-amber-950/30 hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-all text-center space-y-1.5 cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center mx-auto">
                 <Sparkle size={16} weight="fill" />
               </div>
               <p className="text-xs font-bold text-text-primary">
@@ -1003,7 +1003,7 @@ export default function ProfilePage() {
               return (
                 <div
                   key={badge.id}
-                  className="p-3 rounded-xl bg-[#0E0E0E] text-white flex flex-col items-center text-center space-y-1 shadow-sm"
+                  className="p-3 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] flex flex-col items-center text-center space-y-1 shadow-sm"
                 >
                   <IconComp size={20} weight="fill" className="text-[#FBBF24]" />
                   <span className="text-[10px] font-black truncate max-w-full">{badge.title}</span>
@@ -1032,7 +1032,7 @@ export default function ProfilePage() {
         {pendingRequests.map((req) => (
           <div
             key={req.id}
-            className="p-3 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex items-center justify-between gap-3 animate-in fade-in"
+            className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex items-center justify-between gap-3 animate-in fade-in"
           >
             <Link
               href={`/profile/${req.senderId}`}
@@ -1057,7 +1057,7 @@ export default function ProfilePage() {
                   await supabase.from('buddies').update({ status: 'accepted' }).eq('id', req.id)
                   setPendingRequests((prev) => prev.filter((r) => r.id !== req.id))
                 }}
-                className="px-3 py-1.5 bg-[#0E0E0E] text-white rounded-xl text-xs font-bold hover:bg-[#262626]"
+                className="px-3 py-1.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-xl text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80"
               >
                 Approve
               </button>
@@ -1068,7 +1068,7 @@ export default function ProfilePage() {
                   await supabase.from('buddies').delete().eq('id', req.id)
                   setPendingRequests((prev) => prev.filter((r) => r.id !== req.id))
                 }}
-                className="px-2.5 py-1.5 bg-card border border-border text-text-secondary rounded-xl text-xs font-bold hover:text-[#EA2C26]"
+                className="px-2.5 py-1.5 bg-card border border-border text-text-secondary rounded-xl text-xs font-bold hover:text-[#EA2C26] dark:text-red-400"
               >
                 Ignore
               </button>
@@ -1100,7 +1100,7 @@ export default function ProfilePage() {
                     className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-subtle"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#0E0E0E] text-white font-bold text-xs flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
                         {buddy.initial}
                       </div>
                       <div>
@@ -1237,7 +1237,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-2 gap-2.5 pt-1">
           <Link href="/review-digest" className="block">
-            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
+            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors h-full space-y-1">
               <span className="text-xs font-black text-text-primary block">Weekly Review</span>
               <p className="text-[10px] text-text-secondary leading-snug">
                 Growth is often clearer in reflection.
@@ -1246,7 +1246,7 @@ export default function ProfilePage() {
           </Link>
 
           <Link href="/monthly-reflection" className="block">
-            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 transition-colors h-full space-y-1">
+            <div className="p-3.5 rounded-2xl bg-surface border border-border hover:border-[#FBBF24]/40 dark:border-amber-500/30 transition-colors h-full space-y-1">
               <span className="text-xs font-black text-text-primary block">Monthly Reflection</span>
               <p className="text-[10px] text-text-secondary leading-snug">
                 Holistic spiritual journaling and milestones.
@@ -1293,9 +1293,9 @@ export default function ProfilePage() {
           type="button"
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="w-full p-4 flex items-center justify-between cursor-pointer bg-rose-50/50 hover:bg-rose-100/70 active:scale-[0.99] transition-all group text-left disabled:opacity-60"
+          className="w-full p-4 flex items-center justify-between cursor-pointer bg-rose-50 dark:bg-red-950/30/50 dark:bg-red-950/30 hover:bg-rose-100/70 dark:hover:bg-red-950/40 active:scale-[0.99] transition-all group text-left disabled:opacity-60"
         >
-          <div className="flex items-center gap-3 text-[#EA2C26]">
+          <div className="flex items-center gap-3 text-[#EA2C26] dark:text-red-400">
             {isSigningOut ? (
               <CircleNotch size={16} className="animate-spin" />
             ) : (
@@ -1305,7 +1305,7 @@ export default function ProfilePage() {
               {isSigningOut ? 'Logging Out...' : 'Log Out'}
             </span>
           </div>
-          <CaretRight size={16} className="text-[#EA2C26]" />
+          <CaretRight size={16} className="text-[#EA2C26] dark:text-red-400" />
         </button>
       </div>
 
@@ -1313,7 +1313,7 @@ export default function ProfilePage() {
       {/* TOAST NOTIFICATION                                                        */}
       {/* ========================================================================= */}
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-60 px-4 py-2.5 rounded-2xl bg-[#0E0E0E] text-white border border-emerald-500 shadow-2xl flex items-center gap-2 text-xs font-black animate-in slide-in-from-top duration-300">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-60 px-4 py-2.5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border border-emerald-500 shadow-2xl flex items-center gap-2 text-xs font-black animate-in slide-in-from-top duration-300">
           <Check size={16} weight="bold" className="text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -1449,7 +1449,7 @@ export default function ProfilePage() {
                       onClick={() => setTempPrayerTarget(mins)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempPrayerTarget === mins
-                          ? 'bg-[#0E0E0E] text-white shadow-xs'
+                          ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-xs'
                           : 'bg-card-hover border border-border text-text-secondary hover:border-[#FBBF24]'
                       }`}
                     >
@@ -1485,7 +1485,7 @@ export default function ProfilePage() {
               <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
-                    <BookOpen size={16} className="text-[#234537]" weight="fill" />
+                    <BookOpen size={16} className="text-[#234537] dark:text-emerald-400" weight="fill" />
                     <span>Daily Study Goal</span>
                   </span>
 
@@ -1515,7 +1515,7 @@ export default function ProfilePage() {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempStudyTarget === mins
                           ? 'bg-[#234537] text-white shadow-xs'
-                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#234537]'
+                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#234537] dark:border-emerald-700'
                       }`}
                     >
                       {mins}m
@@ -1541,7 +1541,7 @@ export default function ProfilePage() {
                     type="time"
                     value={studyReminderTime}
                     onChange={(e) => setStudyReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537]"
+                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537] dark:border-emerald-700"
                   />
                 </div>
               </div>
@@ -1557,7 +1557,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-[#0E0E0E] text-white py-3 px-4 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                  className="flex-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 px-4 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 active:scale-95"
                 >
                   <Check size={16} weight="bold" className="text-[#FBBF24]" />
                   <span>Save Daily Targets</span>
@@ -1729,7 +1729,7 @@ export default function ProfilePage() {
                   <Link
                     href="/monthly-reflection"
                     onClick={() => setIsNotificationsOpen(false)}
-                    className="text-[10px] font-bold text-[#234537] hover:underline flex items-center gap-0.5"
+                    className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 hover:underline flex items-center gap-0.5"
                   >
                     <span>View Reflection</span>
                     <CaretRight size={10} weight="bold" />
@@ -1766,7 +1766,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={handleSaveNotifications}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 active:scale-95"
             >
               <Check size={16} weight="bold" className="text-[#FBBF24]" />
               <span>Save Notification Preferences</span>
@@ -1833,7 +1833,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={handleSavePrivacy}
-              className="w-full bg-[#0E0E0E] text-white py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 active:scale-95"
             >
               <Check size={16} weight="bold" className="text-[#FBBF24]" />
               <span>Save Privacy Settings</span>

@@ -170,12 +170,12 @@ export default function MonthlyReflectionPage() {
       {/* A. The Monthly Stats Rollup (3 Metric Blocks) */}
       <div className="grid grid-cols-3 gap-2.5">
         {/* Prayer Min */}
-        <div className="p-3.5 rounded-2xl bg-[#FFF0F0] border border-[#EA2C26]/20 flex flex-col justify-between space-y-1 shadow-xs">
+        <div className="p-3.5 rounded-2xl bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 flex flex-col justify-between space-y-1 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#EA2C26]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#EA2C26] dark:text-red-400">
               Prayer
             </span>
-            <Fire size={15} weight="fill" className="text-[#EA2C26]" />
+            <Fire size={15} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
           </div>
           <div>
             <span className="text-xl font-black font-mono-tabular text-text-primary block">
@@ -186,7 +186,7 @@ export default function MonthlyReflectionPage() {
         </div>
 
         {/* Study Min */}
-        <div className="p-3.5 rounded-2xl bg-[#FDF9F1] border border-[#FBBF24]/35 flex flex-col justify-between space-y-1 shadow-xs">
+        <div className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex flex-col justify-between space-y-1 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold uppercase tracking-wider text-[#B45309]">
               Study
@@ -259,7 +259,7 @@ export default function MonthlyReflectionPage() {
         {/* C. Community Publishing Toggle */}
         <div className="faith-card p-4 bg-card border border-border rounded-2xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#FDF9F1] text-[#FBBF24] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center shrink-0">
               <ShareNetwork size={16} />
             </div>
             <div>
@@ -288,7 +288,7 @@ export default function MonthlyReflectionPage() {
           className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
             savedSuccess
               ? 'bg-emerald-600 text-white'
-              : 'bg-[#0E0E0E] text-white hover:bg-[#262626] active:scale-95 disabled:opacity-50'
+              : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 disabled:opacity-50'
           }`}
         >
           {saving ? (

@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthCard subtitle="Check Your Email" closeHref="/login">
         <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => setSubmitted(false)}
-              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] font-bold text-xs text-text-primary shadow-2xs transition-all cursor-pointer"
+              className="w-full py-3.5 px-6 rounded-2xl bg-card border border-border hover:bg-[#FDF9F1] dark:bg-amber-950/30 font-bold text-xs text-text-primary shadow-2xs transition-all cursor-pointer"
             >
               Try another email
             </button>
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
     <AuthCard subtitle="Reset Password" closeHref="/login">
       {/* Error Alert */}
       {error && (
-        <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <WarningCircle size={16} className="shrink-0 text-rose-500" />
           <span>{error}</span>
         </div>
