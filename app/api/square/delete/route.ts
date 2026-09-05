@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isSuperAdmin } from '@/lib/admin/adminAuth'
 
 export async function POST(req: Request) {
   try {
@@ -19,11 +20,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await (supabase
-      .from('square_posts') as any)
-      .delete()
-      .eq('id', postId)
-      .eq('user_id', user.id)
+    const isAuthorizedAdmin = isSuperAdmin(user.email)
+
+    let query = (supabase.from('square_posts') as any).delete().eq('id', postId)
+    if (!isAuthorizedAdmin) {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { error } = await query
 
     if (error) {
       console.error('Server failed to delete square post:', error)

@@ -33,8 +33,10 @@ import {
   Heart,
   Sun,
   Lightbulb,
+  ShieldCheck,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { isSuperAdmin } from '@/lib/admin/adminAuth'
 import { calculateUserStreak } from '@/lib/utils/streak'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
@@ -1026,6 +1028,7 @@ function SquarePageContent() {
                     {currentUser &&
                       (post.author_id === currentUser.id ||
                         post.user_id === currentUser.id ||
+                        isSuperAdmin(currentUser.email) ||
                         !post.user_id) && (
                       <div className="relative">
                         <button
@@ -1033,39 +1036,52 @@ function SquarePageContent() {
                           onClick={() =>
                             setActiveMenuPostId((prev) => (prev === post.id ? null : post.id))
                           }
-                          className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-subtle transition-colors"
+                          className={`p-1 rounded-lg transition-colors ${
+                            isSuperAdmin(currentUser.email) && post.author_id !== currentUser.id && post.user_id !== currentUser.id
+                              ? 'text-[#FBBF24] hover:bg-[#FBBF24]/10'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-subtle'
+                          }`}
                           title="Post options"
                         >
                           <DotsThreeVertical size={16} weight="bold" />
                         </button>
 
                         {activeMenuPostId === post.id && (
-                          <div className="absolute right-0 top-7 z-20 w-44 bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleAnonymous(post.id, Boolean(post.is_anonymous))}
-                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
-                            >
-                              {post.is_anonymous ? (
-                                <>
-                                  <Eye size={14} className="text-[#FBBF24]" />
-                                  <span>Show My Name</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeSlash size={14} className="text-[#234537] dark:text-emerald-400" />
-                                  <span>Make Anonymous</span>
-                                </>
-                              )}
-                            </button>
+                          <div className="absolute right-0 top-7 z-20 w-48 bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95">
+                            {(post.author_id === currentUser.id || post.user_id === currentUser.id) && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAnonymous(post.id, Boolean(post.is_anonymous))}
+                                className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-text-primary hover:bg-surface flex items-center gap-2 transition-colors cursor-pointer"
+                              >
+                                {post.is_anonymous ? (
+                                  <>
+                                    <Eye size={14} className="text-[#FBBF24]" />
+                                    <span>Show My Name</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeSlash size={14} className="text-[#234537] dark:text-emerald-400" />
+                                    <span>Make Anonymous</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            {isSuperAdmin(currentUser.email) && (
+                              <div className="px-2 py-1 text-[9px] font-black text-[#FBBF24] uppercase tracking-wider flex items-center gap-1 border-b border-border">
+                                <ShieldCheck size={12} weight="fill" />
+                                <span>Super Admin</span>
+                              </div>
+                            )}
 
                             <button
                               type="button"
                               onClick={() => handleDeletePost(post.id)}
-                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 dark:bg-red-950/30 flex items-center gap-2 transition-colors"
+                              className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 dark:bg-red-950/30 flex items-center gap-2 transition-colors cursor-pointer"
                             >
                               <Trash size={14} />
-                              <span>Delete Post</span>
+                              <span>{isSuperAdmin(currentUser.email) && post.author_id !== currentUser.id && post.user_id !== currentUser.id ? 'Admin Delete' : 'Delete Post'}</span>
                             </button>
                           </div>
                         )}

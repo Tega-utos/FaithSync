@@ -34,10 +34,12 @@ import {
   Quotes,
   HandsPraying,
   PaintBrush,
+  ShieldCheck,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { shareOrCopyCode } from '@/lib/utils/syncCodes'
 import { calculateUserStreak } from '@/lib/utils/streak'
+import { isSuperAdmin } from '@/lib/admin/adminAuth'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { updateTargetHistory } from '@/lib/utils/targetHistory'
@@ -159,6 +161,7 @@ export default function ProfilePage() {
   const [monthReviewReminderTime, setMonthReviewReminderTime] = useState('19:00')
   const [publicStreak, setPublicStreak] = useState(true)
   const [publicMilestones, setPublicMilestones] = useState(true)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -172,6 +175,8 @@ export default function ProfilePage() {
           router.push('/login')
           return
         }
+
+        setUserEmail(user.email || null)
 
         // 1. Fetch Profile
         const { data: profile } = await supabase
@@ -1342,6 +1347,27 @@ export default function ProfilePage() {
           </Link>
         </div>
       </div>
+
+      {/* Super Admin Command Center Access */}
+      {isSuperAdmin(userEmail) && (
+        <Link href="/admin" className="block">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#FBBF24]/15 to-amber-500/10 border-2 border-[#FBBF24]/40 hover:border-[#FBBF24] transition-all flex items-center justify-between shadow-md group cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#FBBF24] text-[#1A1610] flex items-center justify-center font-bold shadow-sm">
+                <ShieldCheck size={20} weight="fill" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-text-primary flex items-center gap-1.5">
+                  <span>Super Admin Command Center</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#FBBF24] text-[#1A1610] text-[9px] font-black uppercase tracking-wider">Root</span>
+                </p>
+                <p className="text-[10px] text-text-secondary">Platform vitals, square moderation, user streaks & broadcasts</p>
+              </div>
+            </div>
+            <CaretRight size={18} className="text-[#FBBF24] group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </Link>
+      )}
 
       {/* 6. App Settings & Preferences */}
       <div className="faith-card divide-y divide-border-light overflow-hidden bg-card border border-border">
