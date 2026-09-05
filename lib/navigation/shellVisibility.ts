@@ -27,7 +27,7 @@ export function shouldShowAppShell(pathname: string | null): boolean {
     return false
   }
 
-  // Auth subpaths, callbacks, session-summary, and full-screen chat interfaces
+  // Auth subpaths, callbacks, session-summary, full-screen chat interfaces, and in-app Bible reading
   if (
     normalizedPath.startsWith('/auth') ||
     normalizedPath.startsWith('/login') ||
@@ -37,7 +37,8 @@ export function shouldShowAppShell(pathname: string | null): boolean {
     normalizedPath.startsWith('/reset-password') ||
     normalizedPath.startsWith('/session-summary') ||
     normalizedPath.startsWith('/buddy-chat') ||
-    normalizedPath.startsWith('/group-chat')
+    normalizedPath.startsWith('/group-chat') ||
+    normalizedPath.startsWith('/bible')
   ) {
     return false
   }

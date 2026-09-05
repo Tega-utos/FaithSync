@@ -38,6 +38,7 @@ interface BuddyItem {
   avatarUrl: string | null
   church: string
   isOnline: boolean
+  isLiveNow?: boolean
   lastActive: string
   lastMessage: string
 }
@@ -129,9 +130,26 @@ export default function SyncPage() {
           return
         }
 
-        // Fetch Real Groups
+        // Check for active ongoing live sessions across buddies and groups
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        let activeLiveSessions: any[] = []
+        try {
+          const { data: liveSess } = await supabase
+            .from('sessions')
+            .select('id, user_id, group_id, type')
+            .eq('is_complete', false)
+            .gte('started_at', twoHoursAgo)
+          if (liveSess) activeLiveSessions = liveSess
+        } catch {}
+
+        // Fetch Real Groups & map live state
         const realGroups = await fetchGroups()
-        setGroups(realGroups)
+        setGroups(
+          realGroups.map((g) => ({
+            ...g,
+            isLive: g.isLive || activeLiveSessions.some((s) => s.group_id === g.id),
+          }))
+        )
 
         // Fetch Buddy Connections via robust service
         const { active, pendingIncoming } = await getMyBuddies(user.id)
@@ -148,17 +166,23 @@ export default function SyncPage() {
         )
 
         setBuddies(
-          active.map((c) => ({
-            id: c.partnerId,
-            connectionId: c.id,
-            name: c.partnerName,
-            initial: c.partnerInitial,
-            avatarUrl: c.partnerAvatar,
-            church: c.partnerChurch,
-            isOnline: false,
-            lastActive: 'Active today',
-            lastMessage: 'Let’s clock in together!',
-          }))
+          active.map((c) => {
+            const isLive = activeLiveSessions.some(
+              (s) => s.user_id === c.partnerId && !s.group_id
+            )
+            return {
+              id: c.partnerId,
+              connectionId: c.id,
+              name: c.partnerName,
+              initial: c.partnerInitial,
+              avatarUrl: c.partnerAvatar,
+              church: c.partnerChurch,
+              isOnline: isLive,
+              isLiveNow: isLive,
+              lastActive: isLive ? 'Clocked in now' : 'Active today',
+              lastMessage: isLive ? 'Currently in devotion...' : 'Let’s clock in together!',
+            }
+          })
         )
 
         // Fetch Square Connection Requests
@@ -445,7 +469,9 @@ export default function SyncPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                 Active Accountability Buddies
               </span>
-              <span className="text-[10px] font-mono text-text-secondary">{buddies.length} Buddies</span>
+              <span className="text-[10px] font-mono font-bold text-text-secondary bg-surface px-2 py-0.5 rounded-md border border-border">
+                {buddies.length} / 3 Active Buddies
+              </span>
             </div>
 
             {loading ? (
@@ -480,7 +506,7 @@ export default function SyncPage() {
                       href={`/buddy-chat/${buddy.id}`}
                       className="p-3.5 flex items-center justify-between hover:bg-surface transition-colors block group"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="relative">
                           <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
                             {buddy.initial}
@@ -490,12 +516,19 @@ export default function SyncPage() {
                           )}
                         </div>
 
-                        <div className="space-y-0.5">
+                        <div className="space-y-0.5 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors">
+                            <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
                               {buddy.name}
                             </p>
-                            <span className="text-[9px] text-text-muted font-mono">{buddy.lastActive}</span>
+                            {buddy.isLiveNow ? (
+                              <span className="px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[9px] font-extrabold flex items-center gap-1 shrink-0 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                                LIVE NOW
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-text-muted font-mono shrink-0">{buddy.lastActive}</span>
+                            )}
                           </div>
                           <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs">
                             {buddy.lastMessage}
@@ -503,17 +536,23 @@ export default function SyncPage() {
                         </div>
                       </div>
 
-                      <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform" />
+                      <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0 ml-2" />
                     </Link>
                   ))}
                 </div>
 
-                <Link
-                  href="/find-buddy"
-                  className="block text-center p-2.5 rounded-xl border border-dashed border-[#FBBF24]/50 text-xs font-bold text-[#FBBF24] hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-colors"
-                >
-                  + Find More Buddies
-                </Link>
+                {buddies.length < 3 ? (
+                  <Link
+                    href="/find-buddy"
+                    className="block text-center p-2.5 rounded-xl border border-dashed border-[#FBBF24]/50 text-xs font-bold text-[#FBBF24] hover:bg-[#FDF9F1] dark:bg-amber-950/30 transition-colors"
+                  >
+                    + Find More Buddies ({3 - buddies.length} slots remaining)
+                  </Link>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-surface border border-border text-center text-[11px] text-text-secondary font-medium">
+                    Trinity Limit reached (3/3 active buddies).
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -648,9 +687,9 @@ export default function SyncPage() {
                           {group.name}
                         </h3>
                         {group.isLive && (
-                          <span className="px-2 py-0.2 rounded-full bg-rose-50 dark:bg-red-950/300/15 text-rose-600 text-[9px] font-extrabold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-50 dark:bg-red-950/300 animate-ping" />
-                            Live
+                          <span className="px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[9px] font-extrabold flex items-center gap-1 animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                            LIVE NOW
                           </span>
                         )}
                       </div>

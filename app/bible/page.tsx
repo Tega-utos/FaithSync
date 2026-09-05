@@ -298,8 +298,8 @@ export default function BiblePage() {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#FAF9F6] dark:bg-neutral-950 text-[#1A1A1A] dark:text-neutral-100 pb-28 relative">
       {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-card/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-border dark:border-neutral-800 px-3 sm:px-6 py-2.5 shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-40 bg-card/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-border dark:border-neutral-800 px-2 sm:px-4 py-2 shadow-sm">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar flex-nowrap py-0.5">
           {/* Back Button */}
           <button
             type="button"
@@ -311,14 +311,14 @@ export default function BiblePage() {
           </button>
 
           {/* Inline Book, Chapter & Translation Dropdowns */}
-          <div className="flex items-center gap-1.5 flex-1 justify-center max-w-sm">
+          <div className="flex items-center gap-1.5 shrink-0">
             <select
               value={selectedBook}
               onChange={(e) => {
                 setSelectedBook(e.target.value)
                 setSelectedChapter(1)
               }}
-              className="bg-[#FAF9F6] dark:bg-neutral-900 border border-border dark:border-neutral-800 rounded-xl px-2 py-1.5 text-xs font-bold text-text-primary dark:text-neutral-100 focus:outline-none focus:border-[#FBBF24] cursor-pointer max-w-[110px]"
+              className="bg-[#FAF9F6] dark:bg-neutral-900 border border-border dark:border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs font-bold text-text-primary dark:text-neutral-100 focus:outline-none focus:border-[#FBBF24] cursor-pointer min-w-[95px] max-w-[130px]"
             >
               {BIBLE_BOOKS.map((b) => (
                 <option key={b.name} value={b.name}>
@@ -357,14 +357,14 @@ export default function BiblePage() {
             <button
               type="button"
               onClick={() => setIsJumpModalOpen(true)}
-              className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle dark:hover:bg-neutral-800 transition-colors cursor-pointer shrink-0"
               title="Jump to Scripture Reference"
             >
               <MagnifyingGlass size={18} />
             </button>
 
             {/* Font Resizer */}
-            <div className="flex items-center gap-1 bg-[#FAF9F6] dark:bg-neutral-900 border border-border dark:border-neutral-800 rounded-xl p-0.5">
+            <div className="flex items-center gap-1 bg-[#FAF9F6] dark:bg-neutral-900 border border-border dark:border-neutral-800 rounded-xl p-0.5 shrink-0">
               <button
                 type="button"
                 disabled={fontSizeIndex === 0}

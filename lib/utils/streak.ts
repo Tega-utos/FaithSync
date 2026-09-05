@@ -22,12 +22,14 @@ export async function calculateUserStreak(
   const prayerTarget = prefs.prayerTarget || prefs.targets?.prayer || 15
   const studyTarget = prefs.studyTarget || prefs.wordTarget || prefs.targets?.study || 15
 
-  // 2. Fetch all completed sessions
-  const { data: sessions } = await supabase
+  // 2. Fetch all completed personal & buddy sessions (Group sessions are excluded from personal streaks)
+  const { data: rawSessions } = await supabase
     .from('sessions')
-    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
+    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
     .eq('user_id', userId)
     .order('started_at', { ascending: false })
+
+  const sessions = (rawSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
 
   if (!sessions || sessions.length === 0) return 0
 

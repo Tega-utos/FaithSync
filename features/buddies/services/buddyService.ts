@@ -430,50 +430,61 @@ export async function sendBuddyMessage(
 ): Promise<BuddyChatMessage | null> {
   const supabase = createClient()
 
-  const { data: newMsg, error } = await supabase
-    .from('messages')
-    .insert({
-      sender_id: currentUserId,
-      recipient_id: buddyId,
-      content,
-      message_type: messageType,
-      meta: meta || null,
-    })
-    .select('*')
-    .single()
-
-  if (error || !newMsg) {
-    console.error('Failed to send buddy message:', error)
-    return null
-  }
-
-  // Dispatch in-app notification to buddy
+  // 1. Try server API route first for authenticated server-side insertion & RLS bypass
   try {
-    const { data: senderProf } = await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id', currentUserId)
-      .single()
-
-    const sName = senderProf?.display_name || 'Accountability Buddy'
-    await (supabase.from('notifications') as any).insert({
-      user_id: buddyId,
-      sender_id: currentUserId,
-      type: messageType === 'nudge' ? 'nudge' : 'system',
-      title: sName,
-      text: content.trim().slice(0, 80),
-      route_url: `/buddy-chat/${currentUserId}`,
-      icon_type: messageType === 'nudge' ? 'hand_waving' : 'quotes',
+    const res = await fetch('/api/buddy/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipientId: buddyId,
+        content: content.trim(),
+        messageType,
+        meta,
+      }),
     })
+    const data = await res.json()
+    if (res.ok && data.message) {
+      return {
+        id: data.message.id,
+        sender_id: data.message.sender_id,
+        content: data.message.content,
+        message_type: data.message.message_type as any,
+        meta: data.message.meta,
+        created_at: data.message.created_at,
+      }
+    }
   } catch {}
 
-  return {
-    id: newMsg.id,
-    sender_id: newMsg.sender_id,
-    content: newMsg.content,
-    message_type: newMsg.message_type as any,
-    meta: (newMsg as any).meta,
-    created_at: newMsg.created_at,
+  // 2. Direct client fallback insert
+  try {
+    const { data: newMsg, error } = await (supabase
+      .from('messages') as any)
+      .insert({
+        sender_id: currentUserId,
+        recipient_id: buddyId,
+        content: content.trim(),
+        message_type: messageType,
+        meta: meta || null,
+      })
+      .select('*')
+      .single()
+
+    if (error || !newMsg) {
+      console.error('Failed to send buddy message client-side:', error)
+      return null
+    }
+
+    return {
+      id: newMsg.id,
+      sender_id: newMsg.sender_id,
+      content: newMsg.content,
+      message_type: newMsg.message_type as any,
+      meta: (newMsg as any).meta,
+      created_at: newMsg.created_at,
+    }
+  } catch (clientErr) {
+    console.error('Client message insert exception:', clientErr)
+    return null
   }
 }
 

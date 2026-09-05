@@ -209,19 +209,46 @@ export default function BuddyChatPage() {
         } = await supabase.auth.getUser()
         setCurrentUser(user)
 
-        // 1. Fetch Genuine Buddy Profile & Real Streak
+        // 1. Fetch Genuine Buddy Profile & Real Streak (with fallback to buddies relation)
+        let resolvedName = ''
+        let resolvedChurch = ''
+        let resolvedAvatar = null
+
         const { data: partnerProfile } = await supabase
           .from('profiles')
           .select('display_name, church, preferences, avatar_url')
           .eq('id', buddyId)
-          .single()
+          .maybeSingle()
 
         if (partnerProfile) {
-          const name = partnerProfile.display_name || 'Accountability Buddy'
-          setBuddyName(name)
-          setBuddyInitial(name.charAt(0).toUpperCase())
-          setBuddyChurch(partnerProfile.church || '')
+          resolvedName = partnerProfile.display_name || ''
+          resolvedChurch = partnerProfile.church || ''
+          resolvedAvatar = partnerProfile.avatar_url || null
         }
+
+        if (!resolvedName && user) {
+          const { data: conn } = await (supabase
+            .from('buddies') as any)
+            .select(`
+              id, status, connection_type,
+              user_profile:profiles!buddies_user_id_fkey(display_name, church, avatar_url),
+              buddy_profile:profiles!buddies_buddy_id_fkey(display_name, church, avatar_url)
+            `)
+            .or(`and(user_id.eq.${user.id},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${user.id})`)
+            .maybeSingle()
+
+          const p = conn?.user_id === user.id ? conn?.buddy_profile : conn?.user_profile
+          if (p) {
+            resolvedName = p.display_name || ''
+            resolvedChurch = p.church || ''
+            resolvedAvatar = p.avatar_url || null
+          }
+        }
+
+        const finalName = resolvedName || 'Believer'
+        setBuddyName(finalName)
+        setBuddyInitial(finalName.charAt(0).toUpperCase())
+        setBuddyChurch(resolvedChurch || 'Local Assembly')
 
         // 2. Fetch Genuine Buddy Streak from Database
         const realBuddyStreak = await calculateUserStreak(buddyId, supabase)

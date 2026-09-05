@@ -76,12 +76,14 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   )
 
   // 2. Strict Consecutive Streak Determination (The "All or Nothing" Rule)
-  // Query all lifetime sessions to aggregate prayer and study minutes by local day
-  const { data: allUserSessions } = await supabase
+  // Query all lifetime personal and 1-on-1 buddy sessions (Group sessions are excluded from personal records)
+  const { data: rawAllUserSessions } = await supabase
     .from('sessions')
-    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
+    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
     .eq('user_id', user.id)
     .order('started_at', { ascending: false })
+
+  const allUserSessions = (rawAllUserSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
 
   interface DayMinutesAgg {
     prayerSecs: number
@@ -94,7 +96,7 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
 
   const dailyMinutesMap: Record<string, DayMinutesAgg> = {}
 
-  ;(allUserSessions || []).forEach((s) => {
+  allUserSessions.forEach((s) => {
     const dStr = getLocalDateKey(s.started_at || s.created_at)
     if (dStr) {
       if (!dailyMinutesMap[dStr]) {
@@ -192,18 +194,20 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   const dayStart = getStartOfLocalDay(now)
   dayStart.setDate(dayStart.getDate() - currentDayIndex)
 
-  const { data: weekSessions } = await supabase
+  const { data: rawWeekSessions } = await supabase
     .from('sessions')
-    .select('type, started_at, duration_seconds, target_duration_seconds, is_complete')
+    .select('type, started_at, duration_seconds, target_duration_seconds, is_complete, is_group, group_id')
     .eq('user_id', user.id)
     .gte('started_at', dayStart.toISOString())
+
+  const weekSessions = (rawWeekSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
 
   const weekSessionsByDay: Record<number, { prayer: number; study: number; prayerTarget: number; studyTarget: number; hasP: boolean; hasS: boolean }> = {}
   for (let i = 0; i < 7; i++) {
     weekSessionsByDay[i] = { prayer: 0, study: 0, prayerTarget: 0, studyTarget: 0, hasP: false, hasS: false }
   }
 
-  ;(weekSessions || []).forEach((s) => {
+  weekSessions.forEach((s) => {
     const sDate = new Date(s.started_at)
     const dayIdx = (sDate.getDay() + 6) % 7
     if (s.type === 'prayer') {

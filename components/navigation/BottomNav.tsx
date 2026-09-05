@@ -42,40 +42,40 @@ function TimerNavIcon({ active }: { active: boolean }) {
       viewBox="0 0 25 25"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`transition-transform duration-200 ${active ? 'scale-110' : 'opacity-70 group-hover:opacity-100'}`}
+      className={`transition-transform duration-200 ${active ? 'scale-105' : 'opacity-70 group-hover:opacity-100'}`}
     >
       <path
         d="M15.1342 2.09154L10.1343 2.06104"
         stroke="currentColor"
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M4.06384 13.524C4.09248 8.82968 7.92121 5.04739 12.6155 5.07603C14.9627 5.09036 17.0819 6.0547 18.6106 7.60225M18.6106 7.60225C20.1394 9.14981 21.0778 11.2806 21.0635 13.6277C21.0349 18.3221 17.2061 22.1044 12.5118 22.0757L3.01199 22.0178M18.6106 7.60225L20.1093 6.12178"
         stroke="currentColor"
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M8.03018 19.0486L3.03027 19.0181"
         stroke={active ? '#EA2C26' : 'currentColor'}
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M6.04877 16.0364L3.04883 16.0181"
         stroke="currentColor"
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M12.5641 13.5761L16.0854 10.0975"
         stroke={active ? '#FBBF24' : 'currentColor'}
-        strokeWidth={active ? '2.2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -91,19 +91,19 @@ function SyncNavIcon({ active }: { active: boolean }) {
       viewBox="0 0 25 25"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`transition-transform duration-200 ${active ? 'scale-110' : 'opacity-70 group-hover:opacity-100'}`}
+      className={`transition-transform duration-200 ${active ? 'scale-105' : 'opacity-70 group-hover:opacity-100'}`}
     >
       <path
         d="M7.82142 19.0472C7.49589 18.9133 7.31605 18.8483 7.21516 18.8601C7.09116 18.8745 6.91058 19.0054 6.54942 19.267C5.91262 19.7284 5.11192 20.0577 3.9277 20.0218C3.32889 20.0036 3.02948 19.9945 2.89681 19.7662C2.76414 19.538 2.93303 19.2241 3.2708 18.5964C3.73926 17.7257 4.03879 16.7276 3.59905 15.9237C2.84026 14.7746 2.19806 13.4153 2.11193 11.951C2.06566 11.1642 2.07063 10.3497 2.1265 9.56351C2.41201 5.54612 5.60325 2.36414 9.58665 2.12501C10.9429 2.04361 12.3611 2.05207 13.7191 2.15023C17.6823 2.43673 20.8245 5.6313 21.0847 9.62798"
         stroke="currentColor"
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M14.7117 21.7362C12.2029 21.5599 10.2157 19.5914 10.0662 17.1343C10.0369 16.6534 10.04 16.1557 10.0751 15.6752C10.2545 13.2202 12.2656 11.276 14.7764 11.1303C15.633 11.0807 16.527 11.0862 17.3811 11.1462C19.8899 11.3226 21.8771 13.2911 22.0266 15.7482C22.0558 16.2291 22.0528 16.7268 22.0177 17.2072C21.9523 18.1014 21.5372 18.9271 21.0504 19.6235C20.7671 20.1114 20.9484 20.7236 21.237 21.2592C21.4451 21.6453 21.5492 21.8384 21.4638 21.9769C21.3785 22.1154 21.1896 22.1187 20.8121 22.1253C20.0655 22.1382 19.5634 21.931 19.1655 21.6441C18.9399 21.4815 18.827 21.4003 18.7489 21.3905C18.6709 21.3807 18.5168 21.4409 18.2088 21.5611C17.9319 21.6692 17.6107 21.735 17.3164 21.752C16.4616 21.8017 15.5676 21.7964 14.7117 21.7362Z"
         stroke={active ? '#FBBF24' : 'currentColor'}
-        strokeWidth={active ? '2' : '1.5'}
+        strokeWidth={active ? '1.75' : '1.35'}
         strokeLinejoin="round"
       />
     </svg>
@@ -167,12 +167,13 @@ export function BottomNav() {
 
   const isVisible = shouldShowAppShell(pathname)
 
-  // Hide BottomNav in Community Square (/square), Chat (/buddy-chat, /group-chat), Session Summary, when popup is open, or when any modal is active
+  // Hide BottomNav in Community Square (/square), Chat (/buddy-chat, /group-chat), Bible Reader (/bible), Session Summary, when popup is open, or when any modal is active
   if (
     !isVisible ||
     pathname?.startsWith('/square') ||
     pathname?.startsWith('/buddy-chat') ||
     pathname?.startsWith('/group-chat') ||
+    pathname?.startsWith('/bible') ||
     pathname?.startsWith('/session-summary') ||
     isSummaryOpen ||
     hasModalOpen

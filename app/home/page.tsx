@@ -16,10 +16,14 @@ import {
   HandWaving,
   ShareNetwork,
   ChatCircle,
+  Lock,
+  ArrowRight,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchDashboardData, DashboardData } from '@/features/dashboard/services/dashboardService'
 import { WeeklyProgress } from '@/features/dashboard/components/WeeklyProgress'
+import { getVerseOfTheDay } from '@/lib/scripture'
+import { Modal } from '@/components/ui/Modal'
 
 const DASH_ARRAY = 282.74 // 2 * PI * 45
 
@@ -50,6 +54,7 @@ export default function HomePage() {
 
   const [nudgedState, setNudgedState] = useState<Record<string, boolean>>({})
   const [vibratingState, setVibratingState] = useState<Record<string, boolean>>({})
+  const [showGatingModal, setShowGatingModal] = useState(false)
 
   useEffect(() => {
     async function checkOnboardingAndLoad() {
@@ -188,6 +193,19 @@ export default function HomePage() {
   const prayerOffset = RING_CIRCUMFERENCE * (1 - prayerProgress)
   const studyOffset = RING_CIRCUMFERENCE * (1 - studyProgress)
 
+  const votd = getVerseOfTheDay()
+  const isDevotionComplete = (dashboard.prayerMinutes || 0) >= prayerTarget && (dashboard.studyMinutes || 0) >= studyTarget
+
+  const handleShareVotdToSquare = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (isDevotionComplete) {
+      const shareUrl = `/square?compose=true&verse=${encodeURIComponent(`“${votd.text}” — ${votd.reference}`)}&ref=${encodeURIComponent(votd.reference)}&intent=record`
+      router.push(shareUrl)
+    } else {
+      setShowGatingModal(true)
+    }
+  }
+
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-4">
       {/* Personalized Greeting */}
@@ -315,36 +333,39 @@ export default function HomePage() {
               </span>
             </div>
             <span className="text-xs font-mono font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-400/15 px-2.5 py-0.5 rounded-md border border-amber-500/25 dark:border-amber-400/30">
-              Isaiah 40:31 • WEB
+              {votd.reference} • {votd.version || 'WEB'}
             </span>
           </div>
 
           <blockquote className="space-y-1.5">
             <p className="text-[14.5px] sm:text-[15.5px] font-normal text-text-primary dark:text-neutral-100 leading-relaxed">
-              &ldquo;Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.&rdquo;
+              &ldquo;{votd.text}&rdquo;
             </p>
-            <p className="text-xs text-text-secondary dark:text-neutral-400 font-normal">
-              Spiritual Theme: Strength &amp; Endurance in Daily Waiting
-            </p>
+            {votd.theme && (
+              <p className="text-xs text-text-secondary dark:text-neutral-400 font-normal">
+                Spiritual Theme: {votd.theme}
+              </p>
+            )}
           </blockquote>
 
           {/* 1-Tap Verse Actions */}
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border dark:border-neutral-800">
             <Link
-              href="/bible?book=Isaiah&chapter=40"
+              href={`/bible?book=${encodeURIComponent(votd.book)}&chapter=${votd.chapter}`}
               className="p-2.5 rounded-xl bg-surface dark:bg-[#1E1E1E] border border-border dark:border-neutral-700 hover:border-[#FBBF24] text-text-primary dark:text-neutral-100 text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:bg-subtle"
             >
               <BookOpen size={14} className="text-[#FBBF24]" weight="bold" />
               <span>Read Bible</span>
             </Link>
 
-            <Link
-              href={`/square?compose=true&verse=${encodeURIComponent('“Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.” — Isaiah 40:31')}&ref=${encodeURIComponent('Isaiah 40:31')}&intent=record`}
-              className="p-2.5 rounded-xl bg-surface dark:bg-[#1E1E1E] border border-border dark:border-neutral-700 hover:border-[#FBBF24] text-text-primary dark:text-neutral-100 text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:bg-subtle"
+            <button
+              type="button"
+              onClick={handleShareVotdToSquare}
+              className="p-2.5 rounded-xl bg-surface dark:bg-[#1E1E1E] border border-border dark:border-neutral-700 hover:border-[#FBBF24] text-text-primary dark:text-neutral-100 text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:bg-subtle cursor-pointer"
             >
               <ShareNetwork size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
               <span>Share to Square</span>
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -559,6 +580,50 @@ export default function HomePage() {
           <CaretRight size={18} className="text-text-secondary group-hover:translate-x-1 transition-transform" />
         </div>
       </Link>
+
+      {/* Devotion Gating Modal for Verse of the Day Square Share */}
+      <Modal
+        isOpen={showGatingModal}
+        onClose={() => setShowGatingModal(false)}
+        maxWidth="sm"
+      >
+        <div className="flex flex-col items-center text-center space-y-4 pt-1 pb-2">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#FBBF24]">
+            <Lock size={24} weight="bold" />
+          </div>
+
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-text-primary tracking-tight">
+              Devotion Clock-In Required
+            </h3>
+            <p className="text-xs text-text-secondary leading-relaxed px-2">
+              To keep records authentic on the Community Square, you must complete today&apos;s personal <span className="font-semibold text-text-primary">Prayer ({dashboard.prayerMinutes}/{prayerTarget}m)</span> and <span className="font-semibold text-text-primary">Study ({dashboard.studyMinutes}/{studyTarget}m)</span> targets before sharing.
+            </p>
+          </div>
+
+          <div className="w-full space-y-2 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowGatingModal(false)
+                router.push('/clock-in')
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-[#0E0E0E] dark:bg-[#1C1813] border border-transparent dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#262626] dark:hover:bg-[#251E18] transition-all cursor-pointer shadow-sm"
+            >
+              <span>Clock In Now</span>
+              <ArrowRight size={14} weight="bold" className="text-[#FBBF24]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowGatingModal(false)}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            >
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

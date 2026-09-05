@@ -94,15 +94,17 @@ export function SessionSummaryModal({
 
         const { data: todaySessions } = await supabase
           .from('sessions')
-          .select('type, duration_seconds')
+          .select('type, duration_seconds, is_group, group_id')
           .eq('user_id', user.id)
           .gte('started_at', startOfToday.toISOString())
 
         let pSecs = 0
         let sSecs = 0
-        ;(todaySessions || []).forEach((s) => {
-          if (s.type === 'prayer') pSecs += s.duration_seconds
-          if (s.type === 'study' || s.type === 'word') sSecs += s.duration_seconds
+        ;(todaySessions || []).forEach((s: any) => {
+          // Group sessions are fellowship only and do NOT count toward personal time
+          if (s.is_group || s.type === 'group' || s.group_id) return
+          if (s.type === 'prayer') pSecs += s.duration_seconds || 0
+          if (s.type === 'study' || s.type === 'word') sSecs += s.duration_seconds || 0
         })
 
         if (sessionData) {
@@ -368,7 +370,7 @@ export function SessionSummaryModal({
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-rose-50 dark:bg-red-950/300/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
             <WarningCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
@@ -412,7 +414,7 @@ export function SessionSummaryModal({
             </div>
 
             {isPrayerComplete ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1">
                 <Check size={12} weight="bold" /> Done
               </span>
             ) : todayPrayerMins > 0 ? (
@@ -435,7 +437,7 @@ export function SessionSummaryModal({
             </div>
 
             {isStudyComplete ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1">
                 <Check size={12} weight="bold" /> Done
               </span>
             ) : todayStudyMins > 0 ? (

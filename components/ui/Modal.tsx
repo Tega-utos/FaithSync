@@ -63,7 +63,7 @@ export function Modal({
       <div
         className={twMerge(
           clsx(
-            'relative w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 z-10 animate-in zoom-in-95 duration-200 text-slate-100',
+            'relative w-full bg-surface border border-border rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 z-10 animate-in zoom-in-95 duration-200 text-text-primary',
             maxWidths[maxWidth],
             className
           )
@@ -71,12 +71,13 @@ export function Modal({
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            {title && <h3 className="text-lg font-semibold text-white tracking-tight">{title}</h3>}
-            {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
+            {title && <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">{title}</h3>}
+            {description && <p className="text-xs text-text-secondary mt-1">{description}</p>}
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            aria-label="Close dialog"
+            className="text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-subtle transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>

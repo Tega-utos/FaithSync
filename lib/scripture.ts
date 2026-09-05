@@ -176,3 +176,146 @@ export async function setUserPreferredBibleVersion(versionId: string): Promise<b
     return false
   }
 }
+
+export interface VerseOfTheDay {
+  reference: string
+  text: string
+  version: string
+  theme: string
+  book: string
+  chapter: number
+  verse: number
+}
+
+const DAILY_VERSES_CURATION: Omit<VerseOfTheDay, 'version'>[] = [
+  {
+    reference: 'Isaiah 40:31',
+    book: 'Isaiah',
+    chapter: 40,
+    verse: 31,
+    text: 'Those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.',
+    theme: 'Strength & Endurance in Daily Waiting',
+  },
+  {
+    reference: 'Proverbs 3:5-6',
+    book: 'Proverbs',
+    chapter: 3,
+    verse: 5,
+    text: 'Trust in Yahweh with all your heart, and don’t lean on your own understanding. In all your ways acknowledge him, and he will make your paths straight.',
+    theme: 'Wholehearted Trust & Divine Direction',
+  },
+  {
+    reference: 'Philippians 4:6-7',
+    book: 'Philippians',
+    chapter: 4,
+    verse: 6,
+    text: 'In nothing be anxious, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God. And the peace of God will guard your hearts.',
+    theme: 'Surrender in Prayer & Transcendent Peace',
+  },
+  {
+    reference: 'Joshua 1:9',
+    book: 'Joshua',
+    chapter: 1,
+    verse: 9,
+    text: 'Haven’t I commanded you? Be strong and courageous. Don’t be afraid, neither be dismayed, for Yahweh your God is with you wherever you go.',
+    theme: 'Courage & The Unfailing Presence of God',
+  },
+  {
+    reference: 'Romans 8:28',
+    book: 'Romans',
+    chapter: 8,
+    verse: 28,
+    text: 'We know that all things work together for good for those who love God, for those who are called according to his purpose.',
+    theme: 'Sovereign Goodness & Divine Purpose',
+  },
+  {
+    reference: 'Psalm 23:1-3',
+    book: 'Psalms',
+    chapter: 23,
+    verse: 1,
+    text: 'Yahweh is my shepherd; I shall have no lack. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul.',
+    theme: 'The Good Shepherd & Restored Souls',
+  },
+  {
+    reference: 'Matthew 6:33',
+    book: 'Matthew',
+    chapter: 6,
+    verse: 33,
+    text: 'Seek first God’s Kingdom and his righteousness, and all these things will be given to you as well.',
+    theme: 'Kingdom Priorities & Faith Over Worry',
+  },
+  {
+    reference: '2 Timothy 1:7',
+    book: '2 Timothy',
+    chapter: 1,
+    verse: 7,
+    text: 'For God didn’t give us a spirit of fear, but of power, love, and self-control.',
+    theme: 'Spiritual Authority, Bold Love & Discipline',
+  },
+  {
+    reference: 'Lamentations 3:22-23',
+    book: 'Lamentations',
+    chapter: 3,
+    verse: 22,
+    text: 'It is because of Yahweh’s loving kindnesses that we are not consumed, because his compassion doesn’t fail. They are new every morning. Great is your faithfulness.',
+    theme: 'Unfailing Compassion & Daily Mercies',
+  },
+  {
+    reference: 'Galatians 5:22-23',
+    book: 'Galatians',
+    chapter: 5,
+    verse: 22,
+    text: 'The fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faith, gentleness, and self-control.',
+    theme: 'Spiritual Maturity & Fruit of the Spirit',
+  },
+  {
+    reference: 'Colossians 3:2',
+    book: 'Colossians',
+    chapter: 3,
+    verse: 2,
+    text: 'Set your mind on the things that are above, not on the things that are on the earth.',
+    theme: 'Heavenly Focus & Daily Renewal',
+  },
+  {
+    reference: 'Hebrews 11:1',
+    book: 'Hebrews',
+    chapter: 11,
+    verse: 1,
+    text: 'Now faith is assurance of things hoped for, proof of things not seen.',
+    theme: 'Unwavering Conviction & Spiritual Vision',
+  },
+  {
+    reference: 'Psalm 46:1',
+    book: 'Psalms',
+    chapter: 46,
+    verse: 1,
+    text: 'God is our refuge and strength, a very present help in trouble.',
+    theme: 'Unshakable Refuge & Present Help',
+  },
+  {
+    reference: 'Jeremiah 29:11',
+    book: 'Jeremiah',
+    chapter: 29,
+    verse: 11,
+    text: '“For I know the plans that I have for you,” says Yahweh, “plans for peace, and not for evil, to give you hope and a future.”',
+    theme: 'God’s Redemptive Plan & Hope for the Future',
+  },
+]
+
+/**
+ * Returns the Verse of the Day deterministically based on today's calendar date
+ */
+export function getVerseOfTheDay(date: Date = new Date(), versionId = 'WEB'): VerseOfTheDay {
+  const startOfYear = new Date(date.getFullYear(), 0, 0)
+  const diff = date.getTime() - startOfYear.getTime()
+  const oneDay = 1000 * 60 * 60 * 24
+  const dayOfYear = Math.floor(diff / oneDay)
+
+  const index = Math.abs(dayOfYear) % DAILY_VERSES_CURATION.length
+  const item = DAILY_VERSES_CURATION[index]
+
+  return {
+    ...item,
+    version: versionId.toUpperCase(),
+  }
+}

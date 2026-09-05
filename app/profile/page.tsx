@@ -910,7 +910,6 @@ export default function ProfilePage() {
           >
             <div className="flex items-center gap-1.5">
               <h2 className="text-base font-black text-text-primary truncate">{displayName}</h2>
-              <PencilSimple size={14} className="text-[#FBBF24]" />
             </div>
 
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-subtle text-text-primary text-[10px] font-bold">
