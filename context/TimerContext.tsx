@@ -143,11 +143,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // 2. Persist active state to localStorage whenever it changes
+  // 2. Throttled persistence to localStorage (avoids blocking main thread on every second)
+  const lastSaveRef = useRef<number>(0)
   useEffect(() => {
     try {
       if (session.isActive) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+        const now = Date.now()
+        // Save on state changes or every 5 seconds
+        if (session.isPaused || now - lastSaveRef.current > 5000) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+          lastSaveRef.current = now
+        }
       } else {
         localStorage.removeItem(STORAGE_KEY)
       }
@@ -156,49 +162,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session])
 
-// Helper: Auto-save running session directly to database ledger on minimize or target completion
-async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<void> {
-  const runSecs =
-    sessionToSave.lastResumeTimestamp && !sessionToSave.isPaused
-      ? Math.max(0, Math.floor((Date.now() - sessionToSave.lastResumeTimestamp) / 1000))
-      : 0
-  const totalSeconds = (sessionToSave.accumulatedSeconds || 0) + runSecs
-
-  // Require at least 20 seconds of devotion to save as a valid ledger record
-  if (totalSeconds < 20) return
-
-  try {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return
-
-    const targetSecs = sessionToSave.targetDurationSeconds || totalSeconds
-    const isComplete = totalSeconds >= targetSecs && targetSecs > 0
-
-    await (supabase.from('sessions') as any).insert({
-      user_id: user.id,
-      type: sessionToSave.discipline,
-      duration_seconds: totalSeconds,
-      target_duration_seconds: targetSecs,
-      is_complete: isComplete,
-      focus_type: sessionToSave.focusType || 'quick',
-      focus_timeline: (sessionToSave.focusTimeline as any) || null,
-      shared_to_square: false,
-      started_at: sessionToSave.startedAt || new Date().toISOString(),
-      ended_at: new Date().toISOString(),
-    })
-
-    // Invalidate client caches so Ledger and Dashboard immediately reflect the new session
-    invalidateMemoryCache('history_summaries')
-    invalidateMemoryCache(`dashboard_data_${user.id}`)
-  } catch (err) {
-    console.warn('Auto-save session note:', err)
-  }
-}
-
-  // 3. Absolute Timestamp-Based Sync Interval & Event Listeners for Background Recovery & Minimize Auto-Save
+  // 3. Absolute Timestamp-Based Sync Interval & Seamless Background Resumption
   useEffect(() => {
     if (!session.isActive || session.isPaused) {
       if (intervalRef.current) {
@@ -214,23 +178,19 @@ async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<vo
         const currentRunSecs = Math.max(0, Math.floor((Date.now() - prev.lastResumeTimestamp) / 1000))
         const exactTotalSecs = (prev.accumulatedSeconds || 0) + currentRunSecs
 
-        // Anti-Sleep Runaway Prevention: Auto-complete & save when reaching target
-        const targetSecs = prev.targetDurationSeconds || 900
-        const maxAllowedSecs = prev.mode === 'countdown' ? targetSecs : targetSecs + 60
-
-        if (exactTotalSecs >= maxAllowedSecs) {
-          playGentleChime(false)
-          autoSaveSessionToRecord({
-            ...prev,
-            durationSeconds: targetSecs,
-            secondsElapsed: targetSecs,
-          })
-          stopSilentMediaLoop()
-          releaseScreenWakeLock()
-          localStorage.removeItem(STORAGE_KEY)
-          return {
-            ...initialSession,
-            discipline: prev.discipline,
+        // For countdown mode only: stop cleanly at 0
+        if (prev.mode === 'countdown') {
+          const targetSecs = prev.targetDurationSeconds || 900
+          if (exactTotalSecs >= targetSecs) {
+            playGentleChime(false)
+            return {
+              ...prev,
+              isPaused: true,
+              lastResumeTimestamp: null,
+              accumulatedSeconds: targetSecs,
+              durationSeconds: targetSecs,
+              secondsElapsed: targetSecs,
+            }
           }
         }
 
@@ -243,47 +203,34 @@ async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<vo
       })
     }
 
-    // High frequency interval (500ms) for smooth second updates
-    intervalRef.current = setInterval(syncElapsed, 500)
+    // 1000ms aligned ticker for seamless 1-second cadence
+    syncElapsed()
+    intervalRef.current = setInterval(syncElapsed, 1000)
 
-    // Minimize & App Departure Handler: When minimizing or leaving the app, auto-stop and save to record
+    // Background & Tab Switching: Keep devotion running seamlessly across tab switches & screen lock
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        setSession((prev) => {
-          if (!prev.isActive || prev.isPaused) return prev
-          autoSaveSessionToRecord(prev)
-          stopSilentMediaLoop()
-          releaseScreenWakeLock()
-          localStorage.removeItem(STORAGE_KEY)
-          return {
-            ...initialSession,
-            discipline: prev.discipline,
-          }
-        })
-      } else if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible') {
         syncElapsed()
         requestScreenWakeLock()
+      } else if (document.visibilityState === 'hidden') {
+        // Save snapshot to localStorage without killing the session
+        setSession((prev) => {
+          if (prev.isActive) {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(prev))
+            } catch {}
+          }
+          return prev
+        })
       }
     }
 
-    const handlePageHide = () => {
-      setSession((prev) => {
-        if (!prev.isActive || prev.isPaused) return prev
-        autoSaveSessionToRecord(prev)
-        stopSilentMediaLoop()
-        releaseScreenWakeLock()
-        localStorage.removeItem(STORAGE_KEY)
-        return {
-          ...initialSession,
-          discipline: prev.discipline,
-        }
-      })
+    const handleWindowFocus = () => {
+      syncElapsed()
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('pagehide', handlePageHide)
-    window.addEventListener('beforeunload', handlePageHide)
-    window.addEventListener('focus', syncElapsed)
+    window.addEventListener('focus', handleWindowFocus)
 
     return () => {
       if (intervalRef.current) {
@@ -291,9 +238,7 @@ async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<vo
         intervalRef.current = null
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('pagehide', handlePageHide)
-      window.removeEventListener('beforeunload', handlePageHide)
-      window.removeEventListener('focus', syncElapsed)
+      window.removeEventListener('focus', handleWindowFocus)
     }
   }, [session.isActive, session.isPaused])
 
@@ -363,7 +308,8 @@ async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<vo
     }
   }, [session.isActive, session.isPaused, resumeTimer, pauseTimer])
 
-  // 5. Periodic MediaSession Metadata Title Sync (Without re-starting audio or resetting handlers)
+  // 5. MediaSession Metadata Sync (Updated on start/discipline/focus change and on minute boundaries)
+  const currentMinute = Math.floor((session.durationSeconds || 0) / 60)
   useEffect(() => {
     if (!session.isActive || session.isPaused) return
     if (typeof window === 'undefined' || !('mediaSession' in navigator)) return
@@ -371,20 +317,17 @@ async function autoSaveSessionToRecord(sessionToSave: ActiveSession): Promise<vo
     try {
       const disc = session.discipline === 'prayer' ? 'Prayer' : 'Scripture Study'
       const title = session.focusText ? `${disc}: ${session.focusText}` : `${disc} Clock-In`
-      const mins = Math.floor(session.durationSeconds / 60)
-      const secs = session.durationSeconds % 60
-      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 
       navigator.mediaSession.metadata = new (window as any).MediaMetadata({
-        title: `${title} (${timeStr})`,
-        artist: 'FaithSync Clock-In • Active',
+        title: `${title} (${currentMinute}m)`,
+        artist: 'FaithSync Devotion Clock-In',
         album: 'FaithSync',
         artwork: [
           { src: '/assets/welcome-hero.png', sizes: '512x512', type: 'image/png' },
         ],
       })
     } catch (_) {}
-  }, [session.durationSeconds, session.isActive, session.isPaused, session.discipline, session.focusText])
+  }, [currentMinute, session.isActive, session.isPaused, session.discipline, session.focusText])
 
   const startTimer = useCallback(
     (
