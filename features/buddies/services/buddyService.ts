@@ -306,6 +306,7 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
     if (cached) return cached
   }
 
+  const supabase = createClient()
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
   // Fetch active connections, ongoing sessions, and recent clockin invites in parallel

@@ -39,6 +39,7 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
     if (cached) return cached
   }
 
+  const supabase = createClient()
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
   const [groupsRes, liveSessionsRes, liveMessagesRes] = await Promise.all([

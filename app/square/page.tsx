@@ -1149,7 +1149,7 @@ function SquarePageContent() {
                               onClick={() => setOpenReactionPickerPostId(null)}
                             />
 
-                            <div className="absolute right-0 sm:right-auto sm:left-0 bottom-full mb-2 sm:mb-0 sm:bottom-auto sm:top-full sm:mt-2 z-30 bg-card/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-neutral-700/90 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-2.5rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
+                            <div className="absolute left-0 bottom-full mb-2 z-30 bg-surface/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-3rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
                               {FAITH_REACTIONS.map((r) => {
                                 const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
                                 const IconComponent = r.Icon
