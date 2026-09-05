@@ -749,18 +749,11 @@ export default function GroupChatPage() {
           <button
             type="button"
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center gap-1.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-3.5 py-1.5 rounded-full shadow-sm border border-white/15 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all text-xs font-black shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] px-3.5 py-1.5 rounded-full shadow-sm border border-white/15 dark:border-[#FBBF24]/50 hover:bg-[#262626] dark:hover:bg-[#2A241C] active:scale-95 transition-all text-xs font-black shrink-0 cursor-pointer"
             title="Clock-In Together"
           >
-            <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-pulse shrink-0" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/icon-timer-active.svg"
-              alt="Clock-In"
-              width={16}
-              height={16}
-              className="w-4 h-4 object-contain shrink-0"
-            />
+            <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-pulse shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+            <Clock size={15} weight="bold" className="text-[#FBBF24] shrink-0" />
             <span>Clock-In</span>
           </button>
 
@@ -963,7 +956,7 @@ export default function GroupChatPage() {
                         <span>LIVE COHORT</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-subtle text-text-muted text-[9px] font-black uppercase tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded-full bg-subtle dark:bg-neutral-800 text-text-muted dark:text-neutral-300 border border-transparent dark:border-neutral-700/50 text-[9px] font-black uppercase tracking-wider">
                         COMPLETED
                       </span>
                     )}
@@ -1004,7 +997,7 @@ export default function GroupChatPage() {
                     <button
                       type="button"
                       disabled
-                      className="w-full py-3 px-4 rounded-2xl bg-subtle text-text-muted font-bold text-xs cursor-not-allowed text-center"
+                      className="w-full py-3 px-4 rounded-2xl bg-subtle dark:bg-neutral-800 text-text-muted dark:text-neutral-400 border border-transparent dark:border-neutral-700/50 font-bold text-xs cursor-not-allowed text-center"
                     >
                       Session Ended
                     </button>
@@ -1183,8 +1176,8 @@ export default function GroupChatPage() {
         {/* Send Button */}
         <button
           type="submit"
-          disabled={!inputContent.trim()}
-          className="p-2.5 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 disabled:opacity-30 transition-all shrink-0 cursor-pointer"
+          disabled={!inputContent.trim() || isSubmitting}
+          className="p-2.5 rounded-2xl bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 hover:bg-[#262626] dark:hover:bg-[#2A241C] disabled:opacity-30 transition-all shrink-0 cursor-pointer"
         >
           <PaperPlaneTilt size={16} weight="fill" />
         </button>
@@ -1227,7 +1220,7 @@ export default function GroupChatPage() {
                 type="button"
                 disabled={isUploadingImage}
                 onClick={handleSendImage}
-                className="py-3 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
+                className="py-3 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 text-xs font-bold hover:bg-[#262626] dark:hover:bg-[#2A241C] transition-all flex items-center justify-center gap-1.5"
               >
                 {isUploadingImage ? (
                   <>
@@ -1289,7 +1282,7 @@ export default function GroupChatPage() {
                     onClick={() => setInviteDiscipline('study')}
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'study'
-                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+                        ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border border-[#0E0E0E] dark:border-[#FBBF24]/50 shadow-md'
                         : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
@@ -1301,7 +1294,7 @@ export default function GroupChatPage() {
                     onClick={() => setInviteDiscipline('prayer')}
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'prayer'
-                        ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+                        ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border border-[#0E0E0E] dark:border-[#FBBF24]/50 shadow-md'
                         : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                     }`}
                   >
@@ -1324,7 +1317,7 @@ export default function GroupChatPage() {
                         onClick={() => setPrayerFocusMode('plain')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           prayerFocusMode === 'plain'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-2xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] shadow-2xs border border-transparent dark:border-[#FBBF24]/40'
                             : 'text-text-secondary'
                         }`}
                       >
@@ -1335,7 +1328,7 @@ export default function GroupChatPage() {
                         onClick={() => setPrayerFocusMode('timeline')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
                           prayerFocusMode === 'timeline'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-2xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] shadow-2xs border border-transparent dark:border-[#FBBF24]/40'
                             : 'text-text-secondary'
                         }`}
                       >
@@ -1371,7 +1364,7 @@ export default function GroupChatPage() {
                       <button
                         type="button"
                         onClick={() => setIsTimelineBuilderOpen(true)}
-                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] text-xs font-bold hover:bg-[#262626] dark:hover:bg-[#2A241C] border border-white/10 dark:border-[#FBBF24]/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <Sliders size={14} weight="bold" className="text-[#FBBF24]" />
                         <span>Customize Guided Timeline</span>
@@ -1434,7 +1427,7 @@ export default function GroupChatPage() {
                     <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
                       Cohort Duration
                     </label>
-                    <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] px-2.5 py-0.5 rounded-lg">
+                    <span className="text-xs font-black font-mono text-[#FBBF24] bg-[#0E0E0E] dark:bg-[#1E1B16] border border-transparent dark:border-[#FBBF24]/30 px-2.5 py-0.5 rounded-lg">
                       {inviteDuration} mins
                     </span>
                   </div>
@@ -1477,7 +1470,7 @@ export default function GroupChatPage() {
                       <span>Schedule for Later</span>
                     </label>
                     <p className="text-[10px] text-text-secondary">
-                      Synchronizes start time for all members
+                      Synchronizes start time automatically
                     </p>
                   </div>
 
@@ -1485,11 +1478,11 @@ export default function GroupChatPage() {
                     type="button"
                     onClick={() => setIsScheduleEnabled((s) => !s)}
                     className={`w-11 h-6 rounded-full transition-colors relative p-1 cursor-pointer ${
-                      isScheduleEnabled ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
+                      isScheduleEnabled ? 'bg-[#FBBF24]' : 'bg-[#E5E7EB] dark:bg-neutral-700'
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full bg-card shadow-md transition-transform ${
+                      className={`w-4 h-4 rounded-full bg-white dark:bg-[#12100D] shadow-md transition-transform ${
                         isScheduleEnabled ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
@@ -1504,7 +1497,7 @@ export default function GroupChatPage() {
                         onClick={() => setSchedulePreset('tomorrow_6am')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_6am'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border-[#0E0E0E] dark:border-[#FBBF24]/50 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1517,7 +1510,7 @@ export default function GroupChatPage() {
                         onClick={() => setSchedulePreset('tomorrow_7am')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'tomorrow_7am'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border-[#0E0E0E] dark:border-[#FBBF24]/50 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1530,7 +1523,7 @@ export default function GroupChatPage() {
                         onClick={() => setSchedulePreset('today_8pm')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'today_8pm'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border-[#0E0E0E] dark:border-[#FBBF24]/50 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1543,7 +1536,7 @@ export default function GroupChatPage() {
                         onClick={() => setSchedulePreset('custom')}
                         className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                           schedulePreset === 'custom'
-                            ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20 font-bold shadow-xs'
+                            ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border-[#0E0E0E] dark:border-[#FBBF24]/50 font-bold shadow-xs'
                             : 'bg-card border-border text-text-secondary hover:border-[#FBBF24]'
                         }`}
                       >
@@ -1567,7 +1560,7 @@ export default function GroupChatPage() {
               {/* Submit CTA */}
               <button
                 type="submit"
-                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/15 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-white/10 dark:border-[#FBBF24]/50 py-4 rounded-2xl font-black text-sm shadow-xl shadow-black/15 hover:bg-[#262626] dark:hover:bg-[#2A241C] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isScheduleEnabled ? (
                   <>
@@ -1626,7 +1619,7 @@ export default function GroupChatPage() {
               <button
                 type="button"
                 onClick={() => setIsNotifSheetOpen(false)}
-                className="w-full py-3.5 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs rounded-2xl shadow-md mt-2 cursor-pointer"
+                className="w-full py-3.5 bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 font-bold text-xs rounded-2xl shadow-md mt-2 hover:bg-[#262626] dark:hover:bg-[#2A241C] cursor-pointer transition-colors"
               >
                 Done
               </button>
@@ -1712,12 +1705,12 @@ export default function GroupChatPage() {
         }
 
         return (
-          <div className="fixed inset-0 z-50 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
+          <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
             {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/300/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-50 dark:bg-emerald-950/300 animate-ping" />
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   <span>LIVE COHORT</span>
                 </span>
 
@@ -1916,7 +1909,7 @@ export default function GroupChatPage() {
             <button
               type="button"
               onClick={() => setIsSessionCompleteScreen(false)}
-              className="w-full py-3.5 px-4 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs rounded-2xl hover:bg-[#262626] dark:hover:bg-white/80 transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 font-bold text-xs rounded-2xl hover:bg-[#262626] dark:hover:bg-[#2A241C] transition-all cursor-pointer"
             >
               Return to Group Chat
             </button>
@@ -2047,7 +2040,7 @@ export default function GroupChatPage() {
             <button
               type="button"
               onClick={() => setIsNotifSheetOpen(false)}
-              className="w-full py-3.5 px-4 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs rounded-2xl hover:bg-[#262626] dark:hover:bg-white/80 transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 font-bold text-xs rounded-2xl hover:bg-[#262626] dark:hover:bg-[#2A241C] transition-all cursor-pointer"
             >
               Done
             </button>
