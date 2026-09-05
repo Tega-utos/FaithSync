@@ -27,26 +27,21 @@ import {
   PrayerFocusTimelineBuilder,
   TimelineSegment,
 } from '@/components/timer/PrayerFocusTimelineBuilder'
-import { ScriptureText } from '@/components/scripture/ScriptureText'
+import { ClockInTimerDial } from '@/components/timer/ClockInTimerDial'
+import { ActiveTimelineFocus } from '@/components/timer/ActiveTimelineFocus'
 import {
   startLockScreenSession,
   stopLockScreenSession,
-  onTimelineSegmentChanged,
   requestSessionNotificationPermission,
   requestScreenWakeLock,
   releaseScreenWakeLock,
 } from '@/lib/sessionLockScreen'
-
-const DASH_ARRAY = 565.48 // 2 * PI * 90
 
 export default function ClockInPage() {
   const router = useRouter()
   const {
     session,
     state,
-    formattedTime,
-    progressPercentage,
-    lapNumber,
     startTimer,
     pauseTimer,
     resumeTimer,
@@ -242,54 +237,7 @@ export default function ClockInPage() {
     }
   }
 
-  const strokeOffset = DASH_ARRAY - (progressPercentage / 100) * DASH_ARRAY
-  const isPastLap1 = lapNumber > 1
 
-  // Runtime Timeline Computation
-  const activeTimeline = session.focusTimeline || []
-  const isTimelineSession = session.focusType === 'timeline' && activeTimeline.length > 0
-
-  let currentSegment: TimelineSegment | null = null
-  let currentSegmentIndex = -1
-  let segmentElapsedSecs = 0
-  let segmentTotalSecs = 0
-  let isFreePrayerPastTimeline = false
-
-  if (isTimelineSession) {
-    let accumulatedSecs = 0
-    for (let i = 0; i < activeTimeline.length; i++) {
-      const segSecs = (activeTimeline[i].durationMinutes || 1) * 60
-      if (
-        session.secondsElapsed >= accumulatedSecs &&
-        session.secondsElapsed < accumulatedSecs + segSecs
-      ) {
-        currentSegment = activeTimeline[i]
-        currentSegmentIndex = i
-        segmentElapsedSecs = session.secondsElapsed - accumulatedSecs
-        segmentTotalSecs = segSecs
-        break
-      }
-      accumulatedSecs += segSecs
-    }
-
-    if (!currentSegment && session.secondsElapsed >= accumulatedSecs) {
-      isFreePrayerPastTimeline = true
-    }
-  }
-
-  // Segment Transition Handler (Audio Chime + Lock-Screen Media + OS Notification)
-  const prevSegmentIndexRef = React.useRef<number>(-1)
-  useEffect(() => {
-    if (isTimelineSession && isRunning) {
-      if (prevSegmentIndexRef.current !== currentSegmentIndex) {
-        // Segment transitioned
-        if (prevSegmentIndexRef.current !== -1) {
-          onTimelineSegmentChanged(currentSegment, soundMuted, session.discipline)
-        }
-        prevSegmentIndexRef.current = currentSegmentIndex
-      }
-    }
-  }, [currentSegmentIndex, isTimelineSession, isRunning, currentSegment, soundMuted, session.discipline])
 
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-32 sm:pb-36 min-h-[92vh] flex flex-col justify-between">
@@ -453,133 +401,11 @@ export default function ClockInPage() {
         </div>
       ) : (
         /* Active Runtime Focus Display */
-        <div className="px-4 py-2 max-w-sm mx-auto w-full">
-          {isTimelineSession ? (
-            isFreePrayerPastTimeline ? (
-              <div className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/30 dark:border-amber-500/25 text-center space-y-1 animate-in fade-in">
-                <span className="text-[10px] font-bold uppercase text-[#FBBF24] tracking-wider">
-                  Timeline Complete
-                </span>
-                <p className="text-xs font-bold text-text-primary">
-                  Free Prayer & Open Meditation
-                </p>
-                <p className="text-[10px] text-text-secondary italic">
-                  Rest in God&apos;s presence as long as you desire.
-                </p>
-              </div>
-            ) : currentSegment ? (
-              <div className="p-3.5 rounded-2xl bg-card border border-border shadow-xs space-y-2 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase text-text-secondary tracking-wider">
-                    Segment {currentSegmentIndex + 1} of {activeTimeline.length}:{' '}
-                    <span className="text-text-primary">
-                      {currentSegment.type === 'scripture' ? 'Scripture' : 'Reflection'}
-                    </span>
-                  </span>
-
-                  <span className="text-[10px] font-mono font-bold text-[#FBBF24]">
-                    {Math.max(0, Math.ceil((segmentTotalSecs - segmentElapsedSecs) / 60))}m left
-                  </span>
-                </div>
-
-                {/* Progress bar inside active segment */}
-                <div className="w-full bg-subtle rounded-full h-1 overflow-hidden">
-                  <div
-                    className="bg-[#FBBF24] h-full transition-all duration-1000 ease-linear"
-                    style={{
-                      width: `${Math.min(100, (segmentElapsedSecs / segmentTotalSecs) * 100)}%`,
-                    }}
-                  />
-                </div>
-
-                {/* Segment Content */}
-                {currentSegment.type === 'scripture' ? (
-                  <ScriptureText
-                    reference={currentSegment.reference || 'Psalm 23:1'}
-                    versionId={currentSegment.versionId || 'web'}
-                    initialText={currentSegment.verseText}
-                    display="verseWithReference"
-                  />
-                ) : (
-                  <p className="text-xs text-text-primary italic leading-relaxed font-serif">
-                    &ldquo;{currentSegment.prompt}&rdquo;
-                  </p>
-                )}
-              </div>
-            ) : null
-          ) : session.focusText ? (
-            <div className="text-center px-4 py-2">
-              <p className="text-xs font-serif italic text-text-secondary max-w-xs mx-auto">
-                &ldquo;{session.focusText}&rdquo;
-              </p>
-            </div>
-          ) : null}
-        </div>
+        <ActiveTimelineFocus session={session} soundMuted={soundMuted} />
       )}
 
-      {/* Central SVG Circular Timer Ring */}
-      <div className="flex flex-col items-center justify-center my-auto py-4">
-        <div className="relative w-56 h-56 min-[375px]:w-64 min-[375px]:h-64 sm:w-72 sm:h-72 flex items-center justify-center filter drop-shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-            {/* Background Disc */}
-            <circle
-              cx="100"
-              cy="100"
-              r="88"
-              className="fill-card dark:fill-[#16130F] transition-colors"
-            />
-
-            {/* Background Track Ring */}
-            <circle
-              cx="100"
-              cy="100"
-              r="84"
-              stroke="currentColor"
-              strokeWidth="10"
-              fill="transparent"
-              className="text-border dark:text-neutral-800 transition-colors"
-            />
-
-            {/* Dynamic Sweeping Progress Ring */}
-            <circle
-              cx="100"
-              cy="100"
-              r="84"
-              stroke="currentColor"
-              strokeWidth="10"
-              strokeDasharray={2 * Math.PI * 84}
-              strokeDashoffset={(2 * Math.PI * 84) - (progressPercentage / 100) * (2 * Math.PI * 84)}
-              strokeLinecap="round"
-              fill="transparent"
-              className={`transition-[stroke-dashoffset] duration-300 ease-out ${
-                isPastLap1 ? 'text-[#FBBF24]' : 'text-[#0E0E0E] dark:text-[#F5F1E8]'
-              }`}
-            />
-          </svg>
-
-          {/* Center Digits with Fraunces Display Font */}
-          <div className="absolute flex flex-col items-center space-y-1 text-center">
-            {isPastLap1 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] text-[10px] font-extrabold tracking-wider animate-bounce">
-                LAP {lapNumber}
-              </span>
-            )}
-
-            <div className="font-mono tabular-nums text-4xl sm:text-5xl font-bold tracking-tight text-text-primary">
-              {formattedTime}
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs font-bold capitalize text-text-primary dark:text-[#F5F1E8]">
-              {session.discipline === 'prayer' ? (
-                <Fire size={14} weight="fill" className="text-[#FBBF24]" />
-              ) : (
-                <BookOpen size={14} className="text-[#FBBF24]" />
-              )}
-              <span className="text-text-primary dark:text-[#F5F1E8]">{session.discipline} Session</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Central High-Precision Isolated Circular Timer Dial */}
+      <ClockInTimerDial session={session} />
 
       {/* Controls */}
       <div className="space-y-3 pt-2">

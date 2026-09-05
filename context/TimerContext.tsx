@@ -91,6 +91,15 @@ interface TimerContextValue {
   setIsSummaryOpen: (open: boolean) => void
 }
 
+export function getSessionElapsedSeconds(session: ActiveSession): number {
+  if (!session.isActive) return 0
+  if (session.isPaused || !session.lastResumeTimestamp) {
+    return session.accumulatedSeconds || session.durationSeconds || 0
+  }
+  const currentRunSecs = Math.max(0, Math.floor((Date.now() - session.lastResumeTimestamp) / 1000))
+  return (session.accumulatedSeconds || 0) + currentRunSecs
+}
+
 const STORAGE_KEY = 'faithsync_active_timer_v2'
 
 const initialSession: ActiveSession = {
@@ -125,16 +134,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       if (saved) {
         const parsed: ActiveSession = JSON.parse(saved)
         if (parsed.isActive) {
-          if (!parsed.isPaused && parsed.lastResumeTimestamp) {
-            const runningSecs = Math.max(0, Math.floor((Date.now() - parsed.lastResumeTimestamp) / 1000))
-            const exactTotal = (parsed.accumulatedSeconds || 0) + runningSecs
-            parsed.durationSeconds = exactTotal
-            parsed.secondsElapsed = exactTotal
-          } else {
-            const exactTotal = parsed.accumulatedSeconds ?? parsed.durationSeconds ?? 0
-            parsed.durationSeconds = exactTotal
-            parsed.secondsElapsed = exactTotal
-          }
+          const exactTotal = getSessionElapsedSeconds(parsed)
+          parsed.durationSeconds = exactTotal
+          parsed.secondsElapsed = exactTotal
         }
         setSession(parsed)
       }
@@ -143,13 +145,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // 2. Throttled persistence to localStorage (avoids blocking main thread on every second)
+  // 2. Controlled persistence to localStorage (avoids blocking main thread on every millisecond)
   const lastSaveRef = useRef<number>(0)
   useEffect(() => {
     try {
       if (session.isActive) {
         const now = Date.now()
-        // Save on state changes or every 5 seconds
+        // Save on state changes or throttled every 5 seconds
         if (session.isPaused || now - lastSaveRef.current > 5000) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
           lastSaveRef.current = now
@@ -175,10 +177,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const syncElapsed = () => {
       setSession((prev) => {
         if (!prev.isActive || prev.isPaused || !prev.lastResumeTimestamp) return prev
-        const currentRunSecs = Math.max(0, Math.floor((Date.now() - prev.lastResumeTimestamp) / 1000))
-        const exactTotalSecs = (prev.accumulatedSeconds || 0) + currentRunSecs
+        const exactTotalSecs = getSessionElapsedSeconds(prev)
 
-        // For countdown mode only: stop cleanly at 0
+        // For countdown mode only: stop cleanly at target
         if (prev.mode === 'countdown') {
           const targetSecs = prev.targetDurationSeconds || 900
           if (exactTotalSecs >= targetSecs) {
@@ -203,17 +204,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       })
     }
 
-    // 200ms high-precision sampling eliminates 1-second interval drift and lag
+    // Immediate calculation on start/resume
     syncElapsed()
-    intervalRef.current = setInterval(syncElapsed, 200)
+    intervalRef.current = setInterval(syncElapsed, 1000)
 
-    // Background & Tab Switching: Keep devotion running seamlessly across tab switches & screen lock
+    // Background & Tab Switching: Recalculate immediately from startTimestamp
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         syncElapsed()
         requestScreenWakeLock()
       } else if (document.visibilityState === 'hidden') {
-        // Save snapshot to localStorage without killing the session
         setSession((prev) => {
           if (prev.isActive) {
             try {
