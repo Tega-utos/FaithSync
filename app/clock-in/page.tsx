@@ -218,7 +218,7 @@ export default function ClockInPage() {
   }, [currentSegmentIndex, isTimelineSession, isRunning, currentSegment, soundMuted, session.discipline])
 
   return (
-    <div className="command-center-container px-4 sm:px-6 pt-3 pb-24 min-h-[92vh] flex flex-col justify-between">
+    <div className="command-center-container px-4 sm:px-6 pt-3 pb-32 sm:pb-36 min-h-[92vh] flex flex-col justify-between">
       {/* Top Header */}
       <div className="flex items-center justify-between min-h-[44px]">
         {!isTimerActive ? (
@@ -369,7 +369,7 @@ export default function ClockInPage() {
                 </div>
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-xl bg-card dark:bg-neutral-800 border border-border dark:border-neutral-700 text-xs font-bold text-text-primary dark:text-neutral-100 shadow-2xs hover:border-[#FBBF24]"
+                  className="px-3 py-1.5 rounded-xl bg-card dark:bg-[#2A241C] border border-border dark:border-[#FBBF24]/30 text-xs font-bold text-text-primary dark:text-[#F5F1E8] shadow-2xs hover:border-[#FBBF24] transition-all cursor-pointer"
                 >
                   Edit
                 </button>
@@ -514,17 +514,17 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={handleStart}
-              className="w-full bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 hover:bg-[#1f1f1f] dark:hover:bg-neutral-700 active:scale-[0.99] transition-all"
+              className="w-full bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#1A1610] py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 dark:shadow-[0_4px_28px_rgba(251,191,36,0.35)] hover:bg-[#1f1f1f] dark:hover:bg-[#F59E0B] active:scale-[0.99] transition-all cursor-pointer border border-black/10 dark:border-[#D97706]/30"
             >
-              <Play size={20} weight="fill" />
-              <span>Start Session</span>
+              <Play size={20} weight="fill" className="text-[#FBBF24] dark:text-[#1A1610] shrink-0" />
+              <span className="tracking-tight">Start Session</span>
             </button>
 
             {selectedDiscipline === 'study' && (
               <Link href="/bible" className="block">
                 <button
                   type="button"
-                  className="w-full bg-card border border-border text-text-primary py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] transition-all"
+                  className="w-full bg-card dark:bg-[#1C1813] border border-border dark:border-[#332E26] text-text-primary dark:text-[#F5F1E8] py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm hover:border-[#FBBF24] dark:hover:border-[#FBBF24]/60 transition-all cursor-pointer"
                 >
                   <BookBookmark size={18} className="text-[#FBBF24]" />
                   <span>Read Scripture in Bible Reader</span>
@@ -537,16 +537,16 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={isRunning ? handlePause : handleResume}
-              className="py-4 rounded-2xl bg-card border border-border text-text-primary font-bold text-sm shadow-sm flex items-center justify-center gap-2 hover:bg-surface transition-all"
+              className="py-4 rounded-2xl bg-card dark:bg-[#1C1813] border border-border dark:border-[#332E26] text-text-primary dark:text-[#F5F1E8] font-bold text-sm shadow-sm flex items-center justify-center gap-2 hover:bg-surface dark:hover:bg-[#25201A] transition-all cursor-pointer"
             >
               {isRunning ? (
                 <>
-                  <Pause size={18} weight="fill" />
+                  <Pause size={18} weight="fill" className="text-amber-500" />
                   <span>Pause</span>
                 </>
               ) : (
                 <>
-                  <Play size={18} weight="fill" />
+                  <Play size={18} weight="fill" className="text-amber-500" />
                   <span>Resume</span>
                 </>
               )}
@@ -555,7 +555,7 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={handleEnd}
-              className="py-4 rounded-2xl bg-[#EA2C26] text-white font-bold text-sm shadow-lg shadow-[#EA2C26]/25 flex items-center justify-center gap-2 hover:bg-[#c9221d] active:scale-[0.98] transition-all"
+              className="py-4 rounded-2xl bg-[#EA2C26] text-white font-bold text-sm shadow-lg shadow-[#EA2C26]/25 flex items-center justify-center gap-2 hover:bg-[#c9221d] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Square size={16} weight="fill" />
               <span>End Session</span>
