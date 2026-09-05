@@ -341,6 +341,12 @@ export function SessionSummaryModal({
         } catch (_) {}
       }
 
+      // Clear memory cache so all components immediately reflect fresh devotion minutes
+      invalidateMemoryCache()
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('faithsync_session_updated'))
+      }
+
       setSaving(false)
       onClose()
       if (onSaved) onSaved()

@@ -10,6 +10,7 @@ export interface DashboardData {
   studyMinutes: number
   prayerTarget: number
   studyTarget: number
+  isDevotionComplete?: boolean
   weekDots: ('completed' | 'today' | 'missed' | 'pending')[]
   completedDaysCount: number
   buddies: Array<{
@@ -49,13 +50,36 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     if (cached) return cached
   }
 
-  // 1. Profile & Goal Preferences
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name, preferences')
-    .eq('id', user.id)
-    .single()
+  // Parallel Query Batch 1: Fetch Profile, User Sessions, Buddy Connections, and Global Attendance in parallel
+  const startOfToday = getStartOfLocalDay()
+  const now = new Date()
+  const currentDayIndex = (now.getDay() + 6) % 7
+  const dayStart = getStartOfLocalDay(now)
+  dayStart.setDate(dayStart.getDate() - currentDayIndex)
 
+  const [profileRes, sessionsRes, connectionsRes, globalSessionsRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('display_name, preferences')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('sessions')
+      .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
+      .eq('user_id', user.id)
+      .order('started_at', { ascending: false }),
+    supabase
+      .from('buddies')
+      .select('id, status, user_id, buddy_id, created_at')
+      .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`),
+    supabase
+      .from('sessions')
+      .select('user_id')
+      .gte('started_at', startOfToday.toISOString())
+      .limit(50),
+  ])
+
+  const profile = profileRes.data
   const rawName = profile?.display_name || user.user_metadata?.full_name || 'Believer'
   const firstName = rawName.split(' ')[0]
   const prefs = (profile?.preferences as any) || {}
@@ -75,14 +99,7 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     15
   )
 
-  // 2. Strict Consecutive Streak Determination (The "All or Nothing" Rule)
-  // Query all lifetime personal and 1-on-1 buddy sessions (Group sessions are excluded from personal records)
-  const { data: rawAllUserSessions } = await supabase
-    .from('sessions')
-    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
-    .eq('user_id', user.id)
-    .order('started_at', { ascending: false })
-
+  const rawAllUserSessions = sessionsRes.data
   const allUserSessions = (rawAllUserSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
 
   interface DayMinutesAgg {
@@ -133,22 +150,38 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   // Check today's progress using today's target
   const todayKey = getLocalDateKey()
   const todayData = dailyMinutesMap[todayKey]
-  const todayPrayerSecs = todayData?.prayerSecs || 0
-  const todayStudySecs = todayData?.studySecs || 0
-  const prayerMinutes = Math.floor(todayPrayerSecs / 60)
-  const studyMinutes = Math.floor(todayStudySecs / 60)
+  const isDateLockedCompleted = Boolean(prefs.completed_dates?.[todayKey])
+
+  let todayPrayerSecs = todayData?.prayerSecs || 0
+  let todayStudySecs = todayData?.studySecs || 0
+
+  let prayerMinutes = Math.floor(todayPrayerSecs / 60)
+  let studyMinutes = Math.floor(todayStudySecs / 60)
 
   const todayMetrics = {
     prayerMins: prayerMinutes,
     studyMins: studyMinutes,
     recordedPrayerTarget: todayData?.prayerTargetSecs ? Math.round(todayData.prayerTargetSecs / 60) : undefined,
     recordedStudyTarget: todayData?.studyTargetSecs ? Math.round(todayData.studyTargetSecs / 60) : undefined,
-    hasCompletedPrayerSession: todayData?.hasPrayerComplete,
-    hasCompletedStudySession: todayData?.hasStudyComplete,
+    hasCompletedPrayerSession: todayData?.hasPrayerComplete || isDateLockedCompleted,
+    hasCompletedStudySession: todayData?.hasStudyComplete || isDateLockedCompleted,
   }
 
   const todayTarget = getTargetsForDate(todayKey, prefs, prayerTarget, studyTarget, todayMetrics)
-  const isTodayComplete = prayerMinutes >= todayTarget.prayerTarget && studyMinutes >= todayTarget.studyTarget
+
+  // If marked complete on session or target history, honor the full completion
+  if (todayData?.hasPrayerComplete || isDateLockedCompleted) {
+    prayerMinutes = Math.max(prayerMinutes, todayTarget.prayerTarget)
+  }
+  if (todayData?.hasStudyComplete || isDateLockedCompleted) {
+    studyMinutes = Math.max(studyMinutes, todayTarget.studyTarget)
+  }
+
+  const isTodayComplete =
+    isDateLockedCompleted ||
+    Boolean(todayData?.hasPrayerComplete && todayData?.hasStudyComplete) ||
+    (prayerMinutes >= todayTarget.prayerTarget && studyMinutes >= todayTarget.studyTarget) ||
+    (prayerMinutes > 0 && studyMinutes > 0 && todayPrayerSecs >= (todayTarget.prayerTarget * 60 - 45) && todayStudySecs >= (todayTarget.studyTarget * 60 - 45))
 
   let streakDays = isTodayComplete ? 1 : 0
 
@@ -188,19 +221,11 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     }
   }
 
-  // 4. Week Consistency (Mon - Sun) using day-specific targets
-  const now = new Date()
-  const currentDayIndex = (now.getDay() + 6) % 7
-  const dayStart = getStartOfLocalDay(now)
-  dayStart.setDate(dayStart.getDate() - currentDayIndex)
-
-  const { data: rawWeekSessions } = await supabase
-    .from('sessions')
-    .select('type, started_at, duration_seconds, target_duration_seconds, is_complete, is_group, group_id')
-    .eq('user_id', user.id)
-    .gte('started_at', dayStart.toISOString())
-
-  const weekSessions = (rawWeekSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
+  // 4. Week Consistency (Mon - Sun) derived in-memory from user sessions
+  const weekSessions = allUserSessions.filter((s: any) => {
+    const sDate = new Date(s.started_at || s.created_at)
+    return sDate >= dayStart
+  })
 
   const weekSessionsByDay: Record<number, { prayer: number; study: number; prayerTarget: number; studyTarget: number; hasP: boolean; hasS: boolean }> = {}
   for (let i = 0; i < 7; i++) {
@@ -208,7 +233,7 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   }
 
   weekSessions.forEach((s) => {
-    const sDate = new Date(s.started_at)
+    const sDate = new Date(s.started_at || s.created_at)
     const dayIdx = (sDate.getDay() + 6) % 7
     if (s.type === 'prayer') {
       weekSessionsByDay[dayIdx].prayer += s.duration_seconds || 0
@@ -271,18 +296,12 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     }
   }
 
-  // 5. Accountability Buddies
-  const startOfToday = getStartOfLocalDay()
-
-  const { data: connections } = await supabase
-    .from('buddies')
-    .select('id, status, user_id, buddy_id, created_at')
-    .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
-
+  // 5. Accountability Buddies & Global Attendance (Resolved from Parallel Batch 1)
+  const connections = connectionsRes.data
   const activeBuddies: DashboardData['buddies'] = []
   const pendingRequests: DashboardData['pendingRequests'] = []
 
-  if (connections) {
+  if (connections && connections.length > 0) {
     const activePairs = connections.filter((c) => c.status === 'accepted')
     const incomingPending = connections.filter((c) => c.status === 'pending' && c.buddy_id === user.id)
 
@@ -290,69 +309,67 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     const senderIds = incomingPending.map((c) => c.user_id)
     const allProfileIds = Array.from(new Set([...partnerIds, ...senderIds]))
 
-    if (allProfileIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, display_name, username')
-        .in('id', allProfileIds)
+    // Parallel Batch 2: Fetch buddy profiles and buddy today sessions simultaneously
+    const [profilesRes, buddySessionsRes] = await Promise.all([
+      allProfileIds.length > 0
+        ? supabase
+            .from('profiles')
+            .select('id, display_name, username')
+            .in('id', allProfileIds)
+        : Promise.resolve({ data: [] }),
+      partnerIds.length > 0
+        ? supabase
+            .from('sessions')
+            .select('user_id, type, duration_seconds')
+            .in('user_id', partnerIds)
+            .gte('started_at', startOfToday.toISOString())
+        : Promise.resolve({ data: [] }),
+    ])
 
-      const profileMap: Record<string, string> = {}
-      ;(profiles || []).forEach((p) => {
-        profileMap[p.id] = p.display_name || p.username || 'Buddy'
+    const profileMap: Record<string, string> = {}
+    ;(profilesRes.data || []).forEach((p: any) => {
+      profileMap[p.id] = p.display_name || p.username || 'Buddy'
+    })
+
+    incomingPending.forEach((req) => {
+      const sName = profileMap[req.user_id] || 'A Believer'
+      pendingRequests.push({
+        id: req.id,
+        senderId: req.user_id,
+        senderName: sName,
+        senderInitial: sName.charAt(0).toUpperCase(),
       })
+    })
 
-      incomingPending.forEach((req) => {
-        const sName = profileMap[req.user_id] || 'A Believer'
-        pendingRequests.push({
-          id: req.id,
-          senderId: req.user_id,
-          senderName: sName,
-          senderInitial: sName.charAt(0).toUpperCase(),
-        })
+    const buddyMinutesMap: Record<string, { prayer: number; study: number }> = {}
+    ;(buddySessionsRes.data || []).forEach((s: any) => {
+      if (!buddyMinutesMap[s.user_id]) {
+        buddyMinutesMap[s.user_id] = { prayer: 0, study: 0 }
+      }
+      const mins = Math.floor((s.duration_seconds || 0) / 60)
+      if (s.type === 'prayer') buddyMinutesMap[s.user_id].prayer += mins
+      if (s.type === 'study' || s.type === 'word') buddyMinutesMap[s.user_id].study += mins
+    })
+
+    activePairs.forEach((conn) => {
+      const partnerId = conn.user_id === user.id ? conn.buddy_id : conn.user_id
+      const pName = profileMap[partnerId] || 'Accountability Buddy'
+      const bpMins = buddyMinutesMap[partnerId]?.prayer || 0
+      const bsMins = buddyMinutesMap[partnerId]?.study || 0
+      const pDone = bpMins >= 15
+      const sDone = bsMins >= 15
+
+      activeBuddies.push({
+        id: partnerId,
+        connectionId: conn.id,
+        name: pName,
+        initial: pName.charAt(0).toUpperCase(),
+        isActiveNow: bpMins > 0 || bsMins > 0,
+        prayerDone: pDone,
+        studyDone: sDone,
+        bothDone: pDone && sDone,
       })
-
-      activePairs.forEach((conn) => {
-        const partnerId = conn.user_id === user.id ? conn.buddy_id : conn.user_id
-        const pName = profileMap[partnerId] || 'Accountability Buddy'
-        activeBuddies.push({
-          id: partnerId,
-          connectionId: conn.id,
-          name: pName,
-          initial: pName.charAt(0).toUpperCase(),
-          isActiveNow: false,
-          prayerDone: false,
-          studyDone: false,
-          bothDone: false,
-        })
-      })
-    }
-
-    if (partnerIds.length > 0) {
-      const { data: buddySessions } = await supabase
-        .from('sessions')
-        .select('user_id, type, duration_seconds')
-        .in('user_id', partnerIds)
-        .gte('started_at', startOfToday.toISOString())
-
-      const buddyMinutesMap: Record<string, { prayer: number; study: number }> = {}
-      ;(buddySessions || []).forEach((s) => {
-        if (!buddyMinutesMap[s.user_id]) {
-          buddyMinutesMap[s.user_id] = { prayer: 0, study: 0 }
-        }
-        const mins = Math.floor(s.duration_seconds / 60)
-        if (s.type === 'prayer') buddyMinutesMap[s.user_id].prayer += mins
-        if (s.type === 'study' || s.type === 'word') buddyMinutesMap[s.user_id].study += mins
-      })
-
-      activeBuddies.forEach((b) => {
-        const bpMins = buddyMinutesMap[b.id]?.prayer || 0
-        const bsMins = buddyMinutesMap[b.id]?.study || 0
-        b.prayerDone = bpMins >= 15
-        b.studyDone = bsMins >= 15
-        b.bothDone = b.prayerDone && b.studyDone
-        b.isActiveNow = bpMins > 0 || bsMins > 0
-      })
-    }
+    })
   }
 
   // 6. Global Community Attendance
@@ -392,6 +409,7 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     studyMinutes,
     prayerTarget,
     studyTarget,
+    isDevotionComplete: isTodayComplete,
     weekDots,
     completedDaysCount,
     buddies: activeBuddies.slice(0, 3),

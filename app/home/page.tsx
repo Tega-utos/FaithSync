@@ -57,6 +57,11 @@ export default function HomePage() {
   const [showGatingModal, setShowGatingModal] = useState(false)
 
   useEffect(() => {
+    async function reloadDashboard(force = true) {
+      const data = await fetchDashboardData(force)
+      if (data) setDashboard(data)
+    }
+
     async function checkOnboardingAndLoad() {
       try {
         const supabase = createClient()
@@ -100,14 +105,22 @@ export default function HomePage() {
         console.error('Home onboarding check error:', err)
       }
 
-      const data = await fetchDashboardData()
-      if (data) setDashboard(data)
+      await reloadDashboard(true)
     }
 
     checkOnboardingAndLoad()
 
+    const handleFocus = () => reloadDashboard(true)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') reloadDashboard(true)
+    }
+    const handleSessionUpdate = () => reloadDashboard(true)
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('faithsync_session_updated', handleSessionUpdate)
+
     // 4. Push Notification Permissions (The "Silent Ask")
-    // On-Load Bootstrapping: Silently request notification permissions if not yet granted
     async function requestNotificationPermission() {
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'default') {
@@ -118,7 +131,13 @@ export default function HomePage() {
       }
     }
     requestNotificationPermission()
-  }, [])
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('faithsync_session_updated', handleSessionUpdate)
+    }
+  }, [router])
 
   // Nudge Partner Handler (with 400ms Haptic Feedback Emulation)
   const handleNudge = async (e: React.MouseEvent, buddyId: string, connectionId: string) => {
@@ -194,7 +213,10 @@ export default function HomePage() {
   const studyOffset = RING_CIRCUMFERENCE * (1 - studyProgress)
 
   const votd = getVerseOfTheDay()
-  const isDevotionComplete = (dashboard.prayerMinutes || 0) >= prayerTarget && (dashboard.studyMinutes || 0) >= studyTarget
+  const isDevotionComplete = Boolean(
+    dashboard.isDevotionComplete ||
+    ((dashboard.prayerMinutes || 0) >= prayerTarget && (dashboard.studyMinutes || 0) >= studyTarget)
+  )
 
   const handleShareVotdToSquare = (e: React.MouseEvent) => {
     e.preventDefault()
