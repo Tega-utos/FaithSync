@@ -427,7 +427,7 @@ export function SessionSummaryModal({
           {primaryBuddy && (
             <div className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 truncate">
-                <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
                   {primaryBuddy.name.charAt(0)}
                 </div>
                 <div className="truncate">
@@ -508,7 +508,7 @@ export function SessionSummaryModal({
           type="button"
           disabled={saving}
           onClick={handleComplete}
-          className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 rounded-2xl font-bold text-sm shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          className="w-full bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-black/20 hover:bg-[#1f1f1f] dark:hover:bg-neutral-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           {saving ? (
             <>

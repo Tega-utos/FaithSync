@@ -487,7 +487,7 @@ export default function SyncPage() {
                 <div key={sq.id} className="faith-card p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-white font-bold text-[10px] flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-[10px] flex items-center justify-center">
                         {sq.targetInitial}
                       </div>
                       <div>

@@ -284,7 +284,7 @@ export default function ClockInPage() {
               onClick={() => setSelectedDiscipline('prayer')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'prayer'
-                  ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+                  ? 'bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-[#FBBF24]/50 text-white shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -301,7 +301,7 @@ export default function ClockInPage() {
               onClick={() => setSelectedDiscipline('study')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'study'
-                  ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-md'
+                  ? 'bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-[#FBBF24]/50 text-white shadow-md'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -452,8 +452,7 @@ export default function ClockInPage() {
               cx="100"
               cy="100"
               r="88"
-              fill="#FFFFFF"
-              className="transition-colors"
+              className="fill-card dark:fill-[#16130F] transition-colors"
             />
 
             {/* Background Track Ring */}
@@ -461,9 +460,10 @@ export default function ClockInPage() {
               cx="100"
               cy="100"
               r="84"
-              stroke="#E5E7EB"
+              stroke="currentColor"
               strokeWidth="10"
               fill="transparent"
+              className="text-border dark:text-neutral-800 transition-colors"
             />
 
             {/* Dynamic Sweeping Progress Ring */}
@@ -471,13 +471,15 @@ export default function ClockInPage() {
               cx="100"
               cy="100"
               r="84"
-              stroke={isPastLap1 ? '#FBBF24' : '#0E0E0E'}
+              stroke="currentColor"
               strokeWidth="10"
               strokeDasharray={2 * Math.PI * 84}
               strokeDashoffset={(2 * Math.PI * 84) - (progressPercentage / 100) * (2 * Math.PI * 84)}
               strokeLinecap="round"
               fill="transparent"
-              className="transition-all duration-1000 ease-linear"
+              className={`transition-all duration-1000 ease-linear ${
+                isPastLap1 ? 'text-[#FBBF24]' : 'text-[#0E0E0E] dark:text-[#F5F1E8]'
+              }`}
             />
           </svg>
 
@@ -512,7 +514,7 @@ export default function ClockInPage() {
             <button
               type="button"
               onClick={handleStart}
-              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 hover:bg-[#1f1f1f] active:scale-[0.99] transition-all"
+              className="w-full bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 font-extrabold text-base shadow-xl shadow-black/20 hover:bg-[#1f1f1f] dark:hover:bg-neutral-700 active:scale-[0.99] transition-all"
             >
               <Play size={20} weight="fill" />
               <span>Start Session</span>

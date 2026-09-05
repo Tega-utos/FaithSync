@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Globe,
   Plus,
+  PencilSimple,
   Fire,
   BookOpen,
   Sparkle,
@@ -808,10 +809,6 @@ function SquarePageContent() {
           <CaretLeft size={16} weight="bold" className="text-[#FBBF24] group-hover:-translate-x-0.5 transition-transform" />
           <span>Back to SynC</span>
         </Link>
-
-        <span className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">
-          Community Feed
-        </span>
       </div>
 
       {/* Hero Section */}
@@ -845,7 +842,7 @@ function SquarePageContent() {
                 onClick={() => setActiveFilter(tab.id as FilterType)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-[#FBBF24] text-white shadow-sm'
+                    ? 'bg-[#FBBF24] text-[#1A1610] shadow-sm font-extrabold'
                     : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
                 }`}
               >
@@ -854,6 +851,22 @@ function SquarePageContent() {
             )
           })}
         </div>
+      </div>
+
+      {/* Write a Post Quick Trigger Bar */}
+      <div
+        onClick={handleOpenCompose}
+        className="faith-card p-3 sm:p-3.5 bg-card border border-border hover:border-[#FBBF24]/60 transition-all cursor-pointer flex items-center gap-3 group shadow-2xs"
+      >
+        <div className="w-8 h-8 rounded-full bg-[#FBBF24]/15 border border-[#FBBF24]/30 text-[#FBBF24] flex items-center justify-center font-bold shrink-0">
+          <PencilSimple size={16} weight="bold" />
+        </div>
+        <div className="flex-1 text-xs text-text-secondary group-hover:text-text-primary transition-colors">
+          Share a prayer request, struggle, testimony, or reflection...
+        </div>
+        <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white dark:text-neutral-100 group-hover:bg-[#262626] dark:group-hover:bg-neutral-700 transition-all shrink-0">
+          Write a Post
+        </span>
       </div>
 
       {/* Feed Content or Empty State */}
@@ -873,7 +886,7 @@ function SquarePageContent() {
           <button
             type="button"
             onClick={handleOpenCompose}
-            className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 px-6 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all"
+            className="bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white dark:text-neutral-100 py-3 px-6 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all cursor-pointer"
           >
             Write a Post
           </button>
@@ -1381,8 +1394,8 @@ function SquarePageContent() {
       <button
         type="button"
         onClick={handleOpenCompose}
-        className="fixed bottom-6 right-5 sm:right-8 z-40 w-14 h-14 rounded-full bg-[#FBBF24] text-white shadow-[0_8px_30px_rgba(251,191,36,0.55)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center ring-4 ring-[#FBBF24]/20"
-        title="Share to Square"
+        className="fixed bottom-6 right-5 sm:right-8 z-40 w-14 h-14 rounded-full bg-[#FBBF24] text-[#1A1610] shadow-[0_8px_30px_rgba(251,191,36,0.55)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center ring-4 ring-[#FBBF24]/20 cursor-pointer"
+        title="Write a Post"
       >
         <Plus size={24} weight="bold" />
       </button>

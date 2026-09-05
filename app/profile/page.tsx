@@ -1125,7 +1125,7 @@ export default function ProfilePage() {
               href={`/profile/${req.senderId}`}
               className="flex items-center gap-2.5 min-w-0 flex-1 group hover:opacity-85 transition-all"
             >
-              <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-white font-bold text-xs flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-xs flex items-center justify-center shrink-0">
                 {req.senderInitial}
               </div>
               <div className="min-w-0 flex-1 truncate">

@@ -375,7 +375,7 @@ export default function HistoryPage() {
           <Link href="/clock-in" className="inline-block pt-2">
             <button
               type="button"
-              className="px-4 py-2 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold"
+              className="px-4 py-2 rounded-xl bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white text-xs font-bold hover:bg-[#262626] dark:hover:bg-neutral-700 transition-all cursor-pointer"
             >
               Clock In Now
             </button>
