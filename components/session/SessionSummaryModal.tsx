@@ -52,6 +52,7 @@ export function SessionSummaryModal({
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
   const [isDevotionComplete, setIsDevotionComplete] = useState(false)
+  const [hasAlreadyPostedSquareToday, setHasAlreadyPostedSquareToday] = useState(false)
   const [primaryBuddy, setPrimaryBuddy] = useState<{ id: string; connectionId: string; name: string } | null>(null)
   const [nudged, setNudged] = useState(false)
 
@@ -125,6 +126,21 @@ export function SessionSummaryModal({
             connectionId: row.id,
             name: pName,
           })
+        }
+
+        // Law of 1 Post a Day: Check if the user has already shared a post to the Square today
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        const { data: existingSquarePosts } = await (supabase.from('square_posts') as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .gte('created_at', todayStart.toISOString())
+          .limit(1)
+
+        const alreadyPosted = Boolean(existingSquarePosts && existingSquarePosts.length > 0)
+        setHasAlreadyPostedSquareToday(alreadyPosted)
+        if (alreadyPosted) {
+          setShareToSquare(false)
         }
       } catch (err) {
         console.error('Summary load context error:', err)
@@ -258,42 +274,53 @@ export function SessionSummaryModal({
         }
       }
 
-      if (shareToSquare && isBothComplete) {
-        const postText =
-          reflection.trim() ||
-          `Completed daily devotion goals: ${todayPrayerMins}m Prayer & ${todayStudyMins}m Scripture Study 🙏`
+      if (shareToSquare && isBothComplete && !hasAlreadyPostedSquareToday) {
+        // Double check against DB to guarantee no duplicate post is made today
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        const { data: existingCheck } = await (supabase.from('square_posts') as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .gte('created_at', todayStart.toISOString())
+          .limit(1)
 
-        try {
-          const { error: pErr1 } = await (supabase.from('square_posts') as any).insert({
-            user_id: user.id,
-            session_id: sessionRecord?.id || null,
-            content: postText,
-            post_type: 'record',
-            verse_reference: sessionData.verseReference || null,
-            scripture_reference: sessionData.verseReference || null,
-          })
+        if (!existingCheck || existingCheck.length === 0) {
+          const postText =
+            reflection.trim() ||
+            `Completed daily devotion goals: ${todayPrayerMins}m Prayer & ${todayStudyMins}m Scripture Study 🙏`
 
-          if (pErr1) {
-            const { error: pErr2 } = await (supabase.from('square_posts') as any).insert({
+          try {
+            const { error: pErr1 } = await (supabase.from('square_posts') as any).insert({
               user_id: user.id,
+              session_id: sessionRecord?.id || null,
               content: postText,
-              post_type: 'reflection',
+              post_type: 'record',
               verse_reference: sessionData.verseReference || null,
+              scripture_reference: sessionData.verseReference || null,
             })
 
-            if (pErr2) {
-              await (supabase.from('square_posts') as any).insert({
+            if (pErr1) {
+              const { error: pErr2 } = await (supabase.from('square_posts') as any).insert({
                 user_id: user.id,
                 content: postText,
+                post_type: 'reflection',
+                verse_reference: sessionData.verseReference || null,
               })
-            }
-          }
-        } catch (postEx) {
-          console.warn('Square post insert note:', postEx)
-        }
 
-        // Invalidate cache so the new post appears immediately in Square
-        invalidateMemoryCache('square_feed_posts')
+              if (pErr2) {
+                await (supabase.from('square_posts') as any).insert({
+                  user_id: user.id,
+                  content: postText,
+                })
+              }
+            }
+          } catch (postEx) {
+            console.warn('Square post insert note:', postEx)
+          }
+
+          // Invalidate cache so the new post appears immediately in Square
+          invalidateMemoryCache('square_feed_posts')
+        }
       }
 
       // If both daily targets are complete, lock today's targets in completed_dates
@@ -512,7 +539,7 @@ export function SessionSummaryModal({
             </div>
           )}
 
-          {/* Share to Community Square with Gamification Lock */}
+          {/* Share to Community Square with Gamification Lock & 1-Post-A-Day Limit */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -526,11 +553,11 @@ export function SessionSummaryModal({
               <button
                 type="button"
                 role="switch"
-                disabled={!isBothComplete}
-                aria-checked={shareToSquare && isBothComplete}
-                onClick={() => isBothComplete && setShareToSquare(!shareToSquare)}
+                disabled={!isBothComplete || hasAlreadyPostedSquareToday}
+                aria-checked={shareToSquare && isBothComplete && !hasAlreadyPostedSquareToday}
+                onClick={() => isBothComplete && !hasAlreadyPostedSquareToday && setShareToSquare(!shareToSquare)}
                 className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                  !isBothComplete
+                  !isBothComplete || hasAlreadyPostedSquareToday
                     ? 'opacity-40 cursor-not-allowed bg-[#E5E7EB]'
                     : shareToSquare
                     ? 'bg-[#0E0E0E] cursor-pointer'
@@ -539,18 +566,30 @@ export function SessionSummaryModal({
               >
                 <div
                   className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                    shareToSquare && isBothComplete ? 'translate-x-5' : 'translate-x-0'
+                    shareToSquare && isBothComplete && !hasAlreadyPostedSquareToday ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
             </div>
 
-            {!isBothComplete && (
+            {hasAlreadyPostedSquareToday ? (
+              <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 space-y-1 animate-in fade-in">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-text-primary">
+                  <Sparkle size={14} className="text-[#FBBF24]" weight="fill" />
+                  <span>1 Post Daily Limit Reached</span>
+                </div>
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  You have already shared your 1 permitted post on the Square today to prevent noise and keep the altar pure. Your session was saved to your personal ledger and streaks!
+                </p>
+              </div>
+            ) : !isBothComplete ? (
               <div className="p-2 rounded-xl bg-subtle/50 border border-border flex items-center gap-2 text-[10px] text-text-secondary font-medium">
                 <Lock size={14} className="text-text-muted shrink-0" />
-                <span>Complete both daily targets to unlock sharing</span>
+                <span>
+                  Complete both daily targets ({prayerTarget}m Prayer & {studyTarget}m Study) to unlock Square sharing!
+                </span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
