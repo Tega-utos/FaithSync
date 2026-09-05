@@ -1020,7 +1020,7 @@ export default function ProfilePage() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs font-bold">
             <span className="flex items-center gap-1.5 text-text-primary">
-              <Fire size={14} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
+              <HandsPraying size={14} weight="fill" className="text-[#234537] dark:text-emerald-400" />
               <span>Prayer</span>
             </span>
             <span className="font-mono-tabular text-[11px] text-text-secondary">
@@ -1029,7 +1029,7 @@ export default function ProfilePage() {
           </div>
           <div className="w-full bg-subtle h-2.5 rounded-full overflow-hidden">
             <div
-              className="bg-[#EA2C26] h-full rounded-full transition-all duration-700"
+              className="bg-[#234537] dark:bg-emerald-500 h-full rounded-full transition-all duration-700"
               style={{ width: `${prayerPercent}%` }}
             />
           </div>
@@ -1507,7 +1507,7 @@ export default function ProfilePage() {
               <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
-                    <HandsPraying size={16} weight="fill" className="text-[#FBBF24]" />
+                    <HandsPraying size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
                     <span>Daily Prayer Goal</span>
                   </span>
 
@@ -1536,8 +1536,8 @@ export default function ProfilePage() {
                       onClick={() => setTempPrayerTarget(mins)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempPrayerTarget === mins
-                          ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] shadow-xs'
-                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#FBBF24]'
+                          ? 'bg-[#234537] dark:bg-emerald-600 text-white shadow-xs'
+                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#234537] dark:hover:border-emerald-500'
                       }`}
                     >
                       {mins}m
@@ -1553,7 +1553,7 @@ export default function ProfilePage() {
                   step={5}
                   value={tempPrayerTarget}
                   onChange={(e) => setTempPrayerTarget(Number(e.target.value))}
-                  className="w-full accent-[#FBBF24] bg-subtle h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#234537] dark:accent-emerald-400 bg-subtle h-2 rounded-lg cursor-pointer"
                 />
 
                 {/* Reminder Time Picker */}
@@ -1563,7 +1563,7 @@ export default function ProfilePage() {
                     type="time"
                     value={prayerReminderTime}
                     onChange={(e) => setPrayerReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#FBBF24]"
+                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537] dark:focus:border-emerald-400"
                   />
                 </div>
               </div>
@@ -1572,7 +1572,7 @@ export default function ProfilePage() {
               <div className="p-3.5 rounded-2xl bg-card border border-border space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
-                    <BookOpen size={16} className="text-[#234537] dark:text-emerald-400" weight="fill" />
+                    <BookOpen size={16} className="text-[#FBBF24]" weight="fill" />
                     <span>Daily Study Goal</span>
                   </span>
 
@@ -1601,8 +1601,8 @@ export default function ProfilePage() {
                       onClick={() => setTempStudyTarget(mins)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
                         tempStudyTarget === mins
-                          ? 'bg-[#234537] text-white shadow-xs'
-                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#234537] dark:border-emerald-700'
+                          ? 'bg-[#0E0E0E] dark:bg-[#FBBF24] text-white dark:text-[#1A1610] shadow-xs'
+                          : 'bg-card-hover border border-border text-text-secondary hover:border-[#FBBF24]'
                       }`}
                     >
                       {mins}m
@@ -1618,7 +1618,7 @@ export default function ProfilePage() {
                   step={5}
                   value={tempStudyTarget}
                   onChange={(e) => setTempStudyTarget(Number(e.target.value))}
-                  className="w-full accent-[#234537] bg-subtle h-2 rounded-lg cursor-pointer"
+                  className="w-full accent-[#FBBF24] bg-subtle h-2 rounded-lg cursor-pointer"
                 />
 
                 {/* Reminder Time Picker */}
@@ -1628,7 +1628,7 @@ export default function ProfilePage() {
                     type="time"
                     value={studyReminderTime}
                     onChange={(e) => setStudyReminderTime(e.target.value)}
-                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#234537] dark:border-emerald-700"
+                    className="px-2.5 py-1 bg-surface border border-border rounded-xl text-xs font-mono font-bold text-text-primary min-w-0 max-w-[135px] text-center focus:outline-none focus:border-[#FBBF24]"
                   />
                 </div>
               </div>
