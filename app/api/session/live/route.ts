@@ -47,42 +47,49 @@ export async function POST(req: NextRequest) {
       const targetDurationSeconds = inviteDurationMins * 60
       const isComplete = actualDurationSeconds >= targetDurationSeconds
 
-      // 3. Insert server-validated record into sessions
-      const { data: loggedSession, error: logErr } = await (supabase
-        .from('sessions') as any)
-        .insert({
-          user_id: user.id,
-          type: inviteDiscipline,
-          duration_seconds: actualDurationSeconds,
-          target_duration_seconds: targetDurationSeconds,
-          is_complete: isComplete,
-          reflection: inviteFocus || null,
-          started_at: new Date(startMs).toISOString(),
-          ended_at: new Date(nowMs).toISOString(),
-        })
-        .select()
-        .single()
-
-      if (logErr) {
-        console.error('Error logging server-validated session:', logErr)
-      }
-
-      // 4. Update Consecutive Streak ("All or Nothing" Rule)
+      // 3. Insert server-validated record into sessions (for Solo and Buddy clock-ins only, not Group sessions)
+      const isGroupSession = Boolean(body.groupId || body.isGroup)
+      let loggedSession: any = null
       let updatedStreak = 0
-      try {
-        const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
-          p_user_id: user.id,
-        }))
-        if (typeof streakResult === 'number') {
-          updatedStreak = streakResult
+
+      if (!isGroupSession && actualDurationMinutes >= 1) {
+        const { data: inserted, error: logErr } = await (supabase
+          .from('sessions') as any)
+          .insert({
+            user_id: user.id,
+            type: inviteDiscipline,
+            duration_seconds: actualDurationSeconds,
+            target_duration_seconds: targetDurationSeconds,
+            is_complete: isComplete,
+            reflection: inviteFocus || null,
+            started_at: new Date(startMs).toISOString(),
+            ended_at: new Date(nowMs).toISOString(),
+          })
+          .select()
+          .single()
+
+        if (logErr) {
+          console.error('Error logging server-validated session:', logErr)
+        } else {
+          loggedSession = inserted
         }
-      } catch {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('streak_count')
-          .eq('id', user.id)
-          .maybeSingle()
-        updatedStreak = (profile as any)?.streak_count || 0
+
+        // 4. Update Consecutive Streak ("All or Nothing" Rule)
+        try {
+          const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
+            p_user_id: user.id,
+          }))
+          if (typeof streakResult === 'number') {
+            updatedStreak = streakResult
+          }
+        } catch {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('streak_count')
+            .eq('id', user.id)
+            .maybeSingle()
+          updatedStreak = (profile as any)?.streak_count || 0
+        }
       }
 
       // 5. Insert system message into chat if chatId or messageId present
