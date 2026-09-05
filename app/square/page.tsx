@@ -1094,9 +1094,9 @@ function SquarePageContent() {
                         <span>Reflection</span>
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
-                        <Clock size={12} />
-                        <span>Record</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
+                        <Clock size={12} weight="bold" />
+                        <span>Clock-In Record</span>
                       </span>
                     )}
 
@@ -1173,23 +1173,29 @@ function SquarePageContent() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
                           Daily Clock-In Proof
                         </span>
-                        <span className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-[#234537]/20 dark:border-emerald-700/25">
+                        <span className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-2.5 py-0.5 rounded-full border border-[#234537]/25 dark:border-emerald-700/30">
                           Verified Altar ✓
                         </span>
                       </div>
 
                       {/* 2x2 Grid */}
                       <div className="grid grid-cols-2 gap-2.5">
-                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
-                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Prayer</span>
-                          <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
+                        <div className="p-3 rounded-xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <HandsPraying size={13} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#234537] dark:text-emerald-400">Prayer</span>
+                          </div>
+                          <span className="text-sm sm:text-base font-black font-mono text-[#234537] dark:text-emerald-400 block">
                             {post.prayerMins || 15} mins
                           </span>
                         </div>
 
-                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
-                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Study</span>
-                          <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
+                        <div className="p-3 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen size={13} weight="fill" className="text-[#D97706] dark:text-[#FBBF24]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D97706] dark:text-[#FBBF24]">Study</span>
+                          </div>
+                          <span className="text-sm sm:text-base font-black font-mono text-[#D97706] dark:text-[#FBBF24] block">
                             {post.studyMins || 15} mins
                           </span>
                         </div>
@@ -1200,9 +1206,9 @@ function SquarePageContent() {
                         <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
                           All-Time Days Active
                         </span>
-                        <div className="flex items-center gap-1">
-                          <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
-                          <span className="text-base font-black font-mono text-[#234537] dark:text-emerald-400">
+                        <div className="flex items-center gap-1.5">
+                          <Fire size={17} weight="fill" className="text-[#FBBF24]" />
+                          <span className="text-base font-black font-mono text-text-primary">
                             {post.authorStreak ?? 0} {(post.authorStreak === 1) ? 'Day' : 'Days'} &amp; Counting
                           </span>
                         </div>
