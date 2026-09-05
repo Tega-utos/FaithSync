@@ -551,6 +551,13 @@ export default function ProfilePage() {
 
       const completedDatesToLock: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {
         ...(prevPrefs.completed_dates || {}),
+        ...(prevPrefs.completedDates || {}),
+      }
+
+      const dailyTargetsToLock: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {
+        ...(prevPrefs.daily_targets || {}),
+        ...(prevPrefs.dailyTargets || {}),
+        ...completedDatesToLock,
       }
 
       let isTodayCompleted = false
@@ -578,21 +585,36 @@ export default function ProfilePage() {
           const sMins = Math.floor(d.studySecs / 60)
           const effPTarget = d.pTarget || prevPrayer
           const effSTarget = d.sTarget || prevStudy
-          if (pMins >= effPTarget && sMins >= effSTarget) {
+          const isComplete = pMins >= effPTarget && sMins >= effSTarget
+
+          if (isComplete) {
             completedDatesToLock[dKey] = {
               prayerTarget: effPTarget,
               studyTarget: effSTarget,
               isFixed: true,
             }
-            if (dKey === todayStr) {
-              isTodayCompleted = true
+          }
+
+          // Lock every past day into dailyTargetsToLock so it never changes
+          if (dKey < todayStr) {
+            dailyTargetsToLock[dKey] = {
+              prayerTarget: effPTarget,
+              studyTarget: effSTarget,
+              isFixed: true,
+            }
+          } else if (dKey === todayStr && isComplete) {
+            isTodayCompleted = true
+            dailyTargetsToLock[todayStr] = {
+              prayerTarget: effPTarget,
+              studyTarget: effSTarget,
+              isFixed: true,
             }
           }
         })
       }
 
       // If today was already completed under the previous target,
-      // the new target takes effect starting tomorrow so today's completion is not retroactively altered.
+      // lock today at previous target and start new target tomorrow.
       let effectiveDate = todayStr
       if (isTodayCompleted) {
         const tomorrow = new Date()
@@ -609,7 +631,8 @@ export default function ProfilePage() {
         finalPrayer,
         finalStudy,
         effectiveDate,
-        completedDatesToLock
+        completedDatesToLock,
+        dailyTargetsToLock
       )
 
       await supabase
@@ -632,6 +655,11 @@ export default function ProfilePage() {
           },
         },
       })
+
+      // Invalidate memory caches so Devotion Ledger reflects the update immediately
+      invalidateMemoryCache('history_summaries')
+      invalidateMemoryCache('home_dashboard')
+      invalidateMemoryCache('user_streak')
     } catch (err) {
       console.error('Targets update error:', err)
       // Rollback on error

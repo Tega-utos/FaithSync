@@ -149,6 +149,7 @@ export default function HistoryPage() {
         const summaries: DailySummary[] = []
         const todayStr = getLocalDateKey()
         const newCompletedToSync: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {}
+        const newDailyTargetsToSync: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {}
 
         for (let i = 0; i < 30; i++) {
           const d = new Date()
@@ -191,7 +192,7 @@ export default function HistoryPage() {
           let status: 'Complete' | 'In Progress' | 'Missed' = 'Missed'
           if (isPrayerMet && isStudyMet) {
             status = 'Complete'
-            if (!prefs.completed_dates?.[key]) {
+            if (!prefs.completed_dates?.[key] && !prefs.completedDates?.[key]) {
               newCompletedToSync[key] = {
                 prayerTarget: dayTarget.prayerTarget,
                 studyTarget: dayTarget.studyTarget,
@@ -200,6 +201,15 @@ export default function HistoryPage() {
             }
           } else if (pMins > 0 || sMins > 0) {
             status = 'In Progress'
+          }
+
+          // Lock historical daily targets for past days so future target edits never alter them
+          if (!isToday && !prefs.daily_targets?.[key] && !prefs.dailyTargets?.[key]) {
+            newDailyTargetsToSync[key] = {
+              prayerTarget: dayTarget.prayerTarget,
+              studyTarget: dayTarget.studyTarget,
+              isFixed: true,
+            }
           }
 
           summaries.push({
@@ -220,11 +230,21 @@ export default function HistoryPage() {
         setDailySummaries(summaries)
         setMemoryCache('history_summaries', summaries)
 
-        // If newly discovered completed days were not locked in preferences, sync them silently
-        if (Object.keys(newCompletedToSync).length > 0) {
+        // If newly discovered past days or completed days were not locked in preferences, sync them silently
+        const hasNewCompleted = Object.keys(newCompletedToSync).length > 0
+        const hasNewDailyTargets = Object.keys(newDailyTargetsToSync).length > 0
+
+        if (hasNewCompleted || hasNewDailyTargets) {
           const mergedCompleted = {
             ...(prefs.completed_dates || {}),
+            ...(prefs.completedDates || {}),
             ...newCompletedToSync,
+          }
+          const mergedDailyTargets = {
+            ...(prefs.daily_targets || {}),
+            ...(prefs.dailyTargets || {}),
+            ...newDailyTargetsToSync,
+            ...mergedCompleted,
           }
           supabase
             .from('profiles')
@@ -233,6 +253,8 @@ export default function HistoryPage() {
                 ...prefs,
                 completed_dates: mergedCompleted,
                 completedDates: mergedCompleted,
+                daily_targets: mergedDailyTargets,
+                dailyTargets: mergedDailyTargets,
               },
             })
             .eq('id', user.id)
@@ -316,7 +338,7 @@ export default function HistoryPage() {
 
         <div className="faith-card p-3.5 bg-card border border-border space-y-0.5 col-span-2 sm:col-span-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-            Daily Targets Set
+            Current Daily Targets
           </span>
           <p className="text-xs font-bold text-text-primary pt-1 flex items-center gap-2">
             <span className="text-[#FBBF24]">🙏 {prayerTarget}m Prayer</span>

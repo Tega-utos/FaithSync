@@ -1,3 +1,5 @@
+import { getLocalDateKey } from '@/lib/utils/date'
+
 /**
  * Target History & Historical Consistency Engine
  * 
@@ -39,48 +41,55 @@ export function getTargetsForDate(
   defaultStudy = 15,
   dayMetrics?: DaySessionMetrics
 ): DayTargetResolution {
+  const todayKey = getLocalDateKey()
+  const isPastDay = dateKey < todayKey
+
   if (!prefs) {
-    if (dayMetrics) {
+    if (dayMetrics && (dayMetrics.recordedPrayerTarget || dayMetrics.recordedStudyTarget)) {
       const pT = dayMetrics.recordedPrayerTarget || defaultPrayer
       const sT = dayMetrics.recordedStudyTarget || defaultStudy
-      return { prayerTarget: pT, studyTarget: sT }
+      return { prayerTarget: pT, studyTarget: sT, isFixed: isPastDay }
     }
-    return { prayerTarget: defaultPrayer, studyTarget: defaultStudy }
+    return { prayerTarget: defaultPrayer, studyTarget: defaultStudy, isFixed: isPastDay }
   }
 
-  // 1. Check permanently locked/recorded day target (completed_dates or daily_targets_history)
-  if (prefs.completed_dates?.[dateKey]) {
-    const record = prefs.completed_dates[dateKey]
+  // 1. Check permanently locked/recorded day target (daily_targets, completed_dates, or daily_targets_history)
+  const lockedRecord =
+    prefs.daily_targets?.[dateKey] ||
+    prefs.dailyTargets?.[dateKey] ||
+    prefs.completed_dates?.[dateKey] ||
+    prefs.completedDates?.[dateKey] ||
+    prefs.daily_targets_history?.[dateKey]
+
+  if (lockedRecord) {
     return {
-      prayerTarget: record.prayerTarget || defaultPrayer,
-      studyTarget: record.studyTarget || defaultStudy,
+      prayerTarget: lockedRecord.prayerTarget || defaultPrayer,
+      studyTarget: lockedRecord.studyTarget || defaultStudy,
       isFixed: true,
     }
   }
 
-  if (prefs.daily_targets_history?.[dateKey]) {
-    const record = prefs.daily_targets_history[dateKey]
-    return {
-      prayerTarget: record.prayerTarget || defaultPrayer,
-      studyTarget: record.studyTarget || defaultStudy,
-      isFixed: true,
-    }
-  }
-
-  // 2. Check if sessions on this day had explicit targets and were completed/met
-  if (dayMetrics) {
+  // 2. Check if sessions on this day had explicit targets recorded at session time
+  if (dayMetrics && (dayMetrics.recordedPrayerTarget || dayMetrics.recordedStudyTarget)) {
     const pMins = dayMetrics.prayerMins || 0
     const sMins = dayMetrics.studyMins || 0
-    const recPrayer = dayMetrics.recordedPrayerTarget
-    const recStudy = dayMetrics.recordedStudyTarget
+    const recPrayer = dayMetrics.recordedPrayerTarget || defaultPrayer
+    const recStudy = dayMetrics.recordedStudyTarget || defaultStudy
 
     const prayerMetAtSessionTarget =
-      recPrayer && recPrayer > 0 && (dayMetrics.hasCompletedPrayerSession || pMins >= recPrayer)
+      recPrayer > 0 && (dayMetrics.hasCompletedPrayerSession || pMins >= recPrayer)
     const studyMetAtSessionTarget =
-      recStudy && recStudy > 0 && (dayMetrics.hasCompletedStudySession || sMins >= recStudy)
+      recStudy > 0 && (dayMetrics.hasCompletedStudySession || sMins >= recStudy)
 
-    // If both were met based on the session's recorded target at the time, lock it in
     if (prayerMetAtSessionTarget && studyMetAtSessionTarget) {
+      return {
+        prayerTarget: recPrayer,
+        studyTarget: recStudy,
+        isFixed: true,
+      }
+    }
+
+    if (isPastDay) {
       return {
         prayerTarget: recPrayer,
         studyTarget: recStudy,
@@ -100,6 +109,7 @@ export function getTargetsForDate(
       return {
         prayerTarget: sorted[0].prayerTarget || defaultPrayer,
         studyTarget: sorted[0].studyTarget || defaultStudy,
+        isFixed: isPastDay,
       }
     }
 
@@ -116,28 +126,21 @@ export function getTargetsForDate(
       return {
         prayerTarget: activeEntry.prayerTarget || defaultPrayer,
         studyTarget: activeEntry.studyTarget || defaultStudy,
+        isFixed: isPastDay,
       }
     }
   }
 
-  // 4. If this day achieved at least the baseline targets (e.g. 15m),
-  // ensure future target adjustments (e.g. 30m) don't retroactively mark a completed past day as incomplete
-  if (dayMetrics) {
-    const pMins = dayMetrics.prayerMins || 0
-    const sMins = dayMetrics.studyMins || 0
-    const basePrayer = dayMetrics.recordedPrayerTarget || 15
-    const baseStudy = dayMetrics.recordedStudyTarget || 15
-
-    if (pMins >= basePrayer && sMins >= baseStudy) {
-      return {
-        prayerTarget: basePrayer,
-        studyTarget: baseStudy,
-        isFixed: true,
-      }
+  // 4. Fallback for past days: preserve baseline target (e.g. 15m), never retroactively apply new target
+  if (isPastDay) {
+    return {
+      prayerTarget: defaultPrayer,
+      studyTarget: defaultStudy,
+      isFixed: true,
     }
   }
 
-  // 5. Fallback to current preferences target
+  // 5. Active target for today or future days from current preferences
   const pTarget =
     prefs.prayerTarget ||
     prefs.targets?.prayer ||
@@ -148,19 +151,20 @@ export function getTargetsForDate(
     prefs.targets?.study ||
     defaultStudy
 
-  return { prayerTarget: pTarget, studyTarget: sTarget }
+  return { prayerTarget: pTarget, studyTarget: sTarget, isFixed: false }
 }
 
 /**
  * Records a new target change effective from effectiveDate.
- * Preserves past target history and locked completed dates so past days retain their historical targets.
+ * Preserves past target history, daily_targets, and locked completed dates so past days retain their historical targets.
  */
 export function updateTargetHistory(
   prefs: any,
   newPrayerTarget: number,
   newStudyTarget: number,
   effectiveDate: string,
-  completedDatesToLock?: Record<string, { prayerTarget: number; studyTarget: number }>
+  completedDatesToLock?: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }>,
+  dailyTargetsToLock?: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }>
 ): any {
   const currentHistory: TargetEntry[] = [
     ...(prefs?.target_history || prefs?.targetHistory || []),
@@ -193,7 +197,15 @@ export function updateTargetHistory(
 
   const completed_dates = {
     ...(prefs?.completed_dates || {}),
+    ...(prefs?.completedDates || {}),
     ...(completedDatesToLock || {}),
+  }
+
+  const daily_targets = {
+    ...(prefs?.daily_targets || {}),
+    ...(prefs?.dailyTargets || {}),
+    ...(dailyTargetsToLock || {}),
+    ...completed_dates,
   }
 
   return {
@@ -208,6 +220,8 @@ export function updateTargetHistory(
     },
     target_history: filtered,
     targetHistory: filtered,
+    daily_targets,
+    dailyTargets: daily_targets,
     completed_dates,
     completedDates: completed_dates,
   }
