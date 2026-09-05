@@ -13,6 +13,7 @@ import {
   Lock,
   HandsPraying,
   CircleNotch,
+  ShareNetwork,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { calculateUserStreak } from '@/lib/utils/streak'
@@ -68,6 +69,34 @@ const BADGES: BadgeConfig[] = [
     description: 'Consistency is key — reach a 7-day walk',
     icon: Trophy,
     unlockedWhen: (stats) => stats.currentStreakDays >= 7,
+  },
+  {
+    id: '14_day_streak',
+    title: '14 Day Overcomer',
+    description: 'Maintain 14 consecutive days meeting dual daily targets',
+    icon: Sparkle,
+    unlockedWhen: (stats) => stats.currentStreakDays >= 14,
+  },
+  {
+    id: '30_day_warrior',
+    title: '30 Day Warrior',
+    description: 'A full month of unbroken spiritual devotion and consistency',
+    icon: Trophy,
+    unlockedWhen: (stats) => stats.currentStreakDays >= 30,
+  },
+  {
+    id: '100_day_champion',
+    title: '100 Day Champion',
+    description: 'Reach a triple-digit streak in your daily devotion walk',
+    icon: Fire,
+    unlockedWhen: (stats) => stats.currentStreakDays >= 100,
+  },
+  {
+    id: '365_day_legend',
+    title: '365 Day Legend',
+    description: 'One complete year of unbroken daily prayer and study',
+    icon: Trophy,
+    unlockedWhen: (stats) => stats.currentStreakDays >= 365,
   },
   {
     id: 'marathon_believer',
@@ -301,29 +330,47 @@ export default function MilestonesPage() {
                 return (
                   <div
                     key={badge.id}
-                    className="p-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border border-[#262626] shadow-lg relative overflow-hidden flex items-center gap-3.5 group"
+                    className="p-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border border-[#262626] dark:border-white/20 shadow-lg relative overflow-hidden flex items-center justify-between gap-3.5 group"
                   >
                     {/* Subtle Gold Radial Gradient Glow */}
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#FBBF24]/20 via-transparent to-transparent pointer-events-none" />
 
-                    {/* Gold-Filtered Icon Slot */}
-                    <div className="w-12 h-12 rounded-xl bg-card/10 border border-[#FBBF24]/40 dark:border-amber-500/30 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner relative z-10">
-                      <IconComponent size={24} weight="fill" />
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1 relative z-10">
+                      {/* Gold-Filtered Icon Slot */}
+                      <div className="w-12 h-12 rounded-xl bg-card/10 dark:bg-black/10 border border-[#FBBF24]/40 dark:border-amber-600/40 flex items-center justify-center text-[#FBBF24] shrink-0 shadow-inner">
+                        <IconComponent size={24} weight="fill" />
+                      </div>
+
+                      <div className="space-y-0.5 truncate">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xs font-black text-white dark:text-[#0E0E0E] tracking-tight">
+                            {badge.title}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 dark:border-amber-600/40 text-[#FBBF24] dark:text-[#B45309] text-[9px] font-extrabold uppercase">
+                            Earned
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 dark:text-neutral-700 leading-snug">
+                          {badge.description}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="relative z-10 space-y-0.5 truncate">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-black text-white tracking-tight">
-                          {badge.title}
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-full bg-[#FBBF24]/20 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#FBBF24] text-[9px] font-extrabold uppercase">
-                          Earned
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-300 leading-snug">
-                        {badge.description}
-                      </p>
-                    </div>
+                    {/* Share Trophy to Community Square */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/square?compose=true&intent=testimony&verse=${encodeURIComponent(
+                            `🏆 Praise God! I just unlocked the "${badge.title}" milestone on FaithSync!`
+                          )}`
+                        )
+                      }
+                      className="relative z-10 p-2 rounded-xl bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 text-white dark:text-[#0E0E0E] transition-colors shrink-0 cursor-pointer"
+                      title="Share achievement to Community Square"
+                    >
+                      <ShareNetwork size={16} />
+                    </button>
                   </div>
                 )
               })}
