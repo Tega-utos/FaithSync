@@ -21,7 +21,7 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
-import { fetchDashboardData, DashboardData } from '@/features/dashboard/services/dashboardService'
+import { useDashboardData } from '@/features/dashboard/hooks/useDashboardData'
 import { WeeklyProgress } from '@/features/dashboard/components/WeeklyProgress'
 import { getVerseOfTheDay } from '@/lib/scripture'
 import { Modal } from '@/components/ui/Modal'
@@ -35,35 +35,32 @@ function getGreeting() {
   return 'Good evening'
 }
 
+const defaultDashboardState = {
+  firstName: 'Believer',
+  streakDays: 0,
+  prayerMinutes: 0,
+  studyMinutes: 0,
+  prayerTarget: 15,
+  studyTarget: 15,
+  weekDots: ['pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending'] as ('completed' | 'today' | 'missed' | 'pending')[],
+  completedDaysCount: 0,
+  buddies: [],
+  pendingRequests: [],
+  globalCount: 0,
+  activeCommunityUsers: [],
+}
+
 export default function HomePage() {
   const router = useRouter()
-
-  const [dashboard, setDashboard] = useState<DashboardData>({
-    firstName: 'Believer',
-    streakDays: 0,
-    prayerMinutes: 0,
-    studyMinutes: 0,
-    prayerTarget: 15,
-    studyTarget: 15,
-    weekDots: ['pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending'],
-    completedDaysCount: 0,
-    buddies: [],
-    pendingRequests: [],
-    globalCount: 0,
-    activeCommunityUsers: [],
-  })
+  const { dashboard: swrDashboard, mutate } = useDashboardData()
+  const dashboard = swrDashboard || defaultDashboardState
 
   const [nudgedState, setNudgedState] = useState<Record<string, boolean>>({})
   const [vibratingState, setVibratingState] = useState<Record<string, boolean>>({})
   const [showGatingModal, setShowGatingModal] = useState(false)
 
   useEffect(() => {
-    async function reloadDashboard(force = true) {
-      const data = await fetchDashboardData(force)
-      if (data) setDashboard(data)
-    }
-
-    async function checkOnboardingAndLoad() {
+    async function checkOnboarding() {
       try {
         const supabase = createClient()
         const {
@@ -105,23 +102,14 @@ export default function HomePage() {
       } catch (err) {
         console.error('Home onboarding check error:', err)
       }
-
-      await reloadDashboard(true)
     }
 
-    checkOnboardingAndLoad()
+    checkOnboarding()
 
-    const handleFocus = () => reloadDashboard(true)
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') reloadDashboard(true)
-    }
-    const handleSessionUpdate = () => reloadDashboard(true)
-
-    window.addEventListener('focus', handleFocus)
-    document.addEventListener('visibilitychange', handleVisibility)
+    const handleSessionUpdate = () => mutate()
     window.addEventListener('faithsync_session_updated', handleSessionUpdate)
 
-    // 4. Push Notification Permissions (The "Silent Ask")
+    // Push Notification Permissions (The "Silent Ask")
     async function requestNotificationPermission() {
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'default') {
@@ -134,11 +122,9 @@ export default function HomePage() {
     requestNotificationPermission()
 
     return () => {
-      window.removeEventListener('focus', handleFocus)
-      document.removeEventListener('visibilitychange', handleVisibility)
       window.removeEventListener('faithsync_session_updated', handleSessionUpdate)
     }
-  }, [router])
+  }, [router, mutate])
 
   // Nudge Partner Handler (with 400ms Haptic Feedback Emulation)
   const handleNudge = async (e: React.MouseEvent, buddyId: string, connectionId: string) => {

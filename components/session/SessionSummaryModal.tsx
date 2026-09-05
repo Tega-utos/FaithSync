@@ -21,6 +21,10 @@ import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { getLocalDateKey } from '@/lib/utils/date'
 
 import { fetchDashboardData } from '@/features/dashboard/services/dashboardService'
+import { invalidateDashboardData } from '@/features/dashboard/hooks/useDashboardData'
+import { invalidateMilestonesData } from '@/features/milestones/hooks/useMilestonesData'
+import { invalidateHistoryData } from '@/features/history/hooks/useHistoryData'
+import { invalidateSquarePosts } from '@/features/square/hooks/useSquarePosts'
 
 export interface SessionSummaryModalProps {
   isOpen: boolean
@@ -326,8 +330,13 @@ export function SessionSummaryModal({
         } catch (_) {}
       }
 
-      // Clear memory cache so all components immediately reflect fresh devotion minutes
+      // Clear memory cache and revalidate SWR hooks so all views immediately reflect fresh devotion minutes
       invalidateMemoryCache()
+      invalidateDashboardData()
+      invalidateMilestonesData()
+      invalidateHistoryData()
+      invalidateSquarePosts()
+
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('faithsync_session_updated'))
       }

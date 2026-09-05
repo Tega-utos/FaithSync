@@ -6,6 +6,8 @@ import { TimerProvider } from "@/context/TimerContext";
 import { AppShell } from "@/components/navigation/AppShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
+import { SWRProvider } from "@/components/providers/SWRProvider";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -37,13 +39,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-surface text-text-primary selection:bg-[#FBBF24]/30">
-        <ThemeProvider>
-          <TimerProvider>
-            <AppShell>
-              {children}
-            </AppShell>
-          </TimerProvider>
-        </ThemeProvider>
+        <SWRProvider>
+          <ThemeProvider>
+            <TimerProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+            </TimerProvider>
+          </ThemeProvider>
+        </SWRProvider>
       </body>
     </html>
   );

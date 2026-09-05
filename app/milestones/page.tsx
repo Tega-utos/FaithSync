@@ -114,83 +114,11 @@ const BADGES: BadgeConfig[] = [
   },
 ]
 
+import { useMilestonesData } from '@/features/milestones/hooks/useMilestonesData'
+
 export default function MilestonesPage() {
   const router = useRouter()
-  const [stats, setStats] = useState<MilestoneStats>({
-    completedSessions: 0,
-    totalMinutes: 0,
-    currentStreakDays: 0,
-    prayerMinutes: 0,
-    studyMinutes: 0,
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadMilestones() {
-      try {
-        const supabase = createClient()
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          setLoading(false)
-          return
-        }
-
-        // Fetch all user sessions to calculate strictly verified completed metrics
-        const { data: allSessions } = await supabase
-          .from('sessions')
-          .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
-          .eq('user_id', user.id)
-          .order('started_at', { ascending: false })
-
-        if (allSessions && allSessions.length > 0) {
-          // Data Integrity: Only count sessions where user officially completed target time (is_complete)
-          const verifiedSessions = allSessions.filter(
-            (s) =>
-              s.is_complete ||
-              (s.duration_seconds > 0 &&
-                s.duration_seconds >= (s.target_duration_seconds || 0))
-          )
-
-          let totalPrayerSecs = 0
-          let totalStudySecs = 0
-          const uniqueDays = new Set<string>()
-
-          verifiedSessions.forEach((s) => {
-            if (s.type === 'prayer') {
-              totalPrayerSecs += s.duration_seconds
-            }
-            if (s.type === 'study' || s.type === 'word') {
-              totalStudySecs += s.duration_seconds
-            }
-            const dateStr = new Date(s.started_at || s.created_at).toISOString().split('T')[0]
-            uniqueDays.add(dateStr)
-          })
-
-          const pMins = Math.floor(totalPrayerSecs / 60)
-          const sMins = Math.floor(totalStudySecs / 60)
-          const totMins = pMins + sMins
-          const realStreak = await calculateUserStreak(user.id, supabase)
-
-          setStats({
-            completedSessions: verifiedSessions.length,
-            totalMinutes: totMins,
-            currentStreakDays: realStreak,
-            prayerMinutes: pMins,
-            studyMinutes: sMins,
-          })
-        }
-      } catch (err) {
-        console.error('Failed to load milestones:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadMilestones()
-  }, [])
+  const { stats, isLoading: loading } = useMilestonesData()
 
   // Time conversion: hours and minutes
   const hours = Math.floor(stats.totalMinutes / 60)

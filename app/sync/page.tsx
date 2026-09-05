@@ -74,22 +74,44 @@ import {
   subscribeToBuddyUpdates,
 } from '@/features/buddies/services/buddyService'
 
-import { getMemoryCache } from '@/lib/cache/clientCache'
+import { useBuddiesData } from '@/features/buddies/hooks/useBuddiesData'
+import { useGroupsData } from '@/features/groups/hooks/useGroupsData'
 
 export default function SyncPage() {
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<'personal' | 'group' | 'square'>('personal')
-  const [loading, setLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
 
+  const { activeBuddies, incomingRequests: swrIncoming, isInitialLoading: isBuddiesInitialLoading, mutate: mutateBuddies } = useBuddiesData()
+  const { groups: swrGroups, isInitialLoading: isGroupsInitialLoading, mutate: mutateGroups } = useGroupsData()
+
   // Personal Tab States
-  const [buddies, setBuddies] = useState<BuddyItem[]>([])
-  const [incomingRequests, setIncomingRequests] = useState<IncomingRequestItem[]>([])
   const [squareActivities, setSquareActivities] = useState<SquareActivityItem[]>([])
 
-  // Group Tab States
-  const [groups, setGroups] = useState<GroupItem[]>(() => getMemoryCache<GroupItem[]>('public_groups_list') || [])
+  const buddies: BuddyItem[] = activeBuddies.map((c) => ({
+    id: c.partnerId,
+    connectionId: c.id,
+    name: c.partnerName,
+    initial: c.partnerInitial,
+    avatarUrl: c.partnerAvatar,
+    church: c.partnerChurch,
+    isOnline: false,
+    isLiveNow: false,
+    lastActive: 'Active today',
+    lastMessage: 'Let’s clock in together!',
+  }))
+
+  const incomingRequests: IncomingRequestItem[] = swrIncoming.map((c) => ({
+    id: c.id,
+    senderId: c.partnerId,
+    senderName: c.partnerName,
+    senderInitial: c.partnerInitial,
+    senderAvatar: c.partnerAvatar,
+    senderChurch: c.partnerChurch,
+  }))
+
+  const groups: GroupItem[] = swrGroups
 
   // Modals
   const [isAddBuddyOpen, setIsAddBuddyOpen] = useState(false)
@@ -117,133 +139,65 @@ export default function SyncPage() {
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
 
-    async function loadSyncData() {
+    async function initUserAndActivities() {
       try {
         const supabase = createClient()
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
+        const { data: { user } } = await supabase.auth.getUser()
         setCurrentUser(user)
 
-        if (!user) {
-          setLoading(false)
-          return
-        }
+        if (user) {
+          try {
+            const { data: squareConns } = await (supabase.from('buddies') as any)
+              .select(`
+                id,
+                user_id,
+                buddy_id,
+                status,
+                created_at,
+                user_profile:profiles!buddies_user_id_fkey(display_name),
+                buddy_profile:profiles!buddies_buddy_id_fkey(display_name)
+              `)
+              .eq('connection_type', 'square')
+              .eq('status', 'pending')
+              .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
 
-        // Check for active ongoing live sessions across buddies and groups
-        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-        let activeLiveSessions: any[] = []
-        try {
-          const { data: liveSess } = await supabase
-            .from('sessions')
-            .select('id, user_id, group_id, type')
-            .eq('is_complete', false)
-            .gte('started_at', twoHoursAgo)
-          if (liveSess) activeLiveSessions = liveSess
-        } catch {}
-
-        // Fetch Real Groups & map live state
-        const realGroups = await fetchGroups()
-        setGroups(
-          realGroups.map((g) => ({
-            ...g,
-            isLive: g.isLive || activeLiveSessions.some((s) => s.group_id === g.id),
-          }))
-        )
-
-        // Fetch Buddy Connections via robust service
-        const { active, pendingIncoming } = await getMyBuddies(user.id)
-
-        setIncomingRequests(
-          pendingIncoming.map((c) => ({
-            id: c.id,
-            senderId: c.partnerId,
-            senderName: c.partnerName,
-            senderInitial: c.partnerInitial,
-            senderAvatar: c.partnerAvatar,
-            senderChurch: c.partnerChurch,
-          }))
-        )
-
-        setBuddies(
-          active.map((c) => {
-            const isLive = activeLiveSessions.some(
-              (s) => s.user_id === c.partnerId && !s.group_id
-            )
-            return {
-              id: c.partnerId,
-              connectionId: c.id,
-              name: c.partnerName,
-              initial: c.partnerInitial,
-              avatarUrl: c.partnerAvatar,
-              church: c.partnerChurch,
-              isOnline: isLive,
-              isLiveNow: isLive,
-              lastActive: isLive ? 'Clocked in now' : 'Active today',
-              lastMessage: isLive ? 'Currently in devotion...' : 'Let’s clock in together!',
+            if (squareConns && Array.isArray(squareConns)) {
+              setSquareActivities(
+                squareConns.map((sq: any) => {
+                  const isOut = sq.user_id === user.id
+                  const target = isOut ? sq.buddy_profile : sq.user_profile
+                  const name = target?.display_name || 'A Believer'
+                  const partnerId = isOut ? sq.buddy_id : sq.user_id
+                  return {
+                    id: sq.id,
+                    partnerId,
+                    type: isOut ? 'outgoing' : 'incoming',
+                    targetName: name,
+                    targetInitial: name.charAt(0).toUpperCase(),
+                    timeAgo: new Date(sq.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    introMessage: 'Connected from Community Square',
+                  }
+                })
+              )
             }
-          })
-        )
+          } catch {}
 
-        // Fetch Square Connection Requests
-        try {
-          const { data: squareConns } = await (supabase.from('buddies') as any)
-            .select(`
-              id,
-              user_id,
-              buddy_id,
-              status,
-              created_at,
-              user_profile:profiles!buddies_user_id_fkey(display_name),
-              buddy_profile:profiles!buddies_buddy_id_fkey(display_name)
-            `)
-            .eq('connection_type', 'square')
-            .eq('status', 'pending')
-            .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
-
-          if (squareConns && Array.isArray(squareConns)) {
-            setSquareActivities(
-              squareConns.map((sq: any) => {
-                const isOut = sq.user_id === user.id
-                const target = isOut ? sq.buddy_profile : sq.user_profile
-                const name = target?.display_name || 'A Believer'
-                const partnerId = isOut ? sq.buddy_id : sq.user_id
-                return {
-                  id: sq.id,
-                  partnerId,
-                  type: isOut ? 'outgoing' : 'incoming',
-                  targetName: name,
-                  targetInitial: name.charAt(0).toUpperCase(),
-                  timeAgo: new Date(sq.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-                  introMessage: 'Connected from Community Square',
-                }
-              })
-            )
-          } else {
-            setSquareActivities([])
+          if (!unsubscribe) {
+            unsubscribe = subscribeToBuddyUpdates(user.id, () => {
+              mutateBuddies()
+              mutateGroups()
+            })
           }
-        } catch {
-          setSquareActivities([])
         }
-
-        if (!unsubscribe) {
-          unsubscribe = subscribeToBuddyUpdates(user.id, () => {
-            loadSyncData()
-          })
-        }
-      } catch (err) {
-        console.error('Sync load error:', err)
-      } finally {
-        setLoading(false)
-      }
+      } catch {}
     }
 
-    loadSyncData()
+    initUserAndActivities()
 
     return () => {
       if (unsubscribe) unsubscribe()
     }
-  }, [])
+  }, [mutateBuddies, mutateGroups])
 
   // Approve Request (Stage 5)
   const handleApproveRequest = async (reqId: string) => {
@@ -251,21 +205,7 @@ export default function SyncPage() {
     try {
       const res = await approveBuddyRequest(reqId, currentUser.id)
       if (res.success) {
-        setIncomingRequests((prev) => prev.filter((r) => r.id !== reqId))
-        const { active } = await getMyBuddies(currentUser.id)
-        setBuddies(
-          active.map((c) => ({
-            id: c.partnerId,
-            connectionId: c.id,
-            name: c.partnerName,
-            initial: c.partnerInitial,
-            avatarUrl: c.partnerAvatar,
-            church: c.partnerChurch,
-            isOnline: false,
-            lastActive: 'Active today',
-            lastMessage: 'Let’s clock in together!',
-          }))
-        )
+        mutateBuddies()
       }
     } catch (err) {
       console.error('Approve error:', err)
@@ -474,7 +414,7 @@ export default function SyncPage() {
               </span>
             </div>
 
-            {loading ? (
+            {isBuddiesInitialLoading ? (
               <div className="py-12 text-center text-xs text-text-secondary">Loading buddies...</div>
             ) : buddies.length === 0 ? (
               <div className="faith-card p-8 text-center flex flex-col items-center justify-center space-y-3">

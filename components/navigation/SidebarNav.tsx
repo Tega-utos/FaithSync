@@ -23,46 +23,57 @@ import { calculateUserStreak } from '@/lib/utils/streak'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
+import useSWR from 'swr'
+
+interface SidebarUserData {
+  user: { id: string; email?: string; user_metadata?: any } | null
+  streak: number
+  unreadCount: number
+}
+
+async function fetchSidebarUserData(): Promise<SidebarUserData> {
+  const supabase = createClient()
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser()
+
+  if (!currentUser) {
+    return { user: null, streak: 0, unreadCount: 0 }
+  }
+
+  const realStreak = await calculateUserStreak(currentUser.id, supabase)
+  const { count } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .eq('read', false)
+
+  return {
+    user: currentUser,
+    streak: realStreak || 0,
+    unreadCount: count || 0,
+  }
+}
+
 export function SidebarNav() {
   const pathname = usePathname()
   const { session, formattedTime } = useTimer()
-
-  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: any } | null>(null)
-  const [unreadCount, setUnreadCount] = useState<number>(0)
-  const [streak, setStreak] = useState<number>(0)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
   const isVisible = shouldShowAppShell(pathname)
 
-  useEffect(() => {
-    async function loadSidebarData() {
-      try {
-        const supabase = createClient()
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser()
-
-        if (currentUser) {
-          setUser(currentUser)
-
-          const realStreak = await calculateUserStreak(currentUser.id, supabase)
-          setStreak(realStreak)
-
-          const { count } = await supabase
-            .from('notifications')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', currentUser.id)
-            .eq('read', false)
-
-          if (count !== null) setUnreadCount(count)
-        }
-      } catch (err) {
-        console.error('Sidebar data error:', err)
-      }
+  const { data } = useSWR<SidebarUserData>(
+    isVisible ? 'sidebar_user_state' : null,
+    fetchSidebarUserData,
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 10_000,
     }
+  )
 
-    loadSidebarData()
-  }, [pathname])
+  const user = data?.user || null
+  const streak = data?.streak || 0
+  const unreadCount = data?.unreadCount || 0
 
   if (!isVisible) {
     return null
