@@ -350,10 +350,10 @@ export default function GroupInfoPage() {
                   <button
                     type="button"
                     onClick={() => handleToggleAdminRole(member.id, member.role)}
-                    className={`px-2 py-1 rounded-xl text-[10px] font-bold border transition-colors ${
+                    className={`px-2 py-1 rounded-xl text-[10px] font-bold border transition-colors cursor-pointer ${
                       member.role === 'admin'
-                        ? 'bg-amber-50 border-[#FBBF24]/50 text-[#B45309] hover:bg-amber-100'
-                        : 'bg-gray-50 border-border text-text-secondary hover:bg-subtle'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-[#FBBF24]/50 text-[#B45309] dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/60'
+                        : 'bg-card border-border text-text-secondary hover:bg-subtle'
                     }`}
                     title={member.role === 'admin' ? 'Demote from Admin' : 'Make Co-Admin'}
                   >
@@ -363,7 +363,7 @@ export default function GroupInfoPage() {
                   <button
                     type="button"
                     onClick={() => handleKickMember(member.id)}
-                    className="px-2 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] dark:text-red-400 bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors"
+                    className="px-2 py-1 rounded-xl text-[10px] font-bold text-[#EA2C26] dark:text-red-400 bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 hover:bg-[#EA2C26] hover:text-white transition-colors cursor-pointer"
                   >
                     Remove
                   </button>
@@ -381,7 +381,7 @@ export default function GroupInfoPage() {
             <button
               type="button"
               onClick={handleCopy}
-              className="flex-1 py-3.5 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-4 rounded-2xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-black text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {copied ? (
                 <>
@@ -399,7 +399,7 @@ export default function GroupInfoPage() {
             <button
               type="button"
               onClick={handleShare}
-              className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs"
+              className="p-3.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs cursor-pointer"
               title="Share Group Invite"
             >
               <ShareNetwork size={18} />
@@ -409,7 +409,7 @@ export default function GroupInfoPage() {
               <button
                 type="button"
                 onClick={handleLeaveGroup}
-                className="p-3.5 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 text-[#EA2C26] dark:text-red-400 hover:bg-rose-100 transition-all shadow-xs"
+                className="p-3.5 rounded-2xl bg-rose-50 dark:bg-red-950/30 border border-rose-200 dark:border-red-900/40 text-[#EA2C26] dark:text-red-400 hover:bg-rose-100 transition-all shadow-xs cursor-pointer"
                 title="Leave Group"
               >
                 <SignOut size={18} />

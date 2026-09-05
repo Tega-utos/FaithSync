@@ -239,8 +239,8 @@ export default function OtherUserProfilePage() {
           </h2>
 
           {/* Bright green pill for Local Assembly */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[rgba(34,197,94,0.1)] text-emerald-800 border border-emerald-300/40 text-xs font-bold">
-            <Church size={13} className="text-emerald-700" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 border border-emerald-300/40 dark:border-emerald-700/40 text-xs font-bold">
+            <Church size={13} className="text-emerald-700 dark:text-emerald-400" />
             <span>{church}</span>
           </div>
 
@@ -265,7 +265,7 @@ export default function OtherUserProfilePage() {
           </span>
           <div className="text-[#FBBF24]">
             {copiedCode ? (
-              <Check size={13} weight="bold" className="text-emerald-600" />
+              <Check size={13} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
             ) : (
               <Copy size={13} />
             )}
@@ -278,7 +278,7 @@ export default function OtherUserProfilePage() {
             <Link href={`/buddy-chat/${targetUserId}`} className="block">
               <button
                 type="button"
-                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-full font-bold text-xs shadow-md flex items-center justify-center gap-2 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all"
+                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-full font-bold text-xs shadow-md flex items-center justify-center gap-2 hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 transition-all cursor-pointer"
               >
                 <ChatCircle size={16} />
                 <span>Open Buddy Chat</span>
@@ -294,7 +294,7 @@ export default function OtherUserProfilePage() {
                   type="button"
                   onClick={handleApproveIncoming}
                   disabled={sendingRequest}
-                  className="flex-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Check size={14} weight="bold" className="text-[#FBBF24]" />
                   <span>{sendingRequest ? 'Approving...' : 'Approve Request'}</span>
@@ -302,7 +302,7 @@ export default function OtherUserProfilePage() {
                 <button
                   type="button"
                   onClick={handleIgnoreIncoming}
-                  className="px-4 py-2.5 bg-card border border-border text-text-secondary rounded-xl font-bold text-xs hover:text-[#EA2C26] dark:text-red-400 transition-all"
+                  className="px-4 py-2.5 bg-card border border-border text-text-secondary rounded-xl font-bold text-xs hover:text-[#EA2C26] dark:text-red-400 transition-all cursor-pointer"
                 >
                   Ignore
                 </button>
@@ -314,7 +314,7 @@ export default function OtherUserProfilePage() {
               disabled
               className="w-full bg-surface border border-border text-text-secondary py-3.5 rounded-full font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
             >
-              <Check size={16} weight="bold" className="text-emerald-600" />
+              <Check size={16} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
               <span>Request Sent</span>
             </button>
           ) : (
@@ -351,12 +351,12 @@ export default function OtherUserProfilePage() {
             </div>
 
             {prayerActiveToday ? (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black inline-flex items-center gap-1 border border-emerald-200">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 text-[10px] font-black inline-flex items-center gap-1 border border-emerald-200 dark:border-emerald-700/40">
                 <Check size={11} weight="bold" />
                 <span>Active Today</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-text-muted text-[10px] font-bold border border-border">
+              <span className="px-2.5 py-1 rounded-full bg-subtle text-text-muted text-[10px] font-bold border border-border">
                 Pending
               </span>
             )}
@@ -372,12 +372,12 @@ export default function OtherUserProfilePage() {
             </div>
 
             {studyActiveToday ? (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black inline-flex items-center gap-1 border border-emerald-200">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 text-[10px] font-black inline-flex items-center gap-1 border border-emerald-200 dark:border-emerald-700/40">
                 <Check size={11} weight="bold" />
                 <span>Active Today</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-full bg-gray-100 text-text-muted text-[10px] font-bold border border-border">
+              <span className="px-2.5 py-1 rounded-full bg-subtle text-text-muted text-[10px] font-bold border border-border">
                 Pending
               </span>
             )}
