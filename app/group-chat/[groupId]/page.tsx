@@ -92,6 +92,8 @@ interface FloatingNudge {
 
 import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from '@/features/groups/services/groupService'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
+import { getVerse } from '@/lib/scripture'
+import { ScriptureText } from '@/components/scripture/ScriptureText'
 
 export default function GroupChatPage() {
   const params = useParams()
@@ -459,16 +461,30 @@ export default function GroupChatPage() {
     if (!currentUser) return
     setIsScripturePickerOpen(false)
 
+    let finalVerseText = selection.verseText || selection.text || ''
+    if (!finalVerseText) {
+      try {
+        const fetched = await getVerse(selection.reference, selection.versionId || 'web')
+        finalVerseText = fetched.text
+      } catch (e) {
+        console.error('Fetch verse error in group-chat:', e)
+      }
+    }
+
+    const messageContent = finalVerseText
+      ? `${selection.reference}\n\n"${finalVerseText}"`
+      : selection.reference
+
     const tempId = `temp-scripture-${Date.now()}`
     const optMsg: any = {
       id: tempId,
       sender_id: currentUser.id,
-      content: selection.verseText || selection.reference,
+      content: messageContent,
       message_type: 'scripture',
       meta: {
         verseReference: selection.reference,
-        verseText: selection.verseText,
-        versionId: selection.versionId,
+        verseText: finalVerseText,
+        versionId: selection.versionId || 'web',
       },
       created_at: new Date().toISOString(),
       sender_name: currentUser.user_metadata?.full_name || 'Me',
@@ -479,12 +495,12 @@ export default function GroupChatPage() {
     try {
       const sent = await sendGroupMessage(
         groupId,
-        selection.verseText || selection.reference,
+        messageContent,
         'scripture' as any,
         {
           verseReference: selection.reference,
-          verseText: selection.verseText,
-          versionId: selection.versionId,
+          verseText: finalVerseText,
+          versionId: selection.versionId || 'web',
         }
       )
       if (sent) {
@@ -1126,7 +1142,19 @@ export default function GroupChatPage() {
           // Type 4: Scripture Reference Card
           if (msg.message_type === 'scripture' || (msg as any).meta?.verseReference) {
             const verseRef = (msg as any).meta?.verseReference || 'Scripture'
-            const verseText = (msg as any).meta?.verseText || msg.content
+            let verseText = (msg as any).meta?.verseText
+            const versionId = (msg as any).meta?.versionId?.toUpperCase()
+
+            // If verseText is not in meta, parse from content
+            if (!verseText && msg.content) {
+              if (msg.content.includes('\n\n')) {
+                const parts = msg.content.split('\n\n')
+                verseText = parts.slice(1).join('\n\n').replace(/^["“]|["”]$/g, '').trim()
+              } else if (msg.content !== verseRef) {
+                verseText = msg.content.replace(/^["“]|["”]$/g, '').trim()
+              }
+            }
+
             return (
               <div
                 key={msg.id}
@@ -1140,7 +1168,7 @@ export default function GroupChatPage() {
                     <span className="text-[10px] font-bold text-text-secondary dark:text-neutral-400">{msg.sender_name}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1 max-w-[85%]">
+                <div className="flex items-center gap-1 max-w-[88%] sm:max-w-md">
                   {isMe && (
                     <button
                       type="button"
@@ -1152,19 +1180,36 @@ export default function GroupChatPage() {
                     </button>
                   )}
                   <div
-                    className={`p-3.5 rounded-2xl text-xs space-y-2 border shadow-xs ${
+                    className={`w-full p-4 rounded-3xl text-xs space-y-2.5 border shadow-md transition-all ${
                       isMe
-                        ? 'border-[#FBBF24]/30 bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary rounded-br-xs'
+                        ? 'border-[#FBBF24]/40 bg-[#FDF9F1] dark:bg-[#1E1B16] text-text-primary rounded-br-xs'
                         : 'border-border bg-card text-text-primary rounded-bl-xs'
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-black text-[#FBBF24]">
-                      <BookOpen size={16} weight="fill" />
-                      <span>{verseRef}</span>
+                    <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/60">
+                      <div className="flex items-center gap-2 text-xs font-black text-[#D97706] dark:text-[#FBBF24]">
+                        <div className="w-6 h-6 rounded-full bg-[#FBBF24]/20 flex items-center justify-center">
+                          <BookOpen size={14} weight="fill" className="text-[#D97706] dark:text-[#FBBF24]" />
+                        </div>
+                        <span className="tracking-tight">{verseRef}</span>
+                      </div>
+                      {versionId && (
+                        <span className="px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+                          {versionId}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs italic leading-relaxed text-text-primary bg-surface/60 p-2.5 rounded-xl border border-border/50">
-                      &ldquo;{verseText}&rdquo;
-                    </p>
+                    {verseText ? (
+                      <div className="p-3 rounded-2xl bg-surface/80 dark:bg-black/20 border border-border/50">
+                        <p className="text-[13px] italic font-serif leading-relaxed text-text-primary whitespace-pre-line">
+                          &ldquo;{verseText}&rdquo;
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-xl bg-surface/60">
+                        <ScriptureText reference={verseRef} versionId={(msg as any).meta?.versionId || 'web'} />
+                      </div>
+                    )}
                   </div>
                   {!isMe && isHostUser && (
                     <button

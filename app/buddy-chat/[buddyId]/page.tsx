@@ -54,6 +54,8 @@ import { getLocalDateKey } from '@/lib/utils/date'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
 import { calculateUserStreak } from '@/lib/utils/streak'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
+import { getVerse } from '@/lib/scripture'
+import { ScriptureText } from '@/components/scripture/ScriptureText'
 
 const DASH_ARRAY = 565.48
 
@@ -150,6 +152,7 @@ export default function BuddyChatPage() {
 
   // Live Devotion Room (WebRTC + Realtime Synced Stopwatch)
   const [isLiveOverlayOpen, setIsLiveOverlayOpen] = useState(false)
+  const [isBuddyPresentInRoom, setIsBuddyPresentInRoom] = useState(false)
   const [liveDiscipline, setLiveDiscipline] = useState<'prayer' | 'study'>('prayer')
   const [liveDurationSecs, setLiveDurationSecs] = useState(0)
   const [liveTargetMins, setLiveTargetMins] = useState(15)
@@ -310,6 +313,56 @@ export default function BuddyChatPage() {
     return () => clearInterval(interval)
   }, [isLiveOverlayOpen])
 
+  // Live Room Presence Tracking (Only mark buddy present when they actually join)
+  useEffect(() => {
+    if (!isLiveOverlayOpen || !currentUser || !buddyId) {
+      setIsBuddyPresentInRoom(false)
+      return
+    }
+
+    const supabase = createClient()
+    const sortedRoomId = [currentUser.id, buddyId].sort().join('_')
+    const presenceChannel = supabase.channel(`buddy_live_sync_${sortedRoomId}`, {
+      config: { presence: { key: currentUser.id } },
+    })
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState()
+        const presentUserIds = Object.keys(state)
+        const isPartnerIn = presentUserIds.includes(buddyId)
+        setIsBuddyPresentInRoom(isPartnerIn)
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        if (key === buddyId) {
+          setIsBuddyPresentInRoom(true)
+          playChime()
+          setToastMessage(`${buddyName} joined the live sync! 🤝`)
+          setTimeout(() => setToastMessage(null), 3000)
+        }
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        if (key === buddyId) {
+          setIsBuddyPresentInRoom(false)
+          setToastMessage(`${buddyName} left the live room.`)
+          setTimeout(() => setToastMessage(null), 3000)
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            userId: currentUser.id,
+            onlineAt: new Date().toISOString(),
+          })
+        }
+      })
+
+    return () => {
+      presenceChannel.untrack()
+      supabase.removeChannel(presenceChannel)
+    }
+  }, [isLiveOverlayOpen, currentUser, buddyId, buddyName])
+
   // Real-time Clock Ticker for Hostless Scheduled Sessions
   useEffect(() => {
     const timer = setInterval(() => {
@@ -449,16 +502,30 @@ export default function BuddyChatPage() {
     if (!currentUser) return
     setIsScripturePickerOpen(false)
 
+    let finalVerseText = selection.verseText || selection.text || ''
+    if (!finalVerseText) {
+      try {
+        const fetched = await getVerse(selection.reference, selection.versionId || 'web')
+        finalVerseText = fetched.text
+      } catch (e) {
+        console.error('Fetch verse error in buddy-chat:', e)
+      }
+    }
+
+    const messageContent = finalVerseText
+      ? `${selection.reference}\n\n"${finalVerseText}"`
+      : selection.reference
+
     const tempId = `temp-scripture-${Date.now()}`
     const optMsg: any = {
       id: tempId,
       sender_id: currentUser.id,
-      content: selection.verseText || selection.reference,
+      content: messageContent,
       message_type: 'scripture',
       meta: {
         verseReference: selection.reference,
-        verseText: selection.verseText,
-        versionId: selection.versionId,
+        verseText: finalVerseText,
+        versionId: selection.versionId || 'web',
       },
       created_at: new Date().toISOString(),
     }
@@ -468,12 +535,12 @@ export default function BuddyChatPage() {
       const sent = await sendBuddyMessage(
         buddyId,
         currentUser.id,
-        selection.verseText || selection.reference,
+        messageContent,
         'scripture',
         {
           verseReference: selection.reference,
-          verseText: selection.verseText,
-          versionId: selection.versionId,
+          verseText: finalVerseText,
+          versionId: selection.versionId || 'web',
         }
       )
       if (sent) {
@@ -1175,26 +1242,55 @@ export default function BuddyChatPage() {
           // Type 4: Scripture Reference Card
           if (msg.message_type === 'scripture' || (msg as any).meta?.verseReference) {
             const verseRef = (msg as any).meta?.verseReference || 'Scripture'
-            const verseText = (msg as any).meta?.verseText || msg.content
+            let verseText = (msg as any).meta?.verseText
+            const versionId = (msg as any).meta?.versionId?.toUpperCase()
+
+            // If verseText is not in meta, parse from content
+            if (!verseText && msg.content) {
+              if (msg.content.includes('\n\n')) {
+                const parts = msg.content.split('\n\n')
+                verseText = parts.slice(1).join('\n\n').replace(/^["“]|["”]$/g, '').trim()
+              } else if (msg.content !== verseRef) {
+                verseText = msg.content.replace(/^["“]|["”]$/g, '').trim()
+              }
+            }
+
             return (
               <div
                 key={msg.id}
                 className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[85%] p-3.5 rounded-2xl text-xs space-y-2 border shadow-xs ${
+                  className={`max-w-[88%] sm:max-w-md p-4 rounded-3xl text-xs space-y-2.5 border shadow-md transition-all ${
                     isMe
-                      ? 'border-[#FBBF24]/30 bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary rounded-br-xs'
+                      ? 'border-[#FBBF24]/40 bg-[#FDF9F1] dark:bg-[#1E1B16] text-text-primary rounded-br-xs'
                       : 'border-border bg-card text-text-primary rounded-bl-xs'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 text-xs font-black text-[#FBBF24]">
-                    <BookOpen size={16} weight="fill" />
-                    <span>{verseRef}</span>
+                  <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/60">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#D97706] dark:text-[#FBBF24]">
+                      <div className="w-6 h-6 rounded-full bg-[#FBBF24]/20 flex items-center justify-center">
+                        <BookOpen size={14} weight="fill" className="text-[#D97706] dark:text-[#FBBF24]" />
+                      </div>
+                      <span className="tracking-tight">{verseRef}</span>
+                    </div>
+                    {versionId && (
+                      <span className="px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+                        {versionId}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs italic leading-relaxed text-text-primary bg-surface/60 p-2.5 rounded-xl border border-border/50">
-                    &ldquo;{verseText}&rdquo;
-                  </p>
+                  {verseText ? (
+                    <div className="p-3 rounded-2xl bg-surface/80 dark:bg-black/20 border border-border/50">
+                      <p className="text-[13px] italic font-serif leading-relaxed text-text-primary whitespace-pre-line">
+                        &ldquo;{verseText}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-surface/60">
+                      <ScriptureText reference={verseRef} versionId={(msg as any).meta?.versionId || 'web'} />
+                    </div>
+                  )}
                 </div>
                 <span className="text-[10px] text-text-muted dark:text-neutral-400 mt-0.5 px-1 font-mono-tabular">
                   {new Date(msg.created_at).toLocaleTimeString([], {
@@ -1740,10 +1836,17 @@ export default function BuddyChatPage() {
             {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>LIVE 2-WAY SYNC</span>
-                </span>
+                {isBuddyPresentInRoom ? (
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5 animate-in fade-in">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>LIVE 2-WAY SYNC</span>
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-black flex items-center gap-1.5 animate-in fade-in">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span>WAITING FOR BUDDY</span>
+                  </span>
+                )}
 
                 {/* Ambient Sound Mute/Unmute Toggle Button */}
                 <button
@@ -1766,20 +1869,40 @@ export default function BuddyChatPage() {
 
               {/* Present Avatars & Exit */}
               <div className="flex items-center gap-3">
-                <div className="flex items-center -space-x-2">
-                  <div
-                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
-                    title="You (Present)"
-                  >
-                    Me
+                {isBuddyPresentInRoom ? (
+                  <div className="flex items-center -space-x-2 animate-in fade-in">
+                    <div
+                      className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
+                      title="You (Present)"
+                    >
+                      Me
+                    </div>
+                    <div
+                      className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md animate-in zoom-in-90"
+                      title={`${buddyName} (Connected)`}
+                    >
+                      {buddyInitial}
+                    </div>
                   </div>
-                  <div
-                    className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
-                    title={`${buddyName} (Present)`}
-                  >
-                    {buddyInitial}
+                ) : (
+                  <div className="flex items-center gap-1.5 animate-in fade-in">
+                    <div
+                      className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
+                      title="You (In Call)"
+                    >
+                      Me
+                    </div>
+                    <div
+                      className="w-8 h-8 rounded-full bg-transparent text-white/50 border-2 border-dashed border-white/30 flex items-center justify-center text-[11px] font-bold"
+                      title={`Waiting for ${buddyName} to join...`}
+                    >
+                      {buddyInitial}
+                    </div>
+                    <span className="text-[10px] text-amber-300/90 font-medium hidden md:inline ml-0.5">
+                      Waiting for {buddyName}...
+                    </span>
                   </div>
-                </div>
+                )}
 
                 <button
                   type="button"

@@ -17,6 +17,7 @@ export interface ScriptureSelection {
   reference: string
   versionId: string
   text?: string
+  verseText?: string
 }
 
 export interface ScripturePickerProps {
@@ -120,12 +121,22 @@ export function ScripturePicker({
     setActiveTab('search')
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!previewRef.trim() || previewError) return
+    let textToUse = previewText
+    if (!textToUse) {
+      try {
+        const res = await getVerse(previewRef.trim(), selectedVersion)
+        textToUse = res.text
+      } catch {
+        textToUse = ''
+      }
+    }
     onSelect({
       reference: previewRef.trim(),
       versionId: selectedVersion,
-      text: previewText,
+      text: textToUse,
+      verseText: textToUse,
     })
     onClose()
   }
