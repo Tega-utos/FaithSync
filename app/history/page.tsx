@@ -459,15 +459,15 @@ export default function HistoryPage() {
                     {/* 5. Daily Status Badge */}
                     <td className="py-3 px-3.5 whitespace-nowrap border-r border-border-light text-center">
                       {day.status === 'Complete' ? (
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] text-[10px] font-black inline-flex items-center gap-1 shadow-2xs">
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#ECFCCB] text-[#15803D] dark:bg-emerald-950/40 dark:text-emerald-300 dark:border dark:border-emerald-700/30 text-[10px] font-black inline-flex items-center gap-1 shadow-2xs">
                           <Check size={11} weight="bold" /> Complete
                         </span>
                       ) : day.status === 'In Progress' ? (
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[10px] font-bold inline-block">
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-950/40 dark:text-blue-300 dark:border dark:border-blue-700/30 text-[10px] font-bold inline-block">
                           In Progress
                         </span>
                       ) : (
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[10px] font-bold inline-block opacity-75">
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] dark:bg-rose-950/40 dark:text-rose-300 dark:border dark:border-rose-700/30 text-[10px] font-bold inline-block opacity-75">
                           Missed
                         </span>
                       )}

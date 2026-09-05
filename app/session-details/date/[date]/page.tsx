@@ -210,15 +210,15 @@ export default function DateSessionsPage() {
         </div>
 
         {isComplete ? (
-          <span className="px-2.5 py-1 rounded-full bg-[#ECFCCB] text-[#15803D] text-[11px] font-black inline-flex items-center gap-1 shadow-2xs">
+          <span className="px-2.5 py-1 rounded-full bg-[#ECFCCB] text-[#15803D] dark:bg-emerald-950/40 dark:text-emerald-300 dark:border dark:border-emerald-700/30 text-[11px] font-black inline-flex items-center gap-1 shadow-2xs">
             <Check size={12} weight="bold" /> Complete
           </span>
         ) : totalPrayerSecs > 0 || totalStudySecs > 0 ? (
-          <span className="px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[11px] font-bold inline-block">
+          <span className="px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-950/40 dark:text-blue-300 dark:border dark:border-blue-700/30 text-[11px] font-bold inline-block">
             In Progress
           </span>
         ) : (
-          <span className="px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold inline-block opacity-75">
+          <span className="px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] dark:bg-rose-950/40 dark:text-rose-300 dark:border dark:border-rose-700/30 text-[11px] font-bold inline-block opacity-75">
             Missed
           </span>
         )}
