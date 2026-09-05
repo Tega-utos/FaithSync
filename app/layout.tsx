@@ -13,6 +13,7 @@ export const viewport: Viewport = {
   userScalable: false,
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
+  colorScheme: "light dark",
 };
 
 export const metadata: Metadata = {
@@ -27,6 +28,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('faithsync_theme')||localStorage.getItem('theme');var d=s==='dark'||(!s&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;if(d){r.classList.add('dark');r.setAttribute('data-theme','dark');}else{r.classList.remove('dark');r.setAttribute('data-theme','light');}}catch(_){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-surface text-text-primary selection:bg-[#FBBF24]/30">
         <ThemeProvider>
           <TimerProvider>

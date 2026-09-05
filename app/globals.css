@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 /* ═══════════════════════════════════════════════════════════
    Static brand tokens — these never change between modes
@@ -37,7 +37,7 @@
 /* ═══════════════════════════════════════════════════════════
    Theme-aware tokens — resolved at runtime via CSS vars.
    `@theme inline` tells Tailwind to generate utilities that
-   reference these vars so they adapt when .dark is toggled.
+   reference these vars so they adapt when dark mode is active.
    ═══════════════════════════════════════════════════════════ */
 @theme inline {
   --color-surface: var(--bg-surface);
@@ -65,12 +65,48 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LIGHT MODE (default) — clean white, modern
+   LIGHT MODE (default) — clean alabaster & warm white
    ═══════════════════════════════════════════════════════════ */
 :root {
-  /* 1. Brand Colors */
-  --gold: #FBBF24;
-  --gold-light: #FDF9F1;
+  color-scheme: light;
+
+  /* Dedicated fixed tokens — never invert between modes */
+  --surface-dark-fixed: #14110D;
+  --text-on-dark-fixed: #F5F1E8;
+  --text-on-accent-fixed: #1A1610;
+
+  /* Dedicated Real Semantic Tokens: Light Mode */
+  --surface-page: #FAF6EE;
+  --surface-card: #FFFFFF;
+  --surface-sunken: #F9FAFB;
+  --ink: #0E0E0E;
+  --ink-secondary: #555555;
+  --ink-muted: #9095A1;
+  --accent: #FBBF24;
+  --accent-tint: #FDF9F1;
+  --border: #E5E7EB;
+  --border-subtle: #F3F4F6;
+  --danger: #EF4444;
+  --success: #10B981;
+  --info: #2563EB;
+
+  /* Semantic Surface & Text Tokens Mapped to Real Tokens */
+  --bg-surface: var(--surface-page);
+  --bg-card: var(--surface-card);
+  --bg-card-hover: var(--surface-sunken);
+  --bg-elevated: var(--surface-card);
+  --bg-input: #FFFFFF;
+  --bg-subtle: var(--surface-sunken);
+  --t-primary: var(--ink);
+  --t-secondary: var(--ink-secondary);
+  --t-muted: var(--ink-muted);
+  --b-default: var(--border);
+  --b-light: var(--border-subtle);
+  --c-white: #FFFFFF;
+
+  /* Brand Colors */
+  --gold: var(--accent);
+  --gold-light: var(--accent-tint);
   --gold-border: rgba(251, 191, 36, 0.35);
   --secondary: #234537;
   --secondary-light: #EBF3EE;
@@ -80,27 +116,13 @@
   --burnham-dark: #183329;
   --burnham-border: rgba(35, 69, 55, 0.25);
   --orange: #FF6B66;
-  --red: #EA2C26;
+  --red: var(--danger);
   --red-light: #FFF0F0;
-  --gray-icon: #9095A1;
+  --gray-icon: var(--ink-muted);
   --discipline-prayer: #DC4C40;
-  --discipline-study: var(--gold);
+  --discipline-study: var(--accent);
 
-  /* 2. Semantic Surface & Text Tokens */
-  --bg-surface: #F9FAFB;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F3F4F6;
-  --bg-elevated: #FFFFFF;
-  --bg-input: #FFFFFF;
-  --bg-subtle: #F3F4F6;
-  --t-primary: #0E0E0E;
-  --t-secondary: #555555;
-  --t-muted: #9095A1;
-  --b-default: #E5E7EB;
-  --b-light: #F3F4F6;
-  --c-white: #FFFFFF;
-
-  /* 3. Gray palette */
+  /* Gray palette */
   --g-50: #F9FAFB;
   --g-100: #F3F4F6;
   --g-200: #E5E7EB;
@@ -112,96 +134,183 @@
   --g-800: #1F2937;
   --g-900: #111827;
 
-  /* 4. Legacy aliases */
+  /* Legacy aliases */
   --onyx: #0E0E0E;
   --white: #FFFFFF;
   --alabaster: #FAF6EE;
-  --bg-warm: #F9FAFB;
-  --text-main: #0E0E0E;
-  --text-primary: #0E0E0E;
-  --text-secondary: #555555;
-  --text-muted: #9095A1;
-  --border: #E5E7EB;
-  --border-light: #F3F4F6;
-  --card-border: #E5E7EB;
+  --bg-warm: var(--surface-page);
+  --text-main: var(--ink);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-secondary);
+  --text-muted: var(--ink-muted);
+  --card-border: var(--border);
   --card-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.04), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
-  --dock-bg: rgba(255, 255, 255, 0.78);
+  --dock-bg: rgba(255, 255, 255, 0.85);
   --dock-border: rgba(0, 0, 0, 0.08);
 
   /* Glassmorphic Floating Nav */
-  --nav-bg: rgba(255, 255, 255, 0.78);
+  --nav-bg: rgba(255, 255, 255, 0.85);
   --nav-blur: blur(24px) saturate(180%);
   --nav-border: rgba(0, 0, 0, 0.08);
   --nav-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.03);
 
-  /* 5. Status Colors */
-  --success: #10B981;
+  /* Status Colors */
   --success-light: #F0FDF4;
   --success-dark: #166534;
-  --error: #EF4444;
+  --error: var(--danger);
   --error-light: #FEE2E2;
   --error-dark: #B91C1C;
-  --info: #2563EB;
   --info-light: #EFF6FF;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   DARK MODE
+   DARK MODE — Warm near-black, distinct elevation, WCAG AA compliant
    ═══════════════════════════════════════════════════════════ */
-.dark {
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Dedicated Real Semantic Tokens: Dark Mode */
+  --surface-page: #14110D; /* warm near-black, ties to brand warm cream base rather than pure #000 */
+  --surface-card: #201C16; /* slightly elevated above page, gives cards visible separation */
+  --surface-sunken: #0E0C09; /* recessed — inputs, wells */
+  --ink: #F5F1E8; /* primary text — near-white, not pure white (softer, less harsh) */
+  --ink-secondary: #B8B2A6; /* secondary text, contrast > 6.5:1 on surface-card */
+  --ink-muted: #8A8478; /* muted text / metadata */
+  --accent: #FBBF24; /* gold already has strong contrast on dark, keep as-is */
+  --accent-tint: #2A2213; /* dark muted gold wash */
+  --border: #332E26; /* clear card borders, visually distinct on #201C16 */
+  --border-subtle: #211D17;
+  --danger: #F87171; /* lighter red — light-mode red reads muddy on dark */
+  --success: #34D399; /* lighter emerald — high contrast */
+  --info: #60A5FA; /* accessible blue */
+
   /* Semantic Surface & Text */
-  --bg-surface: #0A0A0A;
-  --bg-card: #161616;
-  --bg-card-hover: #1E1E1E;
-  --bg-elevated: #161616;
-  --bg-input: #1A1A1A;
-  --bg-subtle: #1E1E1E;
-  --t-primary: #F0F0F0;
-  --t-secondary: #A3A3A3;
-  --t-muted: #6B7280;
-  --b-default: #262626;
-  --b-light: #1C1C1C;
-  --c-white: #161616;
+  --bg-surface: var(--surface-page);
+  --bg-card: var(--surface-card);
+  --bg-card-hover: #2A251E;
+  --bg-elevated: var(--surface-card);
+  --bg-input: var(--surface-sunken);
+  --bg-subtle: #1C1813;
+  --t-primary: var(--ink);
+  --t-secondary: var(--ink-secondary);
+  --t-muted: var(--ink-muted);
+  --b-default: var(--border);
+  --b-light: var(--border-subtle);
+  --c-white: var(--surface-card);
 
   /* Gray palette — inverted */
-  --g-50: #161616;
-  --g-100: #1E1E1E;
-  --g-200: #262626;
-  --g-300: #3A3A3A;
-  --g-400: #6B7280;
-  --g-500: #9CA3AF;
-  --g-600: #D1D5DB;
-  --g-700: #E5E7EB;
-  --g-800: #F3F4F6;
-  --g-900: #F9FAFB;
+  --g-50: #14110D;
+  --g-100: #201C16;
+  --g-200: #2A251E;
+  --g-300: #332E26;
+  --g-400: #8A8478;
+  --g-500: #B8B2A6;
+  --g-600: #D5D0C6;
+  --g-700: #E5E1D8;
+  --g-800: #F0EDE5;
+  --g-900: #F5F1E8;
 
   /* Legacy aliases */
-  --bg-warm: #0A0A0A;
-  --text-main: #F0F0F0;
-  --text-primary: #F0F0F0;
-  --text-secondary: #A3A3A3;
-  --text-muted: #6B7280;
-  --border: #262626;
-  --border-light: #1C1C1C;
-  --card-border: #262626;
-  --card-shadow: none;
-  --dock-bg: rgba(10, 10, 10, 0.85);
-  --dock-border: rgba(255, 255, 255, 0.06);
+  --bg-warm: var(--surface-page);
+  --text-main: var(--ink);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-secondary);
+  --text-muted: var(--ink-muted);
+  --card-border: var(--border);
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  --dock-bg: rgba(20, 17, 13, 0.88);
+  --dock-border: rgba(255, 255, 255, 0.08);
 
   /* Glassmorphic Floating Nav — Dark */
-  --nav-bg: rgba(10, 10, 10, 0.85);
+  --nav-bg: rgba(20, 17, 13, 0.88);
   --nav-blur: blur(24px) saturate(180%);
-  --nav-border: rgba(255, 255, 255, 0.06);
-  --nav-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
 
   /* Brand tweaks for dark readability */
-  --gold-light: #2A2210;
-  --burnham-light: #142820;
-  --secondary-light: #142820;
-  --red-light: #2A1515;
-  --success-light: #0F2A1F;
-  --error-light: #2A1515;
-  --info-light: #101C2E;
+  --gold-light: var(--accent-tint);
+  --burnham-light: #162E23;
+  --secondary-light: #162E23;
+  --red-light: #2E1515;
+  --success-light: #112E20;
+  --error: var(--danger);
+  --error-light: #2E1515;
+  --info-light: #122138;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUTTON SYSTEM — Explicit Theme-Aware vs Fixed Variants
+   ═══════════════════════════════════════════════════════════ */
+
+/* Fixed: Always dark with light text regardless of theme,
+   maintains visual weight as the primary dark CTA button */
+.btn-primary {
+  background: var(--surface-dark-fixed);
+  color: var(--text-on-dark-fixed);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  background: #26211B;
+}
+
+/* Theme-aware: Flips correctly between light and dark surfaces */
+.btn-secondary {
+  background: var(--surface-sunken);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background: var(--surface-card);
+  border-color: var(--ink-secondary);
+}
+
+/* Accent: Gold background needs dark text in BOTH themes
+   (light text on gold fails WCAG AA contrast) */
+.btn-accent {
+  background: var(--accent);
+  color: var(--text-on-accent-fixed);
+  font-weight: 700;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  transition: all 0.2s ease;
+}
+.btn-accent:hover {
+  filter: brightness(0.95);
+}
+
+/* Theme-aware: Transparent with theme-aware border & text */
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.btn-outline:hover {
+  background: var(--surface-sunken);
+  border-color: var(--ink);
+}
+
+/* Theme-aware: Ghost / subtle interactive state */
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-secondary);
+  transition: all 0.2s ease;
+}
+.btn-ghost:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+/* Fixed status: Destructive action button */
+.btn-danger {
+  background: var(--danger);
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+.btn-danger:hover {
+  filter: brightness(0.9);
 }
 
 html {

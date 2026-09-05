@@ -25,10 +25,23 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   const label =
     theme === 'dark' ? 'Dark mode' : theme === 'light' ? 'Light mode' : 'System'
 
+  const handleToggle = () => {
+    setTheme(nextTheme)
+    try {
+      localStorage.setItem('faithsync_theme', nextTheme)
+      const isDark =
+        nextTheme === 'dark' ||
+        (nextTheme === 'system' &&
+          typeof window !== 'undefined' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+    } catch (_) {}
+  }
+
   return (
     <button
       type="button"
-      onClick={() => setTheme(nextTheme)}
+      onClick={handleToggle}
       className={`relative p-1.5 rounded-full transition-colors hover:bg-subtle text-text-secondary ${className}`}
       aria-label={`Theme: ${label}. Click for ${nextTheme}`}
       title={`${label} — click for ${nextTheme}`}

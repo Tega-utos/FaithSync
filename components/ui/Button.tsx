@@ -26,18 +26,24 @@ export function Button({
     'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]'
 
   const variants = {
+    // Fixed: Dedicated dark surface and near-white text across both themes
     primary:
-      'bg-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 text-white shadow-md',
+      'bg-[var(--surface-dark-fixed)] hover:bg-[#26211B] text-[var(--text-on-dark-fixed)] shadow-md border border-white/10',
+    // Theme-aware: Flips between surface-card and surface-sunken with theme text
     secondary:
-      'bg-[#234537] hover:bg-[#183329] text-white shadow-md shadow-[#234537]/20 border border-[#234537]/30 dark:border-emerald-700/35',
+      'bg-card hover:bg-subtle text-text-primary border border-border shadow-2xs',
+    // Theme-aware: Transparent with theme border and text
     outline:
-      'border border-border hover:border-[#234537] dark:border-emerald-700 text-text-primary hover:bg-[#EBF3EE] dark:bg-emerald-950/30',
+      'border border-border hover:border-text-secondary text-text-primary hover:bg-subtle/50',
+    // Theme-aware: Subtle interactive button
     ghost:
       'text-text-secondary hover:text-text-primary hover:bg-subtle/60',
+    // Fixed status: Danger / destructive action
     danger:
-      'bg-[#EA2C26] hover:bg-[#c9221d] text-white shadow-md shadow-[#EA2C26]/20',
+      'bg-[var(--danger)] hover:opacity-90 text-white shadow-md',
+    // Accent: Gold background strictly requires dark text in BOTH modes for WCAG AAA contrast
     glow:
-      'bg-[#FBBF24] hover:bg-[#eab308] text-text-primary font-bold shadow-lg shadow-[#FBBF24]/30',
+      'bg-[var(--accent)] hover:opacity-95 text-[var(--text-on-accent-fixed)] font-bold shadow-lg shadow-[#FBBF24]/25',
   }
 
   const sizes = {

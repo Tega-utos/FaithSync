@@ -974,19 +974,19 @@ export default function BuddyChatPage() {
                   onClick={() => {
                     if (isLiveNow) handleJoinSession(msg)
                   }}
-                  className={`w-full max-w-sm rounded-3xl bg-[#161616] dark:bg-[#1E1E1E] text-white border p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95 transition-all ${
+                  className={`w-full max-w-sm rounded-3xl bg-card border p-5 shadow-lg space-y-3.5 animate-in zoom-in-95 transition-all ${
                     isLiveNow
-                      ? 'border-[#FBBF24] dark:border-amber-400 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.2)]'
+                      ? 'border-[#FBBF24] dark:border-amber-400 cursor-pointer shadow-[0_10px_30px_rgba(251,191,36,0.15)]'
                       : isScheduledInFuture
                       ? 'border-[#FBBF24]/50 dark:border-amber-400/40'
-                      : 'border-white/20 dark:border-neutral-700 opacity-75'
+                      : 'border-border opacity-80'
                   }`}
                 >
                   {/* Top: Gold Icon Badge & Details */}
                   <div className="flex items-center justify-between pb-1">
                     <div className="flex items-center gap-3">
                       {/* Distinct Gold Circle Badge */}
-                      <div className="w-11 h-11 rounded-full bg-[#FBBF24] text-text-primary flex items-center justify-center font-bold shadow-md shrink-0">
+                      <div className="w-11 h-11 rounded-full bg-[#FBBF24] text-[#1A1610] flex items-center justify-center font-bold shadow-md shrink-0">
                         {discipline === 'prayer' ? (
                           <HandsPraying size={22} weight="fill" />
                         ) : (
@@ -996,10 +996,10 @@ export default function BuddyChatPage() {
 
                       {/* Header Titles */}
                       <div>
-                        <h4 className="text-sm font-black text-white tracking-tight">
+                        <h4 className="text-sm font-black text-text-primary tracking-tight">
                           Clock-in Invite
                         </h4>
-                        <span className="text-xs text-neutral-300 font-mono-tabular">
+                        <span className="text-xs text-text-secondary font-mono-tabular">
                           {durationMins} mins • {discipline}
                         </span>
                       </div>
@@ -1007,17 +1007,17 @@ export default function BuddyChatPage() {
 
                     {/* Dynamic Status Pill */}
                     {isScheduledInFuture ? (
-                      <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-[#FBBF24] dark:text-amber-300 border border-[#FBBF24]/50 dark:border-amber-400/50 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-[#FBBF24]/50 dark:border-amber-400/50 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                         <CalendarCheck size={11} weight="bold" />
                         <span>{datePrefix} {timeDisplay}</span>
                       </span>
                     ) : isLiveNow ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                         <span>LIVE NOW</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/40 text-[9px] font-black uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded-full bg-subtle text-text-muted text-[9px] font-black uppercase tracking-wider">
                         COMPLETED
                       </span>
                     )}
@@ -1025,20 +1025,20 @@ export default function BuddyChatPage() {
 
                   {/* Shared Focus Intention: Translucent Frosted-Glass Block */}
                   {focusText && (
-                    <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/95 italic flex items-start gap-2 shadow-inner">
-                      <Quotes size={15} className="text-[#FBBF24] dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="p-3.5 rounded-2xl bg-surface border border-border text-xs text-text-primary italic flex items-start gap-2 shadow-2xs">
+                      <Quotes size={15} className="text-[#FBBF24] shrink-0 mt-0.5" />
                       <span className="leading-relaxed">&ldquo;{focusText}&rdquo;</span>
                     </div>
                   )}
 
                   {/* Interactive Button Based on Real-Time State */}
                   {isScheduledInFuture ? (
-                    <div className="w-full py-3 px-4 rounded-2xl bg-white/10 dark:bg-neutral-800/80 border border-white/20 dark:border-amber-400/30 text-[#FBBF24] dark:text-amber-300 font-bold text-xs flex items-center justify-between">
+                    <div className="w-full py-3 px-4 rounded-2xl bg-surface border border-border text-text-primary font-bold text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Clock size={16} weight="bold" className="text-[#FBBF24] dark:text-amber-300" />
-                        <span className="text-white dark:text-neutral-100 font-medium">Starts at {timeDisplay}</span>
+                        <Clock size={16} weight="bold" className="text-[#FBBF24] shrink-0" />
+                        <span className="text-text-primary font-medium">Starts at {timeDisplay}</span>
                       </div>
-                      <span className="text-[11px] text-[#FBBF24] dark:text-amber-300 font-mono-tabular font-bold">
+                      <span className="text-[11px] text-[#FBBF24] font-mono-tabular font-bold">
                         in {hoursUntilStart > 0 ? `${hoursUntilStart}h ` : ''}{minsUntilStart % 60}m
                       </span>
                     </div>
@@ -1049,16 +1049,16 @@ export default function BuddyChatPage() {
                         e.stopPropagation()
                         handleJoinSession(msg)
                       }}
-                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-black active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="w-full py-3.5 px-4 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] text-[#1A1610] active:scale-95 transition-all text-xs font-black flex items-center justify-center gap-2 shadow-md cursor-pointer"
                     >
-                      <Play size={15} weight="fill" className="text-black" />
+                      <Play size={15} weight="fill" className="text-[#1A1610]" />
                       <span>{isLiveOverlayOpen ? 'View Active Session' : 'Join Now'} ({remainingMins}m left)</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled
-                      className="w-full py-3 px-4 rounded-2xl bg-white/5 text-white/40 font-bold text-xs cursor-not-allowed text-center"
+                      className="w-full py-3 px-4 rounded-2xl bg-subtle text-text-muted font-bold text-xs cursor-not-allowed text-center"
                     >
                       Session Ended
                     </button>

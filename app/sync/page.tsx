@@ -312,11 +312,11 @@ export default function SyncPage() {
           onClick={() => setActiveTab('personal')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'personal'
-              ? 'bg-[#0E0E0E] text-white dark:bg-white dark:text-[#0E0E0E] shadow-sm'
-              : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
+              ? 'bg-[var(--surface-dark-fixed)] text-[var(--text-on-dark-fixed)] dark:bg-neutral-800 dark:text-neutral-100 dark:border dark:border-neutral-700 shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
           }`}
         >
-          <User size={13} className={activeTab === 'personal' ? 'text-[#FBBF24] dark:text-[#0E0E0E]' : 'opacity-60'} />
+          <User size={14} className={activeTab === 'personal' ? 'text-[#FBBF24]' : 'opacity-60'} />
           <span>Personal</span>
         </button>
 
@@ -326,11 +326,11 @@ export default function SyncPage() {
           onClick={() => setActiveTab('group')}
           className={`py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'group'
-              ? 'bg-[#0E0E0E] text-white dark:bg-white dark:text-[#0E0E0E] shadow-sm'
-              : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
+              ? 'bg-[var(--surface-dark-fixed)] text-[var(--text-on-dark-fixed)] dark:bg-neutral-800 dark:text-neutral-100 dark:border dark:border-neutral-700 shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
           }`}
         >
-          <Users size={13} className={activeTab === 'group' ? 'text-[#FBBF24] dark:text-[#0E0E0E]' : 'opacity-60'} />
+          <Users size={14} className={activeTab === 'group' ? 'text-[#FBBF24]' : 'opacity-60'} />
           <span>Groups</span>
         </button>
 
@@ -338,9 +338,9 @@ export default function SyncPage() {
         <button
           type="button"
           onClick={() => router.push('/square')}
-          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white transition-all flex items-center justify-center gap-1.5"
+          className="py-2 px-3 rounded-xl font-bold text-xs text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-all flex items-center justify-center gap-1.5"
         >
-          <Globe size={13} className="text-[#FBBF24]" />
+          <Globe size={14} className="text-[#FBBF24]" />
           <span>Square</span>
         </button>
       </div>
@@ -557,10 +557,10 @@ export default function SyncPage() {
                 setCreateGroupStep('form')
                 setIsCreateGroupOpen(true)
               }}
-              className="p-3.5 rounded-2xl bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#0E0E0E] dark:hover:bg-[#F59E0B] flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] transition-all cursor-pointer"
+              className="p-3.5 rounded-2xl bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#1A1610] dark:hover:bg-[#F59E0B] flex items-center justify-center gap-2 font-bold text-xs shadow-md hover:bg-[#262626] transition-all cursor-pointer"
             >
-              <Plus size={16} className="text-[#FBBF24] dark:text-[#0E0E0E]" weight="bold" />
-              <span>Create Group</span>
+              <Plus size={16} className="text-[#FBBF24] dark:text-[#1A1610]" weight="bold" />
+              <span className="text-white dark:text-[#1A1610] font-bold">Create Group</span>
             </button>
 
             <button
