@@ -55,8 +55,8 @@ function extractMinsFromContent(content: string): { prayerMins: number; studyMin
   return { prayerMins, studyMins }
 }
 
-type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
-type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
+type FilterType = 'all' | 'reflections' | 'prayers' | 'struggles' | 'testimonies' | 'records'
+type IntentType = 'prayer' | 'struggle' | 'testimony' | 'reflection' | 'record'
 
 export const FAITH_REACTIONS = [
   { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537] dark:text-emerald-400' },
@@ -158,10 +158,10 @@ function SquarePageContent() {
 
     if (shouldCompose || verseParam) {
       setIsComposeOpen(true)
-      if (intentParam && ['prayer', 'struggle', 'testimony', 'record'].includes(intentParam)) {
+      if (intentParam && ['prayer', 'struggle', 'testimony', 'reflection', 'record'].includes(intentParam)) {
         setSelectedIntent(intentParam as IntentType)
       } else {
-        setSelectedIntent('record')
+        setSelectedIntent('reflection')
       }
       setComposeStep('draft')
 
@@ -681,7 +681,9 @@ function SquarePageContent() {
           ? 'struggle'
           : selectedIntent === 'testimony'
           ? 'testimony'
-          : 'record'
+          : selectedIntent === 'record'
+          ? 'record'
+          : 'reflection'
 
       let newPostId: string | null = null
 
@@ -850,15 +852,19 @@ function SquarePageContent() {
     }
 
     if (activeFilter === 'all') return true
+    if (activeFilter === 'reflections')
+      return (
+        p.post_type === 'reflection' ||
+        p.post_type === 'scripture' ||
+        (p.post_type !== 'record' && Boolean(p.scripture_reference || p.verse_reference))
+      )
     if (activeFilter === 'prayers') return p.post_type === 'prayer' || p.post_type === 'prayer_request'
     if (activeFilter === 'struggles') return p.post_type === 'struggle'
     if (activeFilter === 'testimonies') return p.post_type === 'testimony'
     if (activeFilter === 'records')
       return (
-        p.post_type === 'reflection' ||
         p.post_type === 'record' ||
-        p.content.startsWith('Completed') ||
-        p.content.includes('Daily Devotion')
+        (p.content.startsWith('Completed') && p.post_type !== 'reflection')
       )
     return true
   })
@@ -897,10 +903,11 @@ function SquarePageContent() {
         <div className="flex items-center gap-1.5 min-w-max">
           {[
             { id: 'all', label: 'All Entries' },
+            { id: 'reflections', label: 'Reflections' },
             { id: 'prayers', label: 'Prayers' },
             { id: 'struggles', label: 'Struggles' },
             { id: 'testimonies', label: 'Testimonies' },
-            { id: 'records', label: 'Records' },
+            { id: 'records', label: 'Clock-In Records' },
           ].map((tab) => {
             const isActive = activeFilter === tab.id
             return (
@@ -965,11 +972,13 @@ function SquarePageContent() {
             const isPrayer = post.post_type === 'prayer' || post.post_type === 'prayer_request'
             const isStruggle = post.post_type === 'struggle'
             const isTestimony = post.post_type === 'testimony'
-            const isRecord =
+            const isReflection =
               post.post_type === 'reflection' ||
-              post.post_type === 'record' ||
-              post.content.startsWith('Completed') ||
-              post.content.includes('Daily Devotion')
+              post.post_type === 'scripture' ||
+              (post.post_type !== 'record' && Boolean(post.scripture_reference || post.verse_reference))
+            const isRecord =
+              (post.post_type === 'record' || post.content.startsWith('Completed')) &&
+              post.post_type !== 'reflection'
 
             const timeStr = new Date(post.created_at).toLocaleDateString([], {
               month: 'short',
@@ -1040,6 +1049,11 @@ function SquarePageContent() {
                       <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 text-[#FBBF24] text-[10px] font-bold inline-flex items-center gap-1">
                         <Sparkle size={12} weight="fill" />
                         <span>Testimony</span>
+                      </span>
+                    ) : isReflection ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
+                        <BookOpen size={12} weight="bold" />
+                        <span>Reflection</span>
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
@@ -1597,7 +1611,7 @@ function SquarePageContent() {
                 {/* 4. Devotion & Scripture Reflection */}
                 <div
                   onClick={() => {
-                    setSelectedIntent('record')
+                    setSelectedIntent('reflection')
                     setComposeStep('draft')
                   }}
                   className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] dark:border-emerald-700 transition-all group"
@@ -1635,7 +1649,7 @@ function SquarePageContent() {
                       { id: 'prayer', label: 'Prayer' },
                       { id: 'struggle', label: 'Struggle' },
                       { id: 'testimony', label: 'Testimony' },
-                      { id: 'record', label: 'Reflection' },
+                      { id: 'reflection', label: 'Reflection' },
                     ].map((cat) => {
                       const isSel = selectedIntent === cat.id
                       return (

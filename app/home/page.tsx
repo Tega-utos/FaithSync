@@ -222,7 +222,7 @@ export default function HomePage() {
   const handleShareVotdToSquare = (e: React.MouseEvent) => {
     e.preventDefault()
     if (isDevotionComplete) {
-      const shareUrl = `/square?compose=true&verse=${encodeURIComponent(`“${votd.text}” — ${votd.reference}`)}&ref=${encodeURIComponent(votd.reference)}&intent=record`
+      const shareUrl = `/square?compose=true&verse=${encodeURIComponent(`“${votd.text}” — ${votd.reference}`)}&ref=${encodeURIComponent(votd.reference)}&intent=reflection`
       router.push(shareUrl)
     } else {
       setShowGatingModal(true)
