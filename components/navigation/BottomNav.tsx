@@ -118,13 +118,26 @@ export function BottomNav() {
   React.useEffect(() => {
     const checkModals = () => {
       if (typeof document === 'undefined') return
-      const modalEl = document.querySelector(
-        '[role="dialog"], [data-modal="true"], #session-summary-modal, .session-summary-active'
+      // Detect ANY fixed full-screen overlay, backdrop, dialog, or modal
+      const overlayEls = document.querySelectorAll(
+        '[role="dialog"], [data-modal="true"], [aria-modal="true"], #session-summary-modal, .session-summary-active, [class*="fixed inset-0"], .fixed.inset-0'
       )
+      let hasOverlay = false
+      for (let i = 0; i < overlayEls.length; i++) {
+        const el = overlayEls[i]
+        // Ignore bottom-nav itself and any elements inside it
+        if (!el.closest('#bottom-nav') && !el.closest('.faithsync-bottom-nav')) {
+          const style = window.getComputedStyle(el)
+          if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+            hasOverlay = true
+            break
+          }
+        }
+      }
       const isBodyModal =
         document.body.classList.contains('modal-open') ||
         document.documentElement.classList.contains('modal-open')
-      setHasModalOpen(Boolean(modalEl || isBodyModal))
+      setHasModalOpen(Boolean(hasOverlay || isBodyModal))
     }
 
     checkModals()
@@ -138,11 +151,18 @@ export function BottomNav() {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['class', 'data-modal', 'role', 'id'],
       })
+      window.addEventListener('click', checkModals)
+      window.addEventListener('keydown', checkModals)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('click', checkModals)
+        window.removeEventListener('keydown', checkModals)
+      }
+    }
   }, [])
 
   const isVisible = shouldShowAppShell(pathname)
@@ -170,7 +190,7 @@ export function BottomNav() {
   return (
     <nav
       id="bottom-nav"
-      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-50 pointer-events-none flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] px-3 sm:px-4"
+      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] px-3 sm:px-4"
     >
       <div className="w-full max-w-[min(420px,calc(100vw-24px))] pointer-events-auto bg-card/95 dark:bg-[#181511]/95 backdrop-blur-xl border border-border dark:border-[#FBBF24]/20 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] px-2 py-1.5 grid grid-cols-3 items-center gap-1">
         {/* ========================================================================= */}

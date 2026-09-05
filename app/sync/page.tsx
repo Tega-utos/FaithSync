@@ -641,7 +641,7 @@ export default function SyncPage() {
 
       {/* Modal 1: Add Buddy by Code */}
       {isAddBuddyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-text-primary">Add Partner by Code</h3>
@@ -749,7 +749,7 @@ export default function SyncPage() {
 
       {/* Modal 2: Create Group Modal */}
       {isCreateGroupOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="fixed inset-0" onClick={() => setIsCreateGroupOpen(false)} />
 
           <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
@@ -970,7 +970,7 @@ export default function SyncPage() {
 
       {/* Modal 3: Join with Code Modal */}
       {isJoinGroupOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="fixed inset-0" onClick={() => setIsJoinGroupOpen(false)} />
           <div className="relative z-10 w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">

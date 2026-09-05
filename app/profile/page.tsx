@@ -1412,7 +1412,7 @@ export default function ProfilePage() {
 
       {/* Edit Profile Modal */}
       {isEditProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
           <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between pb-1 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">Edit Profile Identity</h3>
@@ -1486,7 +1486,7 @@ export default function ProfilePage() {
 
       {/* Edit Targets Modal */}
       {isEditTargetsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="w-full max-w-md bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
@@ -1657,7 +1657,7 @@ export default function ProfilePage() {
 
       {/* Notifications Modal */}
       {isNotificationsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
           <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
             <div className="flex items-center justify-between pb-1 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">Push Notification Preferences</h3>
@@ -1864,7 +1864,7 @@ export default function ProfilePage() {
 
       {/* Privacy & Public Sharing Modal */}
       {isPrivacyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between pb-1 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">Privacy & Public Sharing</h3>

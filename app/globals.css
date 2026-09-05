@@ -603,7 +603,8 @@ textarea::placeholder {
 
 /* Fixed Modal Isolation & Smooth Scroll Containment */
 [role="dialog"],
-[data-modal="true"] {
+[data-modal="true"],
+[aria-modal="true"] {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -611,4 +612,22 @@ textarea::placeholder {
 body.modal-open {
   overflow: hidden;
   touch-action: pan-y;
+}
+
+/* Instantly hide BottomNav whenever ANY modal, overlay, or dialog is open in the DOM */
+body:has([role="dialog"]),
+body:has([data-modal="true"]),
+body:has([aria-modal="true"]),
+body:has(.session-summary-active),
+body:has(#session-summary-modal),
+body:has([class*="fixed inset-0"]),
+body.modal-open,
+html.modal-open {
+  #bottom-nav,
+  .faithsync-bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
 }
