@@ -190,28 +190,28 @@ export function BottomNav() {
   return (
     <nav
       id="bottom-nav"
-      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] px-3 sm:px-4"
+      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center pb-[max(14px,env(safe-area-inset-bottom))] px-3 sm:px-4"
     >
-      <div className="w-full max-w-[min(420px,calc(100vw-24px))] pointer-events-auto bg-card/95 dark:bg-[#181511]/95 backdrop-blur-xl border border-border dark:border-[#FBBF24]/20 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] px-2 py-1.5 grid grid-cols-3 items-center gap-1">
+      <div className="w-full max-w-[min(380px,calc(100vw-24px))] pointer-events-auto bg-white/85 dark:bg-[#18140E]/90 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.08] rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_1px_1px_rgba(255,255,255,0.05)] px-2 py-1.5 grid grid-cols-3 items-center gap-1.5 transition-all">
         {/* ========================================================================= */}
         {/* 1. HOME (/home or /)                                                      */}
         {/* ========================================================================= */}
         <Link
           href="/"
-          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all group relative ${
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 group relative active:scale-90 ${
             isHome
-              ? 'text-[#0E0E0E] dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.08]'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-text-primary dark:hover:text-neutral-200'
+              ? 'text-text-primary dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.07]'
+              : 'text-neutral-400 dark:text-neutral-500 hover:text-text-primary dark:hover:text-neutral-200'
           }`}
         >
           <div className="relative">
             <HomeNavIcon active={isHome} />
           </div>
           <span
-            className={`text-[11px] mt-1 tracking-tight ${
+            className={`text-[10px] mt-0.5 tracking-tight transition-colors duration-200 ${
               isHome
-                ? 'font-black text-[#0E0E0E] dark:text-[#F5F1E8]'
-                : 'font-medium text-neutral-500 dark:text-neutral-400'
+                ? 'font-bold text-text-primary dark:text-[#F5F1E8]'
+                : 'font-medium text-neutral-400 dark:text-neutral-500 group-hover:text-text-primary dark:group-hover:text-neutral-300'
             }`}
           >
             Home
@@ -223,23 +223,23 @@ export function BottomNav() {
         {/* ========================================================================= */}
         <Link
           href="/clock-in"
-          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all group relative ${
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 group relative active:scale-90 ${
             isClockIn
-              ? 'text-[#0E0E0E] dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.08]'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-text-primary dark:hover:text-neutral-200'
+              ? 'text-text-primary dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.07]'
+              : 'text-neutral-400 dark:text-neutral-500 hover:text-text-primary dark:hover:text-neutral-200'
           }`}
         >
           <div className="relative">
             <TimerNavIcon active={isClockIn || !!session?.isActive} />
             {session?.isActive && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-card animate-ping" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#18140E] animate-ping" />
             )}
           </div>
           <span
-            className={`text-[11px] mt-1 tracking-tight ${
+            className={`text-[10px] mt-0.5 tracking-tight transition-colors duration-200 ${
               isClockIn
-                ? 'font-black text-[#0E0E0E] dark:text-[#F5F1E8]'
-                : 'font-medium text-neutral-500 dark:text-neutral-400'
+                ? 'font-bold text-text-primary dark:text-[#F5F1E8]'
+                : 'font-medium text-neutral-400 dark:text-neutral-500 group-hover:text-text-primary dark:group-hover:text-neutral-300'
             }`}
           >
             {session?.isActive ? 'Timing' : 'Clock-In'}
@@ -251,20 +251,20 @@ export function BottomNav() {
         {/* ========================================================================= */}
         <Link
           href="/sync"
-          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all group relative ${
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-full transition-all duration-200 group relative active:scale-90 ${
             isSync
-              ? 'text-[#0E0E0E] dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.08]'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-text-primary dark:hover:text-neutral-200'
+              ? 'text-text-primary dark:text-[#F5F1E8] bg-black/[0.05] dark:bg-white/[0.07]'
+              : 'text-neutral-400 dark:text-neutral-500 hover:text-text-primary dark:hover:text-neutral-200'
           }`}
         >
           <div className="relative">
             <SyncNavIcon active={isSync} />
           </div>
           <span
-            className={`text-[11px] mt-1 tracking-tight ${
+            className={`text-[10px] mt-0.5 tracking-tight transition-colors duration-200 ${
               isSync
-                ? 'font-black text-[#0E0E0E] dark:text-[#F5F1E8]'
-                : 'font-medium text-neutral-500 dark:text-neutral-400'
+                ? 'font-bold text-text-primary dark:text-[#F5F1E8]'
+                : 'font-medium text-neutral-400 dark:text-neutral-500 group-hover:text-text-primary dark:group-hover:text-neutral-300'
             }`}
           >
             SynC
