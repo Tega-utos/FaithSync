@@ -39,25 +39,63 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
     if (cached) return cached
   }
 
-  const supabase = createClient()
-  const { data: groups, error } = await supabase
-    .from('groups')
-    .select(`
-      id,
-      name,
-      category,
-      church,
-      code,
-      guidelines,
-      is_private,
-      group_members (count)
-    `)
-    .eq('is_private', false)
-    .order('created_at', { ascending: false })
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
-  if (error || !groups) return []
+  const [groupsRes, liveSessionsRes, liveMessagesRes] = await Promise.all([
+    supabase
+      .from('groups')
+      .select(`
+        id,
+        name,
+        category,
+        church,
+        code,
+        guidelines,
+        is_private,
+        group_members (count)
+      `)
+      .eq('is_private', false)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('sessions')
+      .select('id, group_id, type, started_at')
+      .eq('is_complete', false)
+      .not('group_id', 'is', null)
+      .gte('started_at', twoHoursAgo),
+    supabase
+      .from('messages')
+      .select('id, group_id, meta, created_at')
+      .eq('message_type', 'clockin_invite')
+      .not('group_id', 'is', null)
+      .gte('created_at', twoHoursAgo),
+  ])
 
-  const result = groups.map((g: any) => ({
+  if (groupsRes.error || !groupsRes.data) return []
+
+  const activeGroupIds = new Set<string>()
+
+  if (liveSessionsRes.data) {
+    liveSessionsRes.data.forEach((s: any) => {
+      if (s.group_id) activeGroupIds.add(s.group_id)
+    })
+  }
+
+  if (liveMessagesRes.data) {
+    const now = Date.now()
+    liveMessagesRes.data.forEach((m: any) => {
+      if (m.group_id && m.meta) {
+        const startMs = m.meta.startedAt
+          ? new Date(m.meta.startedAt).getTime()
+          : new Date(m.created_at).getTime()
+        const durationMins = Number(m.meta.durationMins) || 15
+        if (now < startMs + durationMins * 60 * 1000) {
+          activeGroupIds.add(m.group_id)
+        }
+      }
+    })
+  }
+
+  const result = groupsRes.data.map((g: any) => ({
     id: g.id,
     name: g.name,
     category: g.category,
@@ -65,7 +103,7 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
     code: g.code || `SYNC-${g.id.slice(0, 6).toUpperCase()}`,
     guidelines: g.guidelines,
     memberCount: g.group_members?.[0]?.count || 1,
-    isLive: false,
+    isLive: activeGroupIds.has(g.id),
     activeTimeToday: '30m',
   }))
 

@@ -23,6 +23,11 @@ export interface BuddyConnectionItem {
   partnerBuddyCode: string
   isRequester: boolean
   createdAt: string
+  isOnline?: boolean
+  isLiveNow?: boolean
+  liveDiscipline?: 'prayer' | 'study'
+  lastActive?: string
+  lastMessage?: string
 }
 
 export interface BuddyChatMessage {
@@ -301,36 +306,86 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
     if (cached) return cached
   }
 
-  const supabase = createClient()
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
-  const { data, error } = await supabase
-    .from('buddies')
-    .select(`
-      id,
-      user_id,
-      buddy_id,
-      status,
-      created_at,
-      user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, buddy_code),
-      buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, buddy_code)
-    `)
-    .or(`user_id.eq.${currentUserId},buddy_id.eq.${currentUserId}`)
-    .order('created_at', { ascending: false })
+  // Fetch active connections, ongoing sessions, and recent clockin invites in parallel
+  const [buddiesRes, sessionsRes, messagesRes] = await Promise.all([
+    supabase
+      .from('buddies')
+      .select(`
+        id,
+        user_id,
+        buddy_id,
+        status,
+        created_at,
+        user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, buddy_code),
+        buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, buddy_code)
+      `)
+      .or(`user_id.eq.${currentUserId},buddy_id.eq.${currentUserId}`)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('sessions')
+      .select('id, user_id, type, started_at')
+      .eq('is_complete', false)
+      .gte('started_at', twoHoursAgo),
+    supabase
+      .from('messages')
+      .select('id, sender_id, recipient_id, content, message_type, meta, created_at')
+      .eq('message_type', 'clockin_invite')
+      .gte('created_at', twoHoursAgo),
+  ])
 
-  if (error || !data) {
-    console.error('getMyBuddies error:', error)
+  if (buddiesRes.error || !buddiesRes.data) {
+    console.error('getMyBuddies error:', buddiesRes.error)
     return { active: [], pendingIncoming: [], pendingOutgoing: [] }
+  }
+
+  // Build live users map
+  const liveUsersMap = new Map<string, { discipline: 'prayer' | 'study'; focusText?: string }>()
+
+  if (sessionsRes.data) {
+    sessionsRes.data.forEach((s: any) => {
+      if (s.user_id) {
+        liveUsersMap.set(s.user_id, {
+          discipline: s.type === 'study' ? 'study' : 'prayer',
+        })
+      }
+    })
+  }
+
+  if (messagesRes.data) {
+    const now = Date.now()
+    messagesRes.data.forEach((m: any) => {
+      if (m.meta) {
+        const startMs = m.meta.startedAt
+          ? new Date(m.meta.startedAt).getTime()
+          : new Date(m.created_at).getTime()
+        const durationMins = Number(m.meta.durationMins) || 15
+        if (now < startMs + durationMins * 60 * 1000) {
+          if (m.sender_id) {
+            liveUsersMap.set(m.sender_id, {
+              discipline: m.meta.discipline === 'study' ? 'study' : 'prayer',
+              focusText: m.meta.focusText,
+            })
+          }
+        }
+      }
+    })
   }
 
   const active: BuddyConnectionItem[] = []
   const pendingIncoming: BuddyConnectionItem[] = []
   const pendingOutgoing: BuddyConnectionItem[] = []
 
-  data.forEach((row: any) => {
+  buddiesRes.data.forEach((row: any) => {
     const isRequester = row.user_id === currentUserId
     const partner = isRequester ? row.buddy_profile : row.user_profile
     const partnerId = isRequester ? row.buddy_id : row.user_id
     const partnerName = partner?.display_name || 'A Believer'
+
+    const liveInfo = liveUsersMap.get(partnerId)
+    const isLive = Boolean(liveInfo)
+    const liveDisc = liveInfo?.discipline || 'prayer'
 
     const item: BuddyConnectionItem = {
       id: row.id,
@@ -345,6 +400,13 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
       partnerBuddyCode: partner?.buddy_code || '',
       isRequester,
       createdAt: row.created_at,
+      isOnline: isLive,
+      isLiveNow: isLive,
+      liveDiscipline: liveDisc,
+      lastActive: isLive ? 'Clocked in now' : 'Active today',
+      lastMessage: isLive
+        ? `🔴 ${liveDisc === 'prayer' ? 'Prayer' : 'Scripture Study'} Clock-In Ongoing • Tap to join!`
+        : 'Let’s clock in together!',
     }
 
     if (row.status === 'accepted') {

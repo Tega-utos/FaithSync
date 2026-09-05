@@ -96,10 +96,10 @@ export default function SyncPage() {
     initial: c.partnerInitial,
     avatarUrl: c.partnerAvatar,
     church: c.partnerChurch,
-    isOnline: false,
-    isLiveNow: false,
-    lastActive: 'Active today',
-    lastMessage: 'Let’s clock in together!',
+    isOnline: Boolean(c.isOnline || c.isLiveNow),
+    isLiveNow: Boolean(c.isLiveNow),
+    lastActive: c.lastActive || 'Active today',
+    lastMessage: c.lastMessage || 'Let’s clock in together!',
   }))
 
   const incomingRequests: IncomingRequestItem[] = swrIncoming.map((c) => ({
@@ -183,10 +183,35 @@ export default function SyncPage() {
           } catch {}
 
           if (!unsubscribe) {
-            unsubscribe = subscribeToBuddyUpdates(user.id, () => {
+            const buddyUnsub = subscribeToBuddyUpdates(user.id, () => {
               mutateBuddies()
               mutateGroups()
             })
+
+            const liveChannel = supabase
+              .channel(`sync_live_sessions_${user.id}`)
+              .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'sessions' },
+                () => {
+                  mutateBuddies()
+                  mutateGroups()
+                }
+              )
+              .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'messages' },
+                () => {
+                  mutateBuddies()
+                  mutateGroups()
+                }
+              )
+              .subscribe()
+
+            unsubscribe = () => {
+              buddyUnsub()
+              supabase.removeChannel(liveChannel)
+            }
           }
         }
       } catch {}
@@ -470,7 +495,7 @@ export default function SyncPage() {
                               <span className="text-[9px] text-text-muted font-mono shrink-0">{buddy.lastActive}</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                          <p className={`text-[11px] truncate max-w-[200px] sm:max-w-xs ${buddy.isLiveNow ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-text-secondary'}`}>
                             {buddy.lastMessage}
                           </p>
                         </div>
@@ -636,6 +661,12 @@ export default function SyncPage() {
                       <p className="text-[10px] text-text-secondary">
                         {group.category} • {group.church}
                       </p>
+                      {group.isLive && (
+                        <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 pt-0.5 animate-pulse">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                          <span>Live Clock-In Ongoing • Tap to join!</span>
+                        </p>
+                      )}
                     </div>
 
                     <span className="text-[10px] font-mono font-bold text-[#FBBF24] bg-[#FDF9F1] dark:bg-amber-950/30 px-2 py-0.5 rounded-md border border-[#FBBF24]/35">
