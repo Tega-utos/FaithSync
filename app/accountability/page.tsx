@@ -412,15 +412,15 @@ export default function AccountabilityPage() {
                       type="button"
                       onClick={() => handleNudge(buddy)}
                       disabled={isNudged}
-                      className={`py-2.5 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
+                      className={`py-2.5 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
                         isNudged
-                          ? 'bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 border-emerald-500/30'
-                          : 'bg-subtle text-[#262626] border-[#DCD6C8] hover:bg-[#E5E7EB]'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                          : 'bg-card border-border text-text-primary hover:border-[#FBBF24]/60 hover:bg-surface dark:hover:border-[#FBBF24]/60 shadow-2xs'
                       }`}
                     >
                       {isNudged ? (
                         <>
-                          <Check size={14} weight="bold" />
+                          <Check size={14} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
                           <span>Nudged!</span>
                         </>
                       ) : (
@@ -434,9 +434,9 @@ export default function AccountabilityPage() {
                     <Link href={`/buddy-chat/${buddy.id}`} className="block">
                       <button
                         type="button"
-                        className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-4 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5"
+                        className="w-full bg-[#0E0E0E] dark:bg-[#1C1813] border border-transparent dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] py-2.5 px-4 rounded-xl font-bold text-xs shadow-md shadow-black/15 dark:shadow-[0_2px_12px_rgba(251,191,36,0.15)] hover:bg-[#262626] dark:hover:bg-[#231E18] dark:hover:border-[#FBBF24]/80 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <ChatCircle size={14} className="text-[#FBBF24]" />
+                        <ChatCircle size={14} weight="fill" className="text-[#FBBF24]" />
                         <span>SynC</span>
                       </button>
                     </Link>

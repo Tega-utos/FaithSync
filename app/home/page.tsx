@@ -15,6 +15,7 @@ import {
   HandsPraying,
   HandWaving,
   ShareNetwork,
+  ChatCircle,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { fetchDashboardData, DashboardData } from '@/features/dashboard/services/dashboardService'
@@ -478,29 +479,40 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => handleNudge(e, buddy.id, buddy.connectionId)}
-                    disabled={isNudged}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                      isNudged
-                        ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#0E0E0E] animate-nudge'
-                        : `bg-[#0E0E0E] text-white dark:bg-[#FBBF24] dark:text-[#0E0E0E] dark:hover:bg-[#F59E0B] shadow-sm active:scale-95 ${
-                            vibratingState[buddy.id] ? 'anim-vibrate' : ''
-                          }`
-                    }`}
-                  >
-                    {isNudged ? (
-                      <>
-                        <Check size={12} weight="bold" />
-                        <span>Sent! ✓</span>
-                      </>
-                    ) : (
-                      <>
-                        <HandWaving size={13} weight="fill" className="text-amber-400 dark:text-[#0E0E0E]" />
-                        <span className="font-semibold text-white dark:text-[#0E0E0E]">Nudge</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={(e) => handleNudge(e, buddy.id, buddy.connectionId)}
+                      disabled={isNudged}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                        isNudged
+                          ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#1A1610] animate-nudge'
+                          : `bg-card border border-border text-text-primary hover:border-[#FBBF24]/60 dark:hover:border-[#FBBF24]/60 shadow-2xs ${
+                              vibratingState[buddy.id] ? 'anim-vibrate' : ''
+                            }`
+                      }`}
+                    >
+                      {isNudged ? (
+                        <>
+                          <Check size={12} weight="bold" />
+                          <span>Sent! ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <HandWaving size={13} weight="fill" className="text-[#FBBF24]" />
+                          <span>Nudge</span>
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      href={`/buddy-chat/${buddy.id}`}
+                      className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-[#1C1813] border border-transparent dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] text-xs font-bold shadow-2xs hover:bg-[#262626] dark:hover:bg-[#231E18] dark:hover:border-[#FBBF24]/80 flex items-center gap-1 transition-all cursor-pointer"
+                      title={`SynC with ${buddy.name}`}
+                    >
+                      <ChatCircle size={13} weight="fill" className="text-[#FBBF24]" />
+                      <span>SynC</span>
+                    </Link>
+                  </div>
                 </div>
               )
             })}
