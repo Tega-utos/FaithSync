@@ -476,3 +476,50 @@ export async function sendBuddyMessage(
     created_at: newMsg.created_at,
   }
 }
+
+/**
+ * Full CRUD real-time subscription scoped to buddy pair
+ */
+export function subscribeToBuddyMessages(
+  buddyId: string,
+  currentUserId: string,
+  onChange: () => void
+): () => void {
+  const supabase = createClient()
+  const pairKey = [currentUserId, buddyId].sort().join('_')
+  const channel = supabase
+    .channel(`buddy_chat_${pairKey}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+      },
+      (payload) => {
+        const rec = (payload.new || payload.old) as any
+        if (
+          rec &&
+          ((rec.sender_id === currentUserId && rec.recipient_id === buddyId) ||
+            (rec.sender_id === buddyId && rec.recipient_id === currentUserId))
+        ) {
+          onChange()
+        }
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
+/**
+ * Delete a message by ID
+ */
+export async function deleteBuddyMessage(messageId: string): Promise<boolean> {
+  const supabase = createClient()
+  const { error } = await supabase.from('messages').delete().eq('id', messageId)
+  return !error
+}
+

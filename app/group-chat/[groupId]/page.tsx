@@ -90,7 +90,8 @@ interface FloatingNudge {
   text: string
 }
 
-import { fetchGroupMessages, sendGroupMessage } from '@/features/groups/services/groupService'
+import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from '@/features/groups/services/groupService'
+import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 
 export default function GroupChatPage() {
   const params = useParams()
@@ -107,6 +108,7 @@ export default function GroupChatPage() {
 
   const [messages, setMessages] = useState<GroupChatMessage[]>([])
   const [inputContent, setInputContent] = useState('')
+  const [isScripturePickerOpen, setIsScripturePickerOpen] = useState(false)
 
   // Header Three-Dots Menu & Modals
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -308,24 +310,17 @@ export default function GroupChatPage() {
     setTimeout(() => setToastMessage(null), 2500)
   }
 
-  // Realtime subscription for group messages
+  // Realtime subscription for group messages (Full CRUD: INSERT, UPDATE, DELETE)
   useEffect(() => {
     if (!groupId) return
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`group_messages_${groupId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'group_messages' },
-        async () => {
-          const updated = await fetchGroupMessages(groupId)
-          setMessages(updated as any)
-        }
-      )
-      .subscribe()
+
+    const unsubscribe = subscribeToGroupMessages(groupId, async () => {
+      const updated = await fetchGroupMessages(groupId)
+      setMessages(updated as any)
+    })
 
     return () => {
-      supabase.removeChannel(channel)
+      unsubscribe()
     }
   }, [groupId])
 
@@ -456,6 +451,63 @@ export default function GroupChatPage() {
       setTimeout(() => setToastMessage(null), 3000)
     } finally {
       setIsUploadingImage(false)
+    }
+  }
+
+  // Handle Scripture Picker Selection for Group
+  const handleSelectScripture = async (selection: ScriptureSelection) => {
+    if (!currentUser) return
+    setIsScripturePickerOpen(false)
+
+    const tempId = `temp-scripture-${Date.now()}`
+    const optMsg: any = {
+      id: tempId,
+      sender_id: currentUser.id,
+      content: selection.verseText || selection.reference,
+      message_type: 'scripture',
+      meta: {
+        verseReference: selection.reference,
+        verseText: selection.verseText,
+        versionId: selection.versionId,
+      },
+      created_at: new Date().toISOString(),
+      sender_name: currentUser.user_metadata?.full_name || 'Me',
+      sender_initial: (currentUser.user_metadata?.full_name || 'M').charAt(0).toUpperCase(),
+    }
+    setMessages((prev) => [...prev, optMsg])
+
+    try {
+      const sent = await sendGroupMessage(
+        groupId,
+        selection.verseText || selection.reference,
+        'scripture' as any,
+        {
+          verseReference: selection.reference,
+          verseText: selection.verseText,
+          versionId: selection.versionId,
+        }
+      )
+      if (sent) {
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
+      }
+
+      fetch('/api/notifications/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          groupId,
+          type: 'chat_message',
+          title: groupName,
+          message: `${currentUser.user_metadata?.full_name || 'Member'} shared scripture: ${selection.reference} 📖`,
+          url: `/group-chat/${groupId}`,
+        }),
+      }).catch(() => {})
+    } catch (err) {
+      console.error('Send scripture error:', err)
+      setMessages((prev) => prev.filter((m) => m.id !== tempId))
+      setToastMessage('Failed to share scripture')
+      setTimeout(() => setToastMessage(null), 3000)
     }
   }
 
@@ -1071,6 +1123,70 @@ export default function GroupChatPage() {
             )
           }
 
+          // Type 4: Scripture Reference Card
+          if (msg.message_type === 'scripture' || (msg as any).meta?.verseReference) {
+            const verseRef = (msg as any).meta?.verseReference || 'Scripture'
+            const verseText = (msg as any).meta?.verseText || msg.content
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}
+              >
+                {!isMe && (
+                  <div className="flex items-center gap-1.5 mb-1 px-1">
+                    <div className="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 text-[9px] font-bold flex items-center justify-center">
+                      {msg.sender_initial}
+                    </div>
+                    <span className="text-[10px] font-bold text-text-secondary dark:text-neutral-400">{msg.sender_name}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 max-w-[85%]">
+                  {isMe && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
+                      title="Delete message"
+                    >
+                      <Trash size={12} />
+                    </button>
+                  )}
+                  <div
+                    className={`p-3.5 rounded-2xl text-xs space-y-2 border shadow-xs ${
+                      isMe
+                        ? 'border-[#FBBF24]/30 bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary rounded-br-xs'
+                        : 'border-border bg-card text-text-primary rounded-bl-xs'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#FBBF24]">
+                      <BookOpen size={16} weight="fill" />
+                      <span>{verseRef}</span>
+                    </div>
+                    <p className="text-xs italic leading-relaxed text-text-primary bg-surface/60 p-2.5 rounded-xl border border-border/50">
+                      &ldquo;{verseText}&rdquo;
+                    </p>
+                  </div>
+                  {!isMe && isHostUser && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-rose-500 transition-opacity cursor-pointer"
+                      title="Moderate & delete message (Admin)"
+                    >
+                      <Trash size={12} />
+                    </button>
+                  )}
+                </div>
+                <span className="text-[10px] text-text-muted dark:text-neutral-400 mt-0.5 px-1 font-mono-tabular">
+                  {new Date(msg.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            )
+          }
+
           // Type 1: Standard Texts with Sender Avatar & Name above bubble
           return (
             <div
@@ -1141,6 +1257,16 @@ export default function GroupChatPage() {
           placeholder={`Message ${groupName}...`}
           className="flex-1 px-3.5 py-2.5 bg-surface/80 dark:bg-neutral-900/80 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all shadow-xs"
         />
+
+        {/* Scripture Picker Button */}
+        <button
+          type="button"
+          onClick={() => setIsScripturePickerOpen(true)}
+          className="p-2 rounded-xl text-text-secondary hover:text-[#FBBF24] hover:bg-subtle transition-colors shrink-0 cursor-pointer"
+          title="Share Scripture"
+        >
+          <BookOpen size={20} weight="bold" />
+        </button>
 
         {/* Picture / Image Picker Input & Button */}
         <input
@@ -2038,6 +2164,13 @@ export default function GroupChatPage() {
           </div>
         </div>
       )}
+
+      {/* Scripture Selection Modal */}
+      <ScripturePicker
+        isOpen={isScripturePickerOpen}
+        onClose={() => setIsScripturePickerOpen(false)}
+        onSelect={handleSelectScripture}
+      />
     </div>
   )
 }

@@ -49,10 +49,11 @@ import {
   PrayerFocusTimelineBuilder,
   TimelineSegment,
 } from '@/components/timer/PrayerFocusTimelineBuilder'
-import { fetchBuddyMessages, sendBuddyMessage } from '@/features/buddies/services/buddyService'
+import { fetchBuddyMessages, sendBuddyMessage, subscribeToBuddyMessages } from '@/features/buddies/services/buddyService'
 import { getLocalDateKey } from '@/lib/utils/date'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
 import { calculateUserStreak } from '@/lib/utils/streak'
+import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 
 const DASH_ARRAY = 565.48
 
@@ -60,7 +61,7 @@ interface ChatMessage {
   id: string
   sender_id: string
   content: string
-  message_type: 'text' | 'clockin_invite' | 'nudge' | 'system'
+  message_type: 'text' | 'clockin_invite' | 'nudge' | 'system' | 'image' | 'scripture'
   meta?: {
     discipline?: 'prayer' | 'study'
     durationMins?: number
@@ -142,6 +143,7 @@ export default function BuddyChatPage() {
     },
   ])
   const [isTimelineBuilderOpen, setIsTimelineBuilderOpen] = useState(false)
+  const [isScripturePickerOpen, setIsScripturePickerOpen] = useState(false)
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(false)
   const [schedulePreset, setSchedulePreset] = useState<'tomorrow_6am' | 'tomorrow_7am' | 'today_8pm' | 'custom'>('tomorrow_6am')
   const [customScheduledTime, setCustomScheduledTime] = useState('')
@@ -250,25 +252,17 @@ export default function BuddyChatPage() {
     loadChatContext()
   }, [buddyId])
 
-  // Realtime messages subscription
+  // Realtime messages subscription (Full CRUD: INSERT, UPDATE, DELETE)
   useEffect(() => {
     if (!buddyId || !currentUser) return
 
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`buddy_messages_${buddyId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        async () => {
-          const updated = await fetchBuddyMessages(buddyId, currentUser.id)
-          setMessages(updated as any)
-        }
-      )
-      .subscribe()
+    const unsubscribe = subscribeToBuddyMessages(buddyId, currentUser.id, async () => {
+      const updated = await fetchBuddyMessages(buddyId, currentUser.id)
+      setMessages(updated as any)
+    })
 
     return () => {
-      supabase.removeChannel(channel)
+      unsubscribe()
     }
   }, [buddyId, currentUser])
 
@@ -420,6 +414,62 @@ export default function BuddyChatPage() {
       setTimeout(() => setToastMessage(null), 3000)
     } finally {
       setIsUploadingImage(false)
+    }
+  }
+
+  // Handle Scripture Picker Selection
+  const handleSelectScripture = async (selection: ScriptureSelection) => {
+    if (!currentUser) return
+    setIsScripturePickerOpen(false)
+
+    const tempId = `temp-scripture-${Date.now()}`
+    const optMsg: any = {
+      id: tempId,
+      sender_id: currentUser.id,
+      content: selection.verseText || selection.reference,
+      message_type: 'scripture',
+      meta: {
+        verseReference: selection.reference,
+        verseText: selection.verseText,
+        versionId: selection.versionId,
+      },
+      created_at: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, optMsg])
+
+    try {
+      const sent = await sendBuddyMessage(
+        buddyId,
+        currentUser.id,
+        selection.verseText || selection.reference,
+        'scripture',
+        {
+          verseReference: selection.reference,
+          verseText: selection.verseText,
+          versionId: selection.versionId,
+        }
+      )
+      if (sent) {
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
+      }
+
+      fetch('/api/notifications/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          targetUserId: buddyId,
+          type: 'chat_message',
+          title: currentUser?.user_metadata?.full_name || 'Accountability Buddy',
+          message: `Shared scripture: ${selection.reference} 📖`,
+          url: `/buddy-chat/${currentUser.id}`,
+        }),
+      }).catch(() => {})
+    } catch (err) {
+      console.error('Send scripture error:', err)
+      setMessages((prev) => prev.filter((m) => m.id !== tempId))
+      setToastMessage('Failed to share scripture')
+      setTimeout(() => setToastMessage(null), 3000)
     }
   }
 
@@ -1095,6 +1145,40 @@ export default function BuddyChatPage() {
             )
           }
 
+          // Type 4: Scripture Reference Card
+          if (msg.message_type === 'scripture' || (msg as any).meta?.verseReference) {
+            const verseRef = (msg as any).meta?.verseReference || 'Scripture'
+            const verseText = (msg as any).meta?.verseText || msg.content
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] p-3.5 rounded-2xl text-xs space-y-2 border shadow-xs ${
+                    isMe
+                      ? 'border-[#FBBF24]/30 bg-[#FDF9F1] dark:bg-amber-950/30 text-text-primary rounded-br-xs'
+                      : 'border-border bg-card text-text-primary rounded-bl-xs'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-black text-[#FBBF24]">
+                    <BookOpen size={16} weight="fill" />
+                    <span>{verseRef}</span>
+                  </div>
+                  <p className="text-xs italic leading-relaxed text-text-primary bg-surface/60 p-2.5 rounded-xl border border-border/50">
+                    &ldquo;{verseText}&rdquo;
+                  </p>
+                </div>
+                <span className="text-[10px] text-text-muted dark:text-neutral-400 mt-0.5 px-1 font-mono-tabular">
+                  {new Date(msg.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            )
+          }
+
           // Type 1: Standard Texts (Sent Gold/Onyx vs Received Gray/White)
           return (
             <div
@@ -1152,6 +1236,16 @@ export default function BuddyChatPage() {
           }
           className="flex-1 px-3.5 py-2.5 bg-surface/80 dark:bg-neutral-900/80 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all shadow-xs disabled:opacity-50"
         />
+
+        {/* Scripture Picker Button */}
+        <button
+          type="button"
+          onClick={() => setIsScripturePickerOpen(true)}
+          className="p-2 rounded-xl text-text-secondary hover:text-[#FBBF24] hover:bg-subtle transition-colors shrink-0 cursor-pointer"
+          title="Share Scripture"
+        >
+          <BookOpen size={20} weight="bold" />
+        </button>
 
         {/* Picture / Image Picker Input & Button */}
         <input
@@ -1807,6 +1901,13 @@ export default function BuddyChatPage() {
           </div>
         </div>
       )}
+
+      {/* Scripture Picker Modal */}
+      <ScripturePicker
+        isOpen={isScripturePickerOpen}
+        onClose={() => setIsScripturePickerOpen(false)}
+        onSelect={handleSelectScripture}
+      />
     </div>
   )
 }

@@ -315,3 +315,42 @@ export async function sendGroupMessage(
     meta: newMsg.meta,
   }
 }
+
+/**
+ * Full CRUD real-time subscription for group messages
+ */
+export function subscribeToGroupMessages(
+  groupId: string,
+  onChange: () => void
+): () => void {
+  const supabase = createClient()
+  const channel = supabase
+    .channel(`group_chat_${groupId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'group_messages',
+        filter: `group_id=eq.${groupId}`,
+      },
+      () => {
+        onChange()
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
+/**
+ * Delete a group message by ID
+ */
+export async function deleteGroupMessage(messageId: string): Promise<boolean> {
+  const supabase = createClient()
+  const { error } = await (supabase.from('group_messages') as any).delete().eq('id', messageId)
+  return !error
+}
+
