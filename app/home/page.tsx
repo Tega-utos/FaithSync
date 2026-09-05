@@ -517,33 +517,29 @@ export default function HomePage() {
                 {dashboard.activeCommunityUsers.slice(0, 3).map((u, idx) => (
                   <div
                     key={u.id || idx}
-                    className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold text-[10px] flex items-center justify-center ring-2 ring-card border border-border/80 dark:border-white/15"
+                    className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-bold text-[10px] flex items-center justify-center ring-2 ring-card border border-neutral-300 dark:border-neutral-700 shadow-2xs"
                   >
                     {u.initial}
                   </div>
                 ))}
                 {dashboard.globalCount > 3 && (
-                  <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
+                  <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-black font-bold text-[9px] flex items-center justify-center ring-2 ring-card shadow-2xs">
                     +{dashboard.globalCount - 3}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/40 border border-[#234537]/25 dark:border-emerald-600/40 text-[#234537] dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
                 <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
               </div>
             )}
 
             <div>
               <p className="text-xs font-bold text-text-primary">
-                {dashboard.globalCount === 0
-                  ? '0 believers clocked in today'
-                  : `${dashboard.globalCount} believer${dashboard.globalCount === 1 ? '' : 's'} active today`}
+                {dashboard.globalCount} {dashboard.globalCount === 1 ? 'believer' : 'believers'} showed up today
               </p>
-              <p className="text-[10px] text-text-secondary">
-                {dashboard.globalCount === 0
-                  ? 'Be the first to clock in today in Community Square'
-                  : 'Join the reflections in Community Square'}
+              <p className="text-[10px] text-text-secondary dark:text-neutral-400">
+                The community is stronger with you
               </p>
             </div>
           </div>

@@ -19,6 +19,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay } from '@/lib/utils/date'
 import { getMemoryCache, setMemoryCache } from '@/lib/cache/clientCache'
+import { getTargetsForDate } from '@/lib/utils/targetHistory'
 
 interface DailySummary {
   dateKey: string // YYYY-MM-DD
@@ -84,36 +85,70 @@ export default function HistoryPage() {
         setPrayerTarget(pTarget)
         setStudyTarget(sTarget)
 
-        // Fetch past 30 days sessions
+        // Fetch past 30 days sessions with full target & completion metadata
         const thirtyDaysAgo = getStartOfLocalDay()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
 
         const { data: sessions } = await supabase
           .from('sessions')
-          .select('type, duration_seconds, started_at, created_at')
+          .select('id, type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
           .eq('user_id', user.id)
           .gte('started_at', thirtyDaysAgo.toISOString())
           .order('started_at', { ascending: false })
 
         // Aggregate by day
-        const dayMap: Record<string, { prayerSecs: number; studySecs: number }> = {}
+        interface DayAgg {
+          prayerSecs: number
+          studySecs: number
+          prayerTargetSecs: number
+          studyTargetSecs: number
+          hasCompletedPrayerSession: boolean
+          hasCompletedStudySession: boolean
+        }
+        const dayMap: Record<string, DayAgg> = {}
 
         ;(sessions || []).forEach((s) => {
           const rawDate = s.started_at || s.created_at
           const dateKey = getLocalDateKey(rawDate)
           if (!dayMap[dateKey]) {
-            dayMap[dateKey] = { prayerSecs: 0, studySecs: 0 }
+            dayMap[dateKey] = {
+              prayerSecs: 0,
+              studySecs: 0,
+              prayerTargetSecs: 0,
+              studyTargetSecs: 0,
+              hasCompletedPrayerSession: false,
+              hasCompletedStudySession: false,
+            }
           }
           if (s.type === 'prayer') {
-            dayMap[dateKey].prayerSecs += s.duration_seconds
+            dayMap[dateKey].prayerSecs += s.duration_seconds || 0
+            if (s.target_duration_seconds && s.target_duration_seconds > 0) {
+              dayMap[dateKey].prayerTargetSecs = Math.max(
+                dayMap[dateKey].prayerTargetSecs,
+                s.target_duration_seconds
+              )
+            }
+            if (s.is_complete || (s.duration_seconds > 0 && s.duration_seconds >= (s.target_duration_seconds || 0))) {
+              dayMap[dateKey].hasCompletedPrayerSession = true
+            }
           } else if (s.type === 'study' || s.type === 'word') {
-            dayMap[dateKey].studySecs += s.duration_seconds
+            dayMap[dateKey].studySecs += s.duration_seconds || 0
+            if (s.target_duration_seconds && s.target_duration_seconds > 0) {
+              dayMap[dateKey].studyTargetSecs = Math.max(
+                dayMap[dateKey].studyTargetSecs,
+                s.target_duration_seconds
+              )
+            }
+            if (s.is_complete || (s.duration_seconds > 0 && s.duration_seconds >= (s.target_duration_seconds || 0))) {
+              dayMap[dateKey].hasCompletedStudySession = true
+            }
           }
         })
 
         // Build continuous 30-day rows
         const summaries: DailySummary[] = []
         const todayStr = getLocalDateKey()
+        const newCompletedToSync: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {}
 
         for (let i = 0; i < 30; i++) {
           const d = new Date()
@@ -127,17 +162,42 @@ export default function HistoryPage() {
             weekday: 'short',
           })
 
-          const data = dayMap[key] || { prayerSecs: 0, studySecs: 0 }
+          const data = dayMap[key] || {
+            prayerSecs: 0,
+            studySecs: 0,
+            prayerTargetSecs: 0,
+            studyTargetSecs: 0,
+            hasCompletedPrayerSession: false,
+            hasCompletedStudySession: false,
+          }
           const pMins = Math.floor(data.prayerSecs / 60)
           const sMins = Math.floor(data.studySecs / 60)
           const totalMins = pMins + sMins
 
-          const isPrayerMet = pMins >= pTarget
-          const isStudyMet = sMins >= sTarget
+          const dayDataMetrics = {
+            prayerMins: pMins,
+            studyMins: sMins,
+            recordedPrayerTarget: data.prayerTargetSecs > 0 ? Math.round(data.prayerTargetSecs / 60) : undefined,
+            recordedStudyTarget: data.studyTargetSecs > 0 ? Math.round(data.studyTargetSecs / 60) : undefined,
+            hasCompletedPrayerSession: data.hasCompletedPrayerSession,
+            hasCompletedStudySession: data.hasCompletedStudySession,
+          }
+
+          // Resolve historical target for this exact date (prioritizes locked/met records)
+          const dayTarget = getTargetsForDate(key, prefs, pTarget, sTarget, dayDataMetrics)
+          const isPrayerMet = pMins >= dayTarget.prayerTarget
+          const isStudyMet = sMins >= dayTarget.studyTarget
 
           let status: 'Complete' | 'In Progress' | 'Missed' = 'Missed'
           if (isPrayerMet && isStudyMet) {
             status = 'Complete'
+            if (!prefs.completed_dates?.[key]) {
+              newCompletedToSync[key] = {
+                prayerTarget: dayTarget.prayerTarget,
+                studyTarget: dayTarget.studyTarget,
+                isFixed: true,
+              }
+            }
           } else if (pMins > 0 || sMins > 0) {
             status = 'In Progress'
           }
@@ -149,8 +209,8 @@ export default function HistoryPage() {
             prayerMinutes: pMins,
             studyMinutes: sMins,
             totalMinutes: totalMins,
-            prayerTarget: pTarget,
-            studyTarget: sTarget,
+            prayerTarget: dayTarget.prayerTarget,
+            studyTarget: dayTarget.studyTarget,
             isPrayerMet,
             isStudyMet,
             status,
@@ -159,6 +219,25 @@ export default function HistoryPage() {
 
         setDailySummaries(summaries)
         setMemoryCache('history_summaries', summaries)
+
+        // If newly discovered completed days were not locked in preferences, sync them silently
+        if (Object.keys(newCompletedToSync).length > 0) {
+          const mergedCompleted = {
+            ...(prefs.completed_dates || {}),
+            ...newCompletedToSync,
+          }
+          supabase
+            .from('profiles')
+            .update({
+              preferences: {
+                ...prefs,
+                completed_dates: mergedCompleted,
+                completedDates: mergedCompleted,
+              },
+            })
+            .eq('id', user.id)
+            .then(() => {})
+        }
       } catch (err) {
         console.error('History load error:', err)
       } finally {

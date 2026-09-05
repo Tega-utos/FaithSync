@@ -43,10 +43,12 @@ export function BottomNav() {
 
   const isVisible = shouldShowAppShell(pathname)
 
-  // Hide BottomNav in Community Square (/square), Session Summary (/session-summary), when Session Summary popup is open, or when any modal is active
+  // Hide BottomNav in Community Square (/square), Chat (/buddy-chat, /group-chat), Session Summary, when popup is open, or when any modal is active
   if (
     !isVisible ||
     pathname?.startsWith('/square') ||
+    pathname?.startsWith('/buddy-chat') ||
+    pathname?.startsWith('/group-chat') ||
     pathname?.startsWith('/session-summary') ||
     isSummaryOpen ||
     hasModalOpen
@@ -58,8 +60,6 @@ export function BottomNav() {
   const isClockIn = pathname === '/clock-in'
   const isSync =
     pathname.startsWith('/sync') ||
-    pathname.startsWith('/buddy-chat') ||
-    pathname.startsWith('/group-chat') ||
     pathname.startsWith('/find-buddy') ||
     pathname.startsWith('/accountability')
 

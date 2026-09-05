@@ -276,19 +276,21 @@ export function PrayerFocusTimelineBuilder({
         </div>
 
         {/* Total Duration Banner */}
-        <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <Sparkle size={18} weight="fill" className="text-[#FBBF24]" />
+        <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-[#1E1E1E] border border-[#FBBF24]/35 dark:border-amber-400/40 flex items-center justify-between shrink-0 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-[#FBBF24] dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Sparkle size={18} weight="fill" />
+            </div>
             <div>
-              <p className="text-xs font-bold text-text-primary">
+              <p className="text-xs font-bold text-text-primary dark:text-neutral-100">
                 Total Timeline: {totalMinutes} Minutes
               </p>
-              <p className="text-[10px] text-text-secondary">
+              <p className="text-[10px] text-text-secondary dark:text-neutral-400">
                 {segments.length} guided segment{segments.length === 1 ? '' : 's'}
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-bold font-mono text-[#FBBF24] bg-card px-2 py-0.5 rounded-lg border border-border">
+          <span className="text-[10px] font-bold font-mono text-amber-600 dark:text-amber-400 bg-card dark:bg-neutral-800 px-2.5 py-1 rounded-lg border border-border dark:border-neutral-700">
             Auto-advancing
           </span>
         </div>

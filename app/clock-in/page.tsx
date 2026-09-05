@@ -321,8 +321,8 @@ export default function ClockInPage() {
                 onClick={() => setFocusMode('quick')}
                 className={`py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                   focusMode === 'quick'
-                    ? 'bg-card text-text-primary shadow-xs'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-card text-text-primary dark:text-neutral-100 shadow-xs'
+                    : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
                 }`}
               >
                 Quick Focus
@@ -332,8 +332,8 @@ export default function ClockInPage() {
                 onClick={() => setFocusMode('timeline')}
                 className={`py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
                   focusMode === 'timeline'
-                    ? 'bg-card text-text-primary shadow-xs'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-card text-text-primary dark:text-neutral-100 shadow-xs'
+                    : 'text-text-secondary dark:text-neutral-400 hover:text-text-primary dark:hover:text-white'
                 }`}
               >
                 <Clock size={12} className="text-[#FBBF24]" weight="bold" />
@@ -354,20 +354,22 @@ export default function ClockInPage() {
               /* Timeline Builder Trigger Card */
               <div
                 onClick={() => setIsTimelineBuilderOpen(true)}
-                className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 hover:border-[#FBBF24] cursor-pointer transition-all flex items-center justify-between shadow-xs"
+                className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-[#1E1E1E] border border-[#FBBF24]/40 dark:border-amber-400/40 hover:border-[#FBBF24] cursor-pointer transition-all flex items-center justify-between shadow-xs"
               >
-                <div className="flex items-center gap-2">
-                  <Sparkle size={16} weight="fill" className="text-[#FBBF24]" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-[#FBBF24] dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Sparkle size={18} weight="fill" />
+                  </div>
                   <div>
-                    <p className="text-xs font-bold text-text-primary">
+                    <p className="text-xs font-bold text-text-primary dark:text-neutral-100">
                       {timelineSegments.length} Guided Segments ({timelineTotalMins}m)
                     </p>
-                    <p className="text-[10px] text-text-secondary">Tap to customize sequence</p>
+                    <p className="text-[10.5px] text-text-secondary dark:text-neutral-400 font-medium">Tap to customize sequence</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="px-2.5 py-1 rounded-xl bg-card border border-border text-[10px] font-bold text-text-primary"
+                  className="px-3 py-1.5 rounded-xl bg-card dark:bg-neutral-800 border border-border dark:border-neutral-700 text-xs font-bold text-text-primary dark:text-neutral-100 shadow-2xs hover:border-[#FBBF24]"
                 >
                   Edit
                 </button>

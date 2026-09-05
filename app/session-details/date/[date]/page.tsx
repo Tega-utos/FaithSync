@@ -13,9 +13,11 @@ import {
   Sparkle,
   Trophy,
   HandsPraying,
+  Check,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay, getEndOfLocalDay } from '@/lib/utils/date'
+import { getTargetsForDate } from '@/lib/utils/targetHistory'
 
 interface SessionRecord {
   id: string
@@ -49,6 +51,7 @@ export default function DateSessionsPage() {
   const [sessions, setSessions] = useState<SessionRecord[]>([])
   const [totalPrayerSecs, setTotalPrayerSecs] = useState(0)
   const [totalStudySecs, setTotalStudySecs] = useState(0)
+  const [dayTarget, setDayTarget] = useState({ prayerTarget: 15, studyTarget: 15 })
 
   useEffect(() => {
     async function loadDateSessions() {
@@ -65,6 +68,17 @@ export default function DateSessionsPage() {
           return
         }
 
+        // Fetch preferences for historical target resolution
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single()
+
+        const prefs = (profile?.preferences as any) || {}
+        const defaultPrayer = prefs.prayerTarget || prefs.targets?.prayer || 15
+        const defaultStudy = prefs.studyTarget || prefs.wordTarget || prefs.targets?.study || 15
+
         // Local date bounds covering the entire 24h of the local day
         const localDayDate = new Date(`${dateParam}T12:00:00`)
         const start = getStartOfLocalDay(localDayDate)
@@ -79,19 +93,55 @@ export default function DateSessionsPage() {
           .order('started_at', { ascending: true })
 
         if (data) {
-          const matching = (data as SessionRecord[]).filter(
+          const matching = (data as any[]).filter(
             (s) => getLocalDateKey(s.started_at) === dateParam
           )
           setSessions(matching)
 
           let pSecs = 0
           let sSecs = 0
+          let recPTarget = 0
+          let recSTarget = 0
+          let hasPComp = false
+          let hasSComp = false
+
           matching.forEach((s: any) => {
-            if (s.type === 'prayer') pSecs += s.duration_seconds
-            if (s.type === 'study' || s.type === 'word') sSecs += s.duration_seconds
+            if (s.type === 'prayer') {
+              pSecs += s.duration_seconds || 0
+              if (s.target_duration_seconds) {
+                recPTarget = Math.max(recPTarget, Math.round(s.target_duration_seconds / 60))
+              }
+              if (s.is_complete || (s.duration_seconds > 0 && s.duration_seconds >= (s.target_duration_seconds || 0))) {
+                hasPComp = true
+              }
+            }
+            if (s.type === 'study' || s.type === 'word') {
+              sSecs += s.duration_seconds || 0
+              if (s.target_duration_seconds) {
+                recSTarget = Math.max(recSTarget, Math.round(s.target_duration_seconds / 60))
+              }
+              if (s.is_complete || (s.duration_seconds > 0 && s.duration_seconds >= (s.target_duration_seconds || 0))) {
+                hasSComp = true
+              }
+            }
           })
           setTotalPrayerSecs(pSecs)
           setTotalStudySecs(sSecs)
+
+          const dayMetrics = {
+            prayerMins: Math.floor(pSecs / 60),
+            studyMins: Math.floor(sSecs / 60),
+            recordedPrayerTarget: recPTarget || undefined,
+            recordedStudyTarget: recSTarget || undefined,
+            hasCompletedPrayerSession: hasPComp,
+            hasCompletedStudySession: hasSComp,
+          }
+
+          const targetRes = getTargetsForDate(dateParam, prefs, defaultPrayer, defaultStudy, dayMetrics)
+          setDayTarget({
+            prayerTarget: targetRes.prayerTarget,
+            studyTarget: targetRes.studyTarget,
+          })
         }
       } catch (err) {
         console.error('Failed to load date details:', err)
@@ -126,6 +176,10 @@ export default function DateSessionsPage() {
     })
   }
 
+  const prayerMins = Math.floor(totalPrayerSecs / 60)
+  const studyMins = Math.floor(totalStudySecs / 60)
+  const isComplete = prayerMins >= dayTarget.prayerTarget && studyMins >= dayTarget.studyTarget
+
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-28 space-y-5">
       {/* Top Header */}
@@ -144,14 +198,30 @@ export default function DateSessionsPage() {
       </div>
 
       {/* Date Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-[#FBBF24]">
-          <CalendarBlank size={16} />
-          <span>{formattedDate}</span>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[#FBBF24]">
+            <CalendarBlank size={16} />
+            <span>{formattedDate}</span>
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-text-primary">
+            Day Breakdown
+          </h2>
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-text-primary">
-          Day Breakdown
-        </h2>
+
+        {isComplete ? (
+          <span className="px-2.5 py-1 rounded-full bg-[#ECFCCB] text-[#15803D] text-[11px] font-black inline-flex items-center gap-1 shadow-2xs">
+            <Check size={12} weight="bold" /> Complete
+          </span>
+        ) : totalPrayerSecs > 0 || totalStudySecs > 0 ? (
+          <span className="px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-[11px] font-bold inline-block">
+            In Progress
+          </span>
+        ) : (
+          <span className="px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold inline-block opacity-75">
+            Missed
+          </span>
+        )}
       </div>
 
       {/* Totals Summary Card */}
@@ -161,7 +231,7 @@ export default function DateSessionsPage() {
             <HandsPraying size={14} weight="fill" className="text-[#FBBF24]" /> Total Prayer
           </span>
           <p className="text-lg font-black font-mono text-text-primary">
-            {Math.floor(totalPrayerSecs / 60)} mins
+            {prayerMins} <span className="text-xs font-normal text-text-secondary">/ {dayTarget.prayerTarget}m</span>
           </p>
         </div>
 
@@ -170,7 +240,7 @@ export default function DateSessionsPage() {
             <BookOpen size={14} className="text-[#FBBF24]" /> Total Study
           </span>
           <p className="text-lg font-black font-mono text-text-primary">
-            {Math.floor(totalStudySecs / 60)} mins
+            {studyMins} <span className="text-xs font-normal text-text-secondary">/ {dayTarget.studyTarget}m</span>
           </p>
         </div>
       </div>

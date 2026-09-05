@@ -40,6 +40,8 @@ import { shareOrCopyCode } from '@/lib/utils/syncCodes'
 import { calculateUserStreak } from '@/lib/utils/streak'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { updateTargetHistory } from '@/lib/utils/targetHistory'
+import { getLocalDateKey } from '@/lib/utils/date'
 
 interface BuddyPartner {
   id: string
@@ -539,19 +541,76 @@ export default function ProfilePage() {
         .single()
 
       const prevPrefs = (profile?.preferences as any) || {}
-      const newPrefs = {
-        ...prevPrefs,
-        prayerTarget: finalPrayer,
-        studyTarget: finalStudy,
-        wordTarget: finalStudy,
-        targets: {
-          prayer: finalPrayer,
-          study: finalStudy,
-          word: finalStudy,
-        },
-        prayerReminderTime,
-        studyReminderTime,
+      const todayStr = getLocalDateKey()
+
+      // Fetch user sessions to lock in any days whose targets were already met
+      const { data: pastSessions } = await supabase
+        .from('sessions')
+        .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
+        .eq('user_id', user.id)
+
+      const completedDatesToLock: Record<string, { prayerTarget: number; studyTarget: number; isFixed?: boolean }> = {
+        ...(prevPrefs.completed_dates || {}),
       }
+
+      let isTodayCompleted = false
+
+      if (pastSessions && pastSessions.length > 0) {
+        const dayMap: Record<string, { prayerSecs: number; studySecs: number; pTarget: number; sTarget: number }> = {}
+        pastSessions.forEach((s) => {
+          const dKey = getLocalDateKey(s.started_at || s.created_at)
+          if (!dayMap[dKey]) dayMap[dKey] = { prayerSecs: 0, studySecs: 0, pTarget: 0, sTarget: 0 }
+          if (s.type === 'prayer') {
+            dayMap[dKey].prayerSecs += s.duration_seconds || 0
+            if (s.target_duration_seconds) {
+              dayMap[dKey].pTarget = Math.max(dayMap[dKey].pTarget, Math.round(s.target_duration_seconds / 60))
+            }
+          } else if (s.type === 'study' || s.type === 'word') {
+            dayMap[dKey].studySecs += s.duration_seconds || 0
+            if (s.target_duration_seconds) {
+              dayMap[dKey].sTarget = Math.max(dayMap[dKey].sTarget, Math.round(s.target_duration_seconds / 60))
+            }
+          }
+        })
+
+        Object.entries(dayMap).forEach(([dKey, d]) => {
+          const pMins = Math.floor(d.prayerSecs / 60)
+          const sMins = Math.floor(d.studySecs / 60)
+          const effPTarget = d.pTarget || prevPrayer
+          const effSTarget = d.sTarget || prevStudy
+          if (pMins >= effPTarget && sMins >= effSTarget) {
+            completedDatesToLock[dKey] = {
+              prayerTarget: effPTarget,
+              studyTarget: effSTarget,
+              isFixed: true,
+            }
+            if (dKey === todayStr) {
+              isTodayCompleted = true
+            }
+          }
+        })
+      }
+
+      // If today was already completed under the previous target,
+      // the new target takes effect starting tomorrow so today's completion is not retroactively altered.
+      let effectiveDate = todayStr
+      if (isTodayCompleted) {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        effectiveDate = getLocalDateKey(tomorrow)
+      }
+
+      const newPrefs = updateTargetHistory(
+        {
+          ...prevPrefs,
+          prayerReminderTime,
+          studyReminderTime,
+        },
+        finalPrayer,
+        finalStudy,
+        effectiveDate,
+        completedDatesToLock
+      )
 
       await supabase
         .from('profiles')

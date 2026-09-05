@@ -18,6 +18,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useTimer, TimerSessionData } from '@/context/TimerContext'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
+import { getLocalDateKey } from '@/lib/utils/date'
 
 export interface SessionSummaryModalProps {
   isOpen: boolean
@@ -253,6 +254,40 @@ export function SessionSummaryModal({
 
         // Invalidate cache so the new post appears immediately in Square
         invalidateMemoryCache('square_feed_posts')
+      }
+
+      // If both daily targets are complete, lock today's targets in completed_dates
+      if (isBothComplete) {
+        try {
+          const todayKey = getLocalDateKey()
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('preferences')
+            .eq('id', user.id)
+            .single()
+
+          const currPrefs = (prof?.preferences as any) || {}
+          const currCompleted = currPrefs.completed_dates || {}
+          if (!currCompleted[todayKey]) {
+            await supabase
+              .from('profiles')
+              .update({
+                preferences: {
+                  ...currPrefs,
+                  completed_dates: {
+                    ...currCompleted,
+                    [todayKey]: {
+                      prayerTarget,
+                      studyTarget,
+                      isFixed: true,
+                      completedAt: new Date().toISOString(),
+                    },
+                  },
+                },
+              })
+              .eq('id', user.id)
+          }
+        } catch (_) {}
       }
 
       setSaving(false)
