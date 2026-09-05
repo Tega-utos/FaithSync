@@ -651,6 +651,11 @@ function SquarePageContent() {
     e.preventDefault()
     if (!postContent.trim()) return
 
+    if (hasPostedToday) {
+      setPostError("Daily Reverence Rule: Each believer is permitted one shared post per day to keep our sanctuary noise-free and sacred. You've already posted today.")
+      return
+    }
+
     setSubmittingPost(true)
     setPostError(null)
     try {
@@ -869,6 +874,17 @@ function SquarePageContent() {
     return true
   })
 
+  const todayDateKey = new Date().toISOString().split('T')[0]
+  const hasPostedToday = Boolean(
+    currentUser &&
+      posts.some(
+        (p) =>
+          (p.author_id === currentUser.id || p.user_id === currentUser.id) &&
+          p.created_at &&
+          new Date(p.created_at).toISOString().split('T')[0] === todayDateKey
+      )
+  )
+
   const charLimit = selectedIntent === 'prayer' ? 140 : 280
   const charsRemaining = charLimit - postContent.length
 
@@ -896,6 +912,26 @@ function SquarePageContent() {
         <p className="text-xs text-text-secondary leading-relaxed">
           A shared sanctuary for collective reflection and fellowship.
         </p>
+      </div>
+
+      {/* Daily Reverence Rule Memo Banner */}
+      <div className="p-3.5 rounded-2xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 flex items-start gap-3 shadow-2xs">
+        <div className="w-7 h-7 rounded-xl bg-[#234537] text-white dark:bg-emerald-500 dark:text-[#14110D] flex items-center justify-center shrink-0 shadow-xs font-bold text-xs mt-0.5">
+          <Sparkle size={14} weight="fill" />
+        </div>
+        <div className="space-y-0.5 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-black text-[#234537] dark:text-emerald-400">
+              Daily Sanctuary Reverence Rule
+            </p>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-white/70 dark:bg-black/40 text-[#234537] dark:text-emerald-400 border border-[#234537]/15 dark:border-emerald-700/30">
+              {hasPostedToday ? '1/1 Shared Today ✓' : '0/1 Daily Post'}
+            </span>
+          </div>
+          <p className="text-[11px] text-[#234537]/85 dark:text-emerald-300/85 leading-relaxed">
+            To keep our community square sacred, authentic, and noise-free, each believer is permitted <span className="font-bold underline decoration-[#234537]/30">one shared post per day</span>.
+          </p>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -937,10 +973,12 @@ function SquarePageContent() {
           <PencilSimple size={16} weight="bold" />
         </div>
         <div className="flex-1 text-xs text-text-secondary group-hover:text-text-primary transition-colors">
-          Share a prayer request, struggle, testimony, or reflection...
+          {hasPostedToday
+            ? "You've shared today's reflection ✓ (1/1 daily limit reached)"
+            : "Share a prayer request, struggle, testimony, or reflection..."}
         </div>
         <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-white/15 text-white dark:text-neutral-100 group-hover:bg-[#262626] dark:group-hover:bg-neutral-700 transition-all shrink-0">
-          Write a Post
+          {hasPostedToday ? 'Posted Today' : 'Write a Post'}
         </span>
       </div>
 

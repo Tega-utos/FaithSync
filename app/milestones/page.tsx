@@ -266,12 +266,12 @@ export default function MilestonesPage() {
         {/* Bottom Section (The Breakdown) */}
         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
           {/* Prayer Breakdown */}
-          <div className="p-3 rounded-2xl bg-[#FFF0F0] dark:bg-red-950/30 border border-[#EA2C26]/20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-card text-[#EA2C26] dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm">
-              <Fire size={20} weight="fill" />
+          <div className="p-3 rounded-2xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-card text-[#234537] dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
+              <HandsPraying size={20} weight="fill" />
             </div>
             <div className="truncate">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#EA2C26] dark:text-red-400 block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#234537] dark:text-emerald-400 block">
                 Prayer
               </span>
               <span className="text-sm font-black font-mono-tabular text-text-primary">

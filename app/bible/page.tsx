@@ -183,7 +183,11 @@ export default function BiblePage() {
       setSummaryData(data)
       setShowSummary(true)
     } else {
-      router.push('/')
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back()
+      } else {
+        router.push('/home')
+      }
     }
   }
 
@@ -218,7 +222,7 @@ export default function BiblePage() {
   const handleShareToSquare = () => {
     if (!selectedVerse) return
     const ref = `${selectedBook} ${selectedChapter}:${selectedVerse.verse}`
-    router.push(`/square?compose=true&ref=${encodeURIComponent(ref)}&verse=${encodeURIComponent(selectedVerse.text)}&intent=record`)
+    router.push(`/square?compose=true&ref=${encodeURIComponent(ref)}&verse=${encodeURIComponent(selectedVerse.text)}&intent=reflection`)
   }
 
   const handleStartDevotionWithVerse = () => {

@@ -372,33 +372,48 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     })
   }
 
-  // 6. Global Community Attendance
+  // 6. Global Community Attendance (Calculated from Square posts today)
   let globalCount = 0
   const activeCommunityUsers: DashboardData['activeCommunityUsers'] = []
 
-  const { data: todayGlobalSessions } = await supabase
-    .from('sessions')
-    .select('user_id')
-    .gte('started_at', startOfToday.toISOString())
+  const { data: todaySquarePosts } = await supabase
+    .from('square_posts')
+    .select('user_id, is_anonymous')
+    .gte('created_at', startOfToday.toISOString())
 
-  if (todayGlobalSessions && todayGlobalSessions.length > 0) {
-    const uniqueGlobalUsers = Array.from(
-      new Set(todayGlobalSessions.map((s) => s.user_id).filter(Boolean))
+  if (todaySquarePosts && todaySquarePosts.length > 0) {
+    const uniqueSquareUsers = Array.from(
+      new Set(todaySquarePosts.map((p) => p.user_id).filter(Boolean))
     )
-    globalCount = uniqueGlobalUsers.length
+    globalCount = Math.max(todaySquarePosts.length, uniqueSquareUsers.length)
 
-    const { data: globalProfiles } = await supabase
-      .from('profiles')
-      .select('id, display_name')
-      .in('id', uniqueGlobalUsers.slice(0, 4))
+    if (uniqueSquareUsers.length > 0) {
+      const { data: squareProfiles } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', uniqueSquareUsers.slice(0, 4))
 
-    if (globalProfiles) {
-      globalProfiles.forEach((p) => {
-        activeCommunityUsers.push({
-          id: p.id,
-          initial: (p.display_name || 'B').charAt(0).toUpperCase(),
+      if (squareProfiles) {
+        squareProfiles.forEach((p) => {
+          activeCommunityUsers.push({
+            id: p.id,
+            initial: (p.display_name || 'B').charAt(0).toUpperCase(),
+          })
         })
-      })
+      }
+    }
+  } else {
+    // Fallback to active sessions if square is quiet
+    const { data: todayGlobalSessions } = await supabase
+      .from('sessions')
+      .select('user_id')
+      .gte('started_at', startOfToday.toISOString())
+
+    if (todayGlobalSessions && todayGlobalSessions.length > 0) {
+      const uniqueGlobalUsers = Array.from(
+        new Set(todayGlobalSessions.map((s) => s.user_id).filter(Boolean))
+      )
+      globalCount = uniqueGlobalUsers.length
     }
   }
 
