@@ -21,6 +21,7 @@ import {
   BookOpen,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 interface ExpandedBuddy {
   id: string
@@ -94,7 +95,7 @@ export default function AccountabilityPage() {
                 senderId: c.user_id,
                 name,
                 initial: name.charAt(0).toUpperCase(),
-                church: c.user_profile?.church || 'Local Assembly',
+                church: c.user_profile?.church || '',
               })
             }
           } else if (c.status === 'accepted') {
@@ -109,22 +110,35 @@ export default function AccountabilityPage() {
               name: pName,
               initial: pName.charAt(0).toUpperCase(),
               avatarUrl: partner?.avatar_url || null,
-              church: partner?.church || 'Grace Assembly',
-              liveStatus: 'Active now',
-              isActiveNow: true,
-              streakCount: 14,
+              church: partner?.church || '',
+              liveStatus: 'Offline',
+              isActiveNow: false,
+              streakCount: 0,
               prayerDone: false,
               studyDone: false,
             })
           }
         })
 
-        // Fetch Real Sessions for today
+        // Fetch Real Database Sessions & Authentic Streaks for active buddies
         const buddyIds = active.map((b) => b.id)
         if (buddyIds.length > 0) {
           const startOfToday = new Date()
           startOfToday.setHours(0, 0, 0, 0)
 
+          // 1. Calculate genuine streaks for each buddy from real database sessions
+          await Promise.all(
+            active.map(async (b) => {
+              try {
+                b.streakCount = await calculateUserStreak(b.id, supabase)
+              } catch (streakErr) {
+                console.error(`Streak calculation error for buddy ${b.id}:`, streakErr)
+                b.streakCount = 0
+              }
+            })
+          )
+
+          // 2. Fetch real sessions for today
           const { data: buddySessions } = await supabase
             .from('sessions')
             .select('user_id, type, duration_seconds')
@@ -134,9 +148,23 @@ export default function AccountabilityPage() {
           const buddyMins: Record<string, { prayer: number; study: number }> = {}
           ;(buddySessions || []).forEach((s) => {
             if (!buddyMins[s.user_id]) buddyMins[s.user_id] = { prayer: 0, study: 0 }
-            const mins = Math.floor(s.duration_seconds / 60)
+            const mins = Math.floor((s.duration_seconds || 0) / 60)
             if (s.type === 'prayer') buddyMins[s.user_id].prayer += mins
             if (s.type === 'study' || s.type === 'word') buddyMins[s.user_id].study += mins
+          })
+
+          // 3. Fetch latest session per buddy to determine authentic last active time
+          const { data: latestSessions } = await supabase
+            .from('sessions')
+            .select('user_id, started_at, created_at')
+            .in('user_id', buddyIds)
+            .order('started_at', { ascending: false })
+
+          const lastSessionMap: Record<string, string> = {}
+          ;(latestSessions || []).forEach((s) => {
+            if (!lastSessionMap[s.user_id]) {
+              lastSessionMap[s.user_id] = s.started_at || s.created_at
+            }
           })
 
           active.forEach((b) => {
@@ -145,7 +173,22 @@ export default function AccountabilityPage() {
             b.prayerDone = bp >= 15
             b.studyDone = bs >= 15
             b.isActiveNow = bp > 0 || bs > 0
-            b.liveStatus = b.isActiveNow ? 'Active now' : 'Seen today'
+
+            if (b.isActiveNow) {
+              b.liveStatus = 'Active today'
+            } else if (lastSessionMap[b.id]) {
+              const diffMs = Date.now() - new Date(lastSessionMap[b.id]).getTime()
+              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+              if (diffDays === 0) {
+                b.liveStatus = 'Seen earlier today'
+              } else if (diffDays === 1) {
+                b.liveStatus = 'Active yesterday'
+              } else {
+                b.liveStatus = `Active ${diffDays}d ago`
+              }
+            } else {
+              b.liveStatus = 'No sessions yet'
+            }
           })
         }
 
@@ -252,7 +295,7 @@ export default function AccountabilityPage() {
                     <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
                       {req.name} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview</span>
                     </p>
-                    <p className="text-[10px] text-text-secondary truncate">{req.church}</p>
+                    {req.church ? <p className="text-[10px] text-text-secondary truncate">{req.church}</p> : null}
                   </div>
                 </Link>
 
@@ -348,7 +391,7 @@ export default function AccountabilityPage() {
                       <div className="space-y-0.5">
                         <h3 className="text-sm font-bold text-text-primary">{buddy.name}</h3>
                         <p className="text-[11px] text-text-secondary">
-                          {buddy.liveStatus} • {buddy.church}
+                          {buddy.liveStatus}{buddy.church ? ` • ${buddy.church}` : ''}
                         </p>
                       </div>
                     </div>
@@ -356,7 +399,7 @@ export default function AccountabilityPage() {
                     <div className="px-2.5 py-1 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 flex items-center gap-1 shadow-2xs">
                       <Fire size={14} weight="fill" className="text-[#234537] dark:text-emerald-400" />
                       <span className="text-xs font-mono font-bold text-[#234537] dark:text-emerald-400">
-                        {buddy.streakCount} days
+                        {buddy.streakCount} {buddy.streakCount === 1 ? 'day' : 'days'}
                       </span>
                     </div>
                   </div>

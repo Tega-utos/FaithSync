@@ -83,10 +83,10 @@ export default function BuddyChatPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [buddyName, setBuddyName] = useState('Accountability Buddy')
   const [buddyInitial, setBuddyInitial] = useState('A')
-  const [buddyChurch, setBuddyChurch] = useState('Assembly of Christ')
-  const [buddyStreak, setBuddyStreak] = useState(7)
-  const [buddyStatus, setBuddyStatus] = useState<'online' | 'offline'>('online')
-  const [buddyLastSeen, setBuddyLastSeen] = useState('Active now')
+  const [buddyChurch, setBuddyChurch] = useState('')
+  const [buddyStreak, setBuddyStreak] = useState(0)
+  const [buddyStatus, setBuddyStatus] = useState<'online' | 'offline'>('offline')
+  const [buddyLastSeen, setBuddyLastSeen] = useState('')
   const [isSquareConnection, setIsSquareConnection] = useState(false)
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -218,7 +218,7 @@ export default function BuddyChatPage() {
           const name = partnerProfile.display_name || 'Accountability Buddy'
           setBuddyName(name)
           setBuddyInitial(name.charAt(0).toUpperCase())
-          setBuddyChurch(partnerProfile.church || 'Local Assembly')
+          setBuddyChurch(partnerProfile.church || '')
         }
 
         // 2. Fetch Genuine Buddy Streak from Database

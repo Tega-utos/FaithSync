@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     // 2. Query profiles
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, buddy_code')
+      .select('id, display_name, avatar_url, buddy_code, church')
       .neq('id', user.id)
 
     if (query) {
@@ -54,8 +54,9 @@ export async function GET(req: NextRequest) {
         name: p.display_name || 'A Believer',
         initial: (p.display_name || 'B').charAt(0).toUpperCase(),
         avatarUrl: p.avatar_url,
-        church: 'Local Assembly',
+        church: p.church || '',
         buddyCode: p.buddy_code || '',
+        streakDays: 0,
         activityLevel: 'Daily Active',
         goalLength: '15m Daily',
         connectionStatus: conn ? conn.status : 'none',

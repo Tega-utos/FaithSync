@@ -603,14 +603,18 @@ export default function FindBuddyPage() {
                       </div>
 
                       <div className="flex items-center gap-2 text-[10px] text-text-secondary">
-                        <span className="flex items-center gap-1 font-bold text-text-primary truncate max-w-[120px]">
-                          <Church size={12} className="text-[#FBBF24] shrink-0" />
-                          <span className="truncate">{userItem.church}</span>
-                        </span>
-                        <span>•</span>
+                        {userItem.church ? (
+                          <>
+                            <span className="flex items-center gap-1 font-bold text-text-primary truncate max-w-[120px]">
+                              <Church size={12} className="text-[#FBBF24] shrink-0" />
+                              <span className="truncate">{userItem.church}</span>
+                            </span>
+                            <span>•</span>
+                          </>
+                        ) : null}
                         <span className="flex items-center gap-0.5 text-[#234537] dark:text-emerald-400 font-bold shrink-0">
                           <Fire size={12} weight="fill" className="text-[#234537] dark:text-emerald-400" />
-                          {userItem.streakDays}d Streak
+                          {userItem.streakDays || 0}d Streak
                         </span>
                       </div>
                     </div>

@@ -35,8 +35,23 @@ import {
   Lightbulb,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { calculateUserStreak } from '@/lib/utils/streak'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
+
+function extractMinsFromContent(content: string): { prayerMins: number; studyMins: number } {
+  let prayerMins = 0
+  let studyMins = 0
+  if (!content) return { prayerMins, studyMins }
+
+  const prayerMatch = content.match(/(\d+)\s*m(?:in)?s?\s*(?:of\s*)?prayer/i)
+  if (prayerMatch) prayerMins = parseInt(prayerMatch[1], 10)
+
+  const studyMatch = content.match(/(\d+)\s*m(?:in)?s?\s*(?:of\s*)?(?:scripture\s*study|study|word)/i)
+  if (studyMatch) studyMins = parseInt(studyMatch[1], 10)
+
+  return { prayerMins, studyMins }
+}
 
 type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
 type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
@@ -260,6 +275,28 @@ function SquarePageContent() {
             }
           } catch (_) {}
 
+          // Calculate authentic streaks for distinct non-anonymous authors
+          const streakMap: Record<string, number> = {}
+          const distinctUserIds = Array.from(
+            new Set(
+              dbPosts
+                .filter((p: any) => p.user_id && !p.is_anonymous)
+                .map((p: any) => p.user_id)
+            )
+          )
+
+          if (distinctUserIds.length > 0) {
+            await Promise.all(
+              distinctUserIds.map(async (uid) => {
+                try {
+                  streakMap[uid] = await calculateUserStreak(uid, supabase)
+                } catch {
+                  streakMap[uid] = 0
+                }
+              })
+            )
+          }
+
           const formatted: SquarePostItem[] = dbPosts.map((p: any) => {
             const author = p.profiles || authorMap[p.user_id] || {}
             const isAnon = Boolean(
@@ -272,7 +309,9 @@ function SquarePageContent() {
             const authorDisplayName = isAnon
               ? 'Anonymous Member'
               : author.display_name || (user && p.user_id === user.id ? user.user_metadata?.full_name || 'Me' : 'A Believer')
-            const authorChurchName = isAnon ? 'Community Square' : (author.church || 'Local Assembly')
+            const authorChurchName = isAnon ? 'Community Square' : (author.church || '')
+
+            const { prayerMins: pMins, studyMins: sMins } = extractMinsFromContent(p.content || '')
 
             return {
               id: p.id,
@@ -288,9 +327,9 @@ function SquarePageContent() {
               authorName: authorDisplayName,
               authorAvatar: isAnon ? null : author.avatar_url || null,
               authorChurch: authorChurchName,
-              authorStreak: 14,
-              prayerMins: 30,
-              studyMins: 20,
+              authorStreak: isAnon ? 0 : (streakMap[p.user_id] || 0),
+              prayerMins: pMins || (p.post_type === 'record' ? 15 : undefined),
+              studyMins: sMins || undefined,
               reactions: postReactionsMap[p.id] || {},
               commentCount: postCommentCountMap[p.id] || 0,
             }
@@ -677,6 +716,9 @@ function SquarePageContent() {
         newPostId = newPost?.id || `sp-${Date.now()}`
       }
 
+      const realAuthorStreak = user ? await calculateUserStreak(user.id, supabase) : 0
+      const { prayerMins: pubPrayer, studyMins: pubStudy } = extractMinsFromContent(combinedContent)
+
       const optimisticPost: SquarePostItem = {
         id: newPostId,
         user_id: isAnonymous ? '' : user.id,
@@ -691,9 +733,10 @@ function SquarePageContent() {
           ? 'Anonymous Member'
           : user.user_metadata?.full_name || user.user_metadata?.display_name || 'Believer',
         authorAvatar: isAnonymous ? null : user.user_metadata?.avatar_url,
-        authorChurch: isAnonymous ? 'Community Square' : (user.user_metadata?.church || 'Assembly of Christ'),
-        authorStreak: 14,
-        prayerMins: 30,
+        authorChurch: isAnonymous ? 'Community Square' : (user.user_metadata?.church || ''),
+        authorStreak: realAuthorStreak,
+        prayerMins: pubPrayer || (normalizedPostType === 'record' ? 15 : undefined),
+        studyMins: pubStudy || undefined,
         reactions: {},
         commentCount: 0,
       }
@@ -1069,7 +1112,7 @@ function SquarePageContent() {
                         <div className="flex items-center gap-1">
                           <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
                           <span className="text-base font-black font-mono text-[#234537] dark:text-emerald-400">
-                            {post.authorStreak || 1} Days &amp; Counting
+                            {post.authorStreak ?? 0} {(post.authorStreak === 1) ? 'Day' : 'Days'} &amp; Counting
                           </span>
                         </div>
                       </div>

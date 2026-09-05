@@ -331,7 +331,7 @@ export default function ProfilePage() {
                   connectionId: b.id,
                   name: rawName,
                   initial: rawName.charAt(0).toUpperCase(),
-                  church: p.church || 'Grace Assembly',
+                  church: p.church || '',
                   permissions: {
                     canInviteToClockIn: perm.canInviteToClockIn ?? true,
                     sendNotificationOnStart: perm.sendNotificationOnStart ?? true,
