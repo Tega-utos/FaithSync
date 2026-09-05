@@ -170,6 +170,14 @@ class AmbientSoundEngine {
     this.masterGain.gain.linearRampToValueAtTime(muted ? 0 : this.baseVolume, now + 0.2)
   }
 
+  public duck(isDucked: boolean) {
+    if (this.isMuted || !this.audioCtx || !this.masterGain) return
+    const now = this.audioCtx.currentTime
+    const targetVolume = isDucked ? 0.08 : this.baseVolume
+    this.masterGain.gain.cancelScheduledValues(now)
+    this.masterGain.gain.linearRampToValueAtTime(targetVolume, now + 0.3)
+  }
+
   public toggleMute(): boolean {
     this.setMuted(!this.isMuted)
     return this.isMuted

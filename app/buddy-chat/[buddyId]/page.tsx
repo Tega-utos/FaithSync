@@ -56,6 +56,7 @@ import { calculateUserStreak } from '@/lib/utils/streak'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { getVerse } from '@/lib/scripture'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
+import { useWebRTCAudio } from '@/hooks/useWebRTCAudio'
 
 const DASH_ARRAY = 565.48
 
@@ -150,7 +151,7 @@ export default function BuddyChatPage() {
   const [schedulePreset, setSchedulePreset] = useState<'tomorrow_6am' | 'tomorrow_7am' | 'today_8pm' | 'custom'>('tomorrow_6am')
   const [customScheduledTime, setCustomScheduledTime] = useState('')
 
-  // Live Devotion Room (WebRTC + Realtime Synced Stopwatch)
+  // Live Devotion Room (WebRTC Voice Chat + Realtime Synced Stopwatch)
   const [isLiveOverlayOpen, setIsLiveOverlayOpen] = useState(false)
   const [isBuddyPresentInRoom, setIsBuddyPresentInRoom] = useState(false)
   const [liveDiscipline, setLiveDiscipline] = useState<'prayer' | 'study'>('prayer')
@@ -158,9 +159,31 @@ export default function BuddyChatPage() {
   const [liveTargetMins, setLiveTargetMins] = useState(15)
   const [liveFocusText, setLiveFocusText] = useState('')
   const [liveTimelineSegments, setLiveTimelineSegments] = useState<TimelineSegment[]>([])
-  const [isMicMuted, setIsMicMuted] = useState(false)
   const [isBuddySpeaking, setIsBuddySpeaking] = useState(false)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
+
+  // WebRTC Audio Engine for 2-way Voice Chat
+  const webrtcRoomId = currentUser && buddyId ? [currentUser.id, buddyId].sort().join('_') : null
+  const {
+    isMicMuted,
+    isSpeakerMuted,
+    isSelfSpeaking,
+    hasMicPermission,
+    toggleMic,
+    toggleSpeaker,
+  } = useWebRTCAudio({
+    roomId: webrtcRoomId,
+    userId: currentUser?.id || null,
+    userName: currentUser?.user_metadata?.full_name || 'Accountability Buddy',
+    isEnabled: isLiveOverlayOpen,
+    onSpeakingChange: (isSpeaking) => {
+      ambientSound.duck(isSpeaking || isBuddySpeaking)
+    },
+    onPeerSpeakingChange: (_peerId, isSpeaking) => {
+      setIsBuddySpeaking(isSpeaking)
+      ambientSound.duck(isSpeaking || isSelfSpeaking)
+    },
+  })
 
   // In-App Bible Reader & Ambient Sound in Live Session
   const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false)
@@ -1834,6 +1857,7 @@ export default function BuddyChatPage() {
         return (
           <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
             {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
+            {/* Top Bar: Live Status & Controls */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 {isBuddyPresentInRoom ? (
@@ -1863,7 +1887,22 @@ export default function BuddyChatPage() {
                   title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
                 >
                   {!isAmbientMuted ? <SpeakerHigh size={15} weight="bold" /> : <SpeakerSlash size={15} />}
-                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambient: On' : 'Ambient: Muted'}</span>
+                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambiance' : 'Ambiance Off'}</span>
+                </button>
+
+                {/* Voice Chat Speaker Output Mute/Unmute */}
+                <button
+                  type="button"
+                  onClick={() => toggleSpeaker()}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !isSpeakerMuted
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                      : 'bg-card/10 border-white/20 text-white/50 hover:text-white'
+                  }`}
+                  title={!isSpeakerMuted ? 'Mute Incoming Room Audio' : 'Unmute Room Audio'}
+                >
+                  {!isSpeakerMuted ? <SpeakerHigh size={15} weight="fill" /> : <SpeakerSlash size={15} />}
+                  <span className="hidden sm:inline">{!isSpeakerMuted ? 'Voice: On' : 'Voice: Muted'}</span>
                 </button>
               </div>
 
@@ -1872,14 +1911,22 @@ export default function BuddyChatPage() {
                 {isBuddyPresentInRoom ? (
                   <div className="flex items-center -space-x-2 animate-in fade-in">
                     <div
-                      className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
-                      title="You (Present)"
+                      className={`w-9 h-9 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 shadow-md transition-all ${
+                        isSelfSpeaking
+                          ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-black scale-110 shadow-[0_0_15px_rgba(52,211,153,0.7)]'
+                          : 'ring-2 ring-emerald-400'
+                      }`}
+                      title={isSelfSpeaking ? 'You (Praying / Speaking)' : 'You (Present)'}
                     >
                       Me
                     </div>
                     <div
-                      className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md animate-in zoom-in-90"
-                      title={`${buddyName} (Connected)`}
+                      className={`w-9 h-9 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 shadow-md animate-in zoom-in-90 transition-all ${
+                        isBuddySpeaking
+                          ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-black scale-110 shadow-[0_0_15px_rgba(52,211,153,0.7)]'
+                          : 'ring-2 ring-emerald-400'
+                      }`}
+                      title={isBuddySpeaking ? `${buddyName} (Praying / Speaking)` : `${buddyName} (Connected)`}
                     >
                       {buddyInitial}
                     </div>
@@ -1887,13 +1934,15 @@ export default function BuddyChatPage() {
                 ) : (
                   <div className="flex items-center gap-1.5 animate-in fade-in">
                     <div
-                      className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
+                      className={`w-9 h-9 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 shadow-md ${
+                        isSelfSpeaking ? 'ring-4 ring-emerald-400 scale-110' : 'ring-2 ring-emerald-400'
+                      }`}
                       title="You (In Call)"
                     >
                       Me
                     </div>
                     <div
-                      className="w-8 h-8 rounded-full bg-transparent text-white/50 border-2 border-dashed border-white/30 flex items-center justify-center text-[11px] font-bold"
+                      className="w-9 h-9 rounded-full bg-transparent text-white/50 border-2 border-dashed border-white/30 flex items-center justify-center text-[11px] font-bold"
                       title={`Waiting for ${buddyName} to join...`}
                     >
                       {buddyInitial}
@@ -1914,6 +1963,16 @@ export default function BuddyChatPage() {
                 </button>
               </div>
             </div>
+
+            {/* Speaking Status Pill */}
+            {(isSelfSpeaking || isBuddySpeaking) && (
+              <div className="flex justify-center -my-2 animate-in fade-in">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>{isBuddySpeaking ? `${buddyName} is speaking...` : 'You are speaking...'}</span>
+                </span>
+              </div>
+            )}
 
             {/* Middle Section: Stopwatch Ring & Contextual Study / Prayer Phase Card */}
             <div className="flex flex-col items-center justify-center space-y-4 my-auto">
@@ -1996,12 +2055,39 @@ export default function BuddyChatPage() {
               )}
             </div>
 
-            {/* Bottom Bar: Action Finish Button */}
-            <div className="flex items-center justify-center gap-4">
+            {/* Bottom Bar: Live WebRTC Microphone Toggle & Finish Button */}
+            <div className="flex items-center justify-center gap-3">
+              {/* Microphone Toggle Button */}
+              <button
+                type="button"
+                onClick={() => toggleMic()}
+                className={`py-3 px-5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
+                  isMicMuted
+                    ? 'bg-card/20 hover:bg-card/30 text-white/80 border border-white/20'
+                    : isSelfSpeaking
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 animate-pulse'
+                    : 'bg-[#FBBF24] hover:bg-[#F59E0B] text-[#1A1610] shadow-[#FBBF24]/20'
+                }`}
+                title={isMicMuted ? 'Unmute microphone' : 'Mute microphone'}
+              >
+                {isMicMuted ? (
+                  <>
+                    <MicrophoneSlash size={16} />
+                    <span>Unmute Mic</span>
+                  </>
+                ) : (
+                  <>
+                    <Microphone size={16} weight="fill" />
+                    <span>{isSelfSpeaking ? 'Speaking...' : 'Mic Live'}</span>
+                  </>
+                )}
+              </button>
+
+              {/* Finish Devotion Button */}
               <button
                 type="button"
                 onClick={() => setShowEndConfirm(true)}
-                className="py-3 px-6 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
+                className="py-3 px-5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
               >
                 <Square size={16} weight="fill" />
                 <span>Finish & Credit Target</span>

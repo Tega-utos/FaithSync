@@ -94,6 +94,7 @@ import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from '
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { getVerse } from '@/lib/scripture'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
+import { useWebRTCAudio } from '@/hooks/useWebRTCAudio'
 
 export default function GroupChatPage() {
   const params = useParams()
@@ -158,7 +159,7 @@ export default function GroupChatPage() {
   const [schedulePreset, setSchedulePreset] = useState<'tomorrow_6am' | 'tomorrow_7am' | 'today_8pm' | 'custom'>('tomorrow_6am')
   const [customScheduledTime, setCustomScheduledTime] = useState('')
 
-  // Live Cohort Overlay State
+  // Live Cohort Overlay State (Multi-Peer WebRTC Voice Devotion Room)
   const [isLiveOverlayOpen, setIsLiveOverlayOpen] = useState(false)
   const [isHostUser, setIsHostUser] = useState(false)
   const [liveDiscipline, setLiveDiscipline] = useState<'prayer' | 'study'>('study')
@@ -166,8 +167,30 @@ export default function GroupChatPage() {
   const [liveTargetMins, setLiveTargetMins] = useState(30)
   const [liveFocusText, setLiveFocusText] = useState('Hebrews 11 - Faith & Endurance')
   const [liveTimelineSegments, setLiveTimelineSegments] = useState<TimelineSegment[]>([])
-  // Auto-Mute (Group Mode): Participants are muted by default to prevent chaotic audio feedback
-  const [isMicMuted, setIsMicMuted] = useState(true)
+
+  // Multi-Peer WebRTC Audio Engine for Group Devotion Room
+  const {
+    isMicMuted,
+    isSpeakerMuted,
+    isSelfSpeaking,
+    hasMicPermission,
+    speakingPeers,
+    toggleMic,
+    toggleSpeaker,
+  } = useWebRTCAudio({
+    roomId: groupId || null,
+    userId: currentUser?.id || null,
+    userName: currentUser?.user_metadata?.full_name || 'Member',
+    isEnabled: isLiveOverlayOpen,
+    onSpeakingChange: (isSpeaking) => {
+      const anyPeerSpeaking = Object.values(speakingPeers).some(Boolean)
+      ambientSound.duck(isSpeaking || anyPeerSpeaking)
+    },
+    onPeerSpeakingChange: (_peerId, isSpeaking) => {
+      const anyPeerSpeaking = isSpeaking || Object.values(speakingPeers).some(Boolean)
+      ambientSound.duck(anyPeerSpeaking || isSelfSpeaking)
+    },
+  })
 
   // In-App Bible Reader & Ambient Sound in Live Session
   const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false)
@@ -1868,7 +1891,7 @@ export default function GroupChatPage() {
 
         return (
           <div className="fixed inset-0 z-50 bg-[#0E0E0E] text-white p-5 sm:p-6 flex flex-col justify-between animate-in slide-in-from-bottom duration-300">
-            {/* Top Bar: Sync Badge, Audio Control, Avatars & Exit */}
+            {/* Top Bar: Live Status & Audio Controls */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black flex items-center gap-1.5">
@@ -1891,7 +1914,22 @@ export default function GroupChatPage() {
                   title={!isAmbientMuted ? 'Mute Ambient Sound' : 'Enable Ambient Sound'}
                 >
                   {!isAmbientMuted ? <SpeakerHigh size={15} weight="bold" /> : <SpeakerSlash size={15} />}
-                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambient: On' : 'Ambient: Muted'}</span>
+                  <span className="hidden sm:inline">{!isAmbientMuted ? 'Ambiance' : 'Ambiance Off'}</span>
+                </button>
+
+                {/* Voice Chat Speaker Output Mute/Unmute */}
+                <button
+                  type="button"
+                  onClick={() => toggleSpeaker()}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !isSpeakerMuted
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                      : 'bg-card/10 border-white/20 text-white/50 hover:text-white'
+                  }`}
+                  title={!isSpeakerMuted ? 'Mute Incoming Voice' : 'Unmute Voice'}
+                >
+                  {!isSpeakerMuted ? <SpeakerHigh size={15} weight="fill" /> : <SpeakerSlash size={15} />}
+                  <span className="hidden sm:inline">{!isSpeakerMuted ? 'Voice: On' : 'Voice: Muted'}</span>
                 </button>
               </div>
 
@@ -1899,26 +1937,37 @@ export default function GroupChatPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center -space-x-2">
                   <div
-                    className="w-8 h-8 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
-                    title="You (Present)"
+                    className={`w-9 h-9 rounded-full bg-[#FBBF24] text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 shadow-md transition-all ${
+                      isSelfSpeaking
+                        ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-black scale-110 shadow-[0_0_15px_rgba(52,211,153,0.7)]'
+                        : 'ring-2 ring-emerald-400'
+                    }`}
+                    title={isSelfSpeaking ? 'You (Praying / Speaking)' : 'You (Present)'}
                   >
                     Me
                   </div>
                   {participants
                     .filter((p) => p.id !== 'me')
-                    .slice(0, 3)
-                    .map((p) => (
-                      <div
-                        key={p.id}
-                        className="w-8 h-8 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 ring-2 ring-emerald-400 shadow-md"
-                        title={`${p.name} (Present)`}
-                      >
-                        {p.initial}
-                      </div>
-                    ))}
-                  {participants.length > 4 && (
+                    .slice(0, 4)
+                    .map((p) => {
+                      const isPeerSpeaking = Boolean(speakingPeers[p.id])
+                      return (
+                        <div
+                          key={p.id}
+                          className={`w-9 h-9 rounded-full bg-card text-text-primary font-black text-xs flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20 shadow-md transition-all ${
+                            isPeerSpeaking
+                              ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-black scale-110 shadow-[0_0_15px_rgba(52,211,153,0.7)]'
+                              : 'ring-2 ring-emerald-400'
+                          }`}
+                          title={isPeerSpeaking ? `${p.name} (Praying / Speaking)` : `${p.name} (Present)`}
+                        >
+                          {p.initial}
+                        </div>
+                      )
+                    })}
+                  {participants.length > 5 && (
                     <div className="w-8 h-8 rounded-full bg-[#262626] text-white font-black text-[10px] flex items-center justify-center border-2 border-[#0E0E0E] dark:border-white/20">
-                      +{participants.length - 4}
+                      +{participants.length - 5}
                     </div>
                   )}
                 </div>
@@ -1933,6 +1982,16 @@ export default function GroupChatPage() {
                 </button>
               </div>
             </div>
+
+            {/* Speaking Status Banner */}
+            {(isSelfSpeaking || Object.values(speakingPeers).some(Boolean)) && (
+              <div className="flex justify-center -my-2 animate-in fade-in">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>{isSelfSpeaking ? 'You are speaking...' : 'Member is speaking aloud...'}</span>
+                </span>
+              </div>
+            )}
 
             {/* Middle Section: Circular Stopwatch & Contextual Study / Prayer Phase Card */}
             <div className="flex flex-col items-center justify-center space-y-4 my-auto">
@@ -2014,17 +2073,41 @@ export default function GroupChatPage() {
               )}
             </div>
 
-            {/* Bottom Bar: Microphone Control */}
-            <div className="flex items-center justify-center gap-4">
+            {/* Bottom Bar: Live WebRTC Microphone Toggle & Exit */}
+            <div className="flex items-center justify-center gap-3">
+              {/* Microphone Toggle Button */}
               <button
                 type="button"
-                onClick={() => setIsMicMuted((m) => !m)}
-                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-xl cursor-pointer ${
-                  isMicMuted ? 'bg-rose-600 text-white' : 'bg-card text-text-primary hover:bg-slate-200'
+                onClick={() => toggleMic()}
+                className={`py-3 px-5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
+                  isMicMuted
+                    ? 'bg-card/20 hover:bg-card/30 text-white/80 border border-white/20'
+                    : isSelfSpeaking
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 animate-pulse'
+                    : 'bg-[#FBBF24] hover:bg-[#F59E0B] text-[#1A1610] shadow-[#FBBF24]/20'
                 }`}
-                title={isMicMuted ? 'Unmute' : 'Mute'}
+                title={isMicMuted ? 'Unmute microphone' : 'Mute microphone'}
               >
-                {isMicMuted ? <MicrophoneSlash size={24} /> : <Microphone size={24} />}
+                {isMicMuted ? (
+                  <>
+                    <MicrophoneSlash size={16} />
+                    <span>Unmute Mic</span>
+                  </>
+                ) : (
+                  <>
+                    <Microphone size={16} weight="fill" />
+                    <span>{isSelfSpeaking ? 'Speaking...' : 'Mic Live'}</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEndLiveSession}
+                className="py-3 px-5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
+              >
+                <Square size={14} weight="fill" />
+                <span>{isHostUser ? 'End Session' : 'Leave Early'}</span>
               </button>
             </div>
           </div>
