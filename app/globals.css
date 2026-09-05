@@ -6,6 +6,7 @@
    Static brand tokens — these never change between modes
    ═══════════════════════════════════════════════════════════ */
 @theme {
+  --color-white: #FFFFFF;
   --color-gold: #FBBF24;
   --color-gold-light: #FDF9F1;
   --color-burnham: #234537;
@@ -51,7 +52,6 @@
   --color-text-muted: var(--t-muted);
   --color-border: var(--b-default);
   --color-border-light: var(--b-light);
-  --color-white: var(--c-white);
   --color-gray-50: var(--g-50);
   --color-gray-100: var(--g-100);
   --color-gray-200: var(--g-200);
@@ -197,7 +197,7 @@
   --t-muted: var(--ink-muted);
   --b-default: var(--border);
   --b-light: var(--border-subtle);
-  --c-white: var(--surface-card);
+  --c-white: #FFFFFF;
 
   /* Gray palette — inverted */
   --g-50: #14110D;

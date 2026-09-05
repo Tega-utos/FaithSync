@@ -1288,11 +1288,11 @@ export default function GroupChatPage() {
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'study'
                         ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border border-[#0E0E0E] dark:border-[#FBBF24]/50 shadow-md'
-                        : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
+                        : 'bg-card border border-border text-text-secondary dark:text-neutral-400 hover:border-[#FBBF24]'
                     }`}
                   >
                     <BookOpen size={16} weight="bold" className={inviteDiscipline === 'study' ? 'text-[#FBBF24]' : ''} />
-                    <span>Scripture Study</span>
+                    <span className={inviteDiscipline === 'study' ? 'text-white dark:text-[#F5F1E8] font-black' : ''}>Scripture Study</span>
                   </button>
                   <button
                     type="button"
@@ -1300,11 +1300,11 @@ export default function GroupChatPage() {
                     className={`py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       inviteDiscipline === 'prayer'
                         ? 'bg-[#0E0E0E] dark:bg-[#2A241C] text-white dark:text-[#F5F1E8] border border-[#0E0E0E] dark:border-[#FBBF24]/50 shadow-md'
-                        : 'bg-card border border-border text-text-secondary hover:border-[#FBBF24]'
+                        : 'bg-card border border-border text-text-secondary dark:text-neutral-400 hover:border-[#FBBF24]'
                     }`}
                   >
                     <HandsPraying size={16} weight="fill" className={inviteDiscipline === 'prayer' ? 'text-[#FBBF24]' : ''} />
-                    <span>Prayer</span>
+                    <span className={inviteDiscipline === 'prayer' ? 'text-white dark:text-[#F5F1E8] font-black' : ''}>Prayer</span>
                   </button>
                 </div>
               </div>

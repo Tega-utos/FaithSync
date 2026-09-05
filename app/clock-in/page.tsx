@@ -236,13 +236,13 @@ export default function ClockInPage() {
 
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-text-primary">
           {isTimerActive ? (
-            <span className="flex items-center gap-1.5 capitalize text-text-primary">
+            <span className="flex items-center gap-1.5 capitalize text-text-primary dark:text-[#F5F1E8]">
               {session.discipline === 'prayer' ? (
                 <HandsPraying size={18} weight="fill" className="text-[#FBBF24]" />
               ) : (
                 <BookOpen size={18} className="text-[#FBBF24]" />
               )}
-              <span>{session.discipline}</span>
+              <span className="font-bold">{session.discipline}</span>
             </span>
           ) : (
             'Start Session'
@@ -278,14 +278,14 @@ export default function ClockInPage() {
       {!isTimerActive ? (
         <div className="space-y-3.5 pt-1">
           {/* Mode Selector Toggle (Prayer vs Study) */}
-          <div className="p-1 rounded-2xl bg-subtle/60 border border-border grid grid-cols-2 gap-1 max-w-xs mx-auto">
+          <div className="p-1 rounded-2xl bg-subtle/60 dark:bg-[#1C1813] border border-border dark:border-[#332E26] grid grid-cols-2 gap-1 max-w-xs mx-auto">
             <button
               type="button"
               onClick={() => setSelectedDiscipline('prayer')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'prayer'
-                  ? 'bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-[#FBBF24]/50 text-white shadow-md'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-[#0E0E0E] dark:bg-[#2A241C] dark:border dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] shadow-md'
+                  : 'text-text-secondary dark:text-[#A8A29E] hover:text-text-primary dark:hover:text-[#F5F1E8]'
               }`}
             >
               <HandsPraying
@@ -293,7 +293,7 @@ export default function ClockInPage() {
                 weight="fill"
                 className={selectedDiscipline === 'prayer' ? 'text-[#FBBF24]' : 'text-current'}
               />
-              <span>Prayer</span>
+              <span className={selectedDiscipline === 'prayer' ? 'text-white dark:text-[#F5F1E8] font-bold' : ''}>Prayer</span>
             </button>
 
             <button
@@ -301,15 +301,15 @@ export default function ClockInPage() {
               onClick={() => setSelectedDiscipline('study')}
               className={`py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
                 selectedDiscipline === 'study'
-                  ? 'bg-[#0E0E0E] dark:bg-neutral-800 dark:border dark:border-[#FBBF24]/50 text-white shadow-md'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-[#0E0E0E] dark:bg-[#2A241C] dark:border dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] shadow-md'
+                  : 'text-text-secondary dark:text-[#A8A29E] hover:text-text-primary dark:hover:text-[#F5F1E8]'
               }`}
             >
               <BookOpen
                 size={16}
                 className={selectedDiscipline === 'study' ? 'text-[#FBBF24]' : 'text-current'}
               />
-              <span>Study</span>
+              <span className={selectedDiscipline === 'study' ? 'text-white dark:text-[#F5F1E8] font-bold' : ''}>Study</span>
             </button>
           </div>
 
@@ -495,13 +495,13 @@ export default function ClockInPage() {
               {formattedTime}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-bold capitalize text-text-secondary">
+            <div className="flex items-center gap-1.5 text-xs font-bold capitalize text-text-primary dark:text-[#F5F1E8]">
               {session.discipline === 'prayer' ? (
                 <Fire size={14} weight="fill" className="text-[#FBBF24]" />
               ) : (
                 <BookOpen size={14} className="text-[#FBBF24]" />
               )}
-              <span>{session.discipline} Session</span>
+              <span className="text-text-primary dark:text-[#F5F1E8]">{session.discipline} Session</span>
             </div>
           </div>
         </div>
