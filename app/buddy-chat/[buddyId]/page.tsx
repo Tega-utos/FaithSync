@@ -682,7 +682,7 @@ export default function BuddyChatPage() {
 
     try {
       const roomId = `buddy-${buddyId}`
-      // 1. Terminate Live Room Signal
+      // Persist Completed Devotion Session via Server-Validated Live Endpoint
       await fetch('/api/session/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -692,21 +692,7 @@ export default function BuddyChatPage() {
           discipline: liveDiscipline,
           elapsedSeconds: liveDurationSecs,
           targetMins: liveTargetMins,
-          focusText: liveFocusText,
-        }),
-      })
-
-      // 2. Persist Completed Devotion Session to Database & User Stats
-      await fetch('/api/session/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: liveDiscipline,
-          durationSeconds: liveDurationSecs,
-          targetDurationSeconds: liveTargetMins * 60,
-          startedAt: new Date(Date.now() - liveDurationSecs * 1000).toISOString(),
           focusText: liveFocusText || `Buddy Session with ${buddyName}`,
-          sharedToSquare: false,
         }),
       })
     } catch (err) {

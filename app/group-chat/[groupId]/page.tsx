@@ -661,7 +661,7 @@ export default function GroupChatPage() {
 
     try {
       const roomId = `group-${groupId}`
-      // 1. Live Signal End
+      // Persist Completed Devotion Session via Server-Validated Live Endpoint
       await fetch('/api/session/live', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -671,21 +671,7 @@ export default function GroupChatPage() {
           discipline: liveDiscipline,
           elapsedSeconds: liveDurationSecs,
           targetMins: liveTargetMins,
-          focusText: `Group Session: ${liveFocusText}`,
-        }),
-      })
-
-      // 2. Persist to Personal Targets & Stats (Prayer / Study Minutes)
-      await fetch('/api/session/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: liveDiscipline,
-          durationSeconds: liveDurationSecs,
-          targetDurationSeconds: liveTargetMins * 60,
-          startedAt: new Date(Date.now() - liveDurationSecs * 1000).toISOString(),
           focusText: `Group Devotion: ${groupName} - ${liveFocusText}`,
-          sharedToSquare: false,
         }),
       })
     } catch (err) {

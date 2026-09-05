@@ -60,6 +60,7 @@ export interface TimerSessionData {
   sessionMood?: string
   notes?: string
   verseReference?: string
+  sessionId?: string
 }
 
 interface TimerContextValue {

@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      postId: newPost?.id,
+      postId: createdPost?.id,
       streakCount,
       prayerMinutes,
       studyMinutes,

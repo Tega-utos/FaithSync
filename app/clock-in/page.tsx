@@ -20,6 +20,7 @@ import {
   SpeakerSlash,
 } from '@phosphor-icons/react'
 import { useTimer, TimerSessionData } from '@/context/TimerContext'
+import { createClient } from '@/lib/supabase/client'
 import { SessionSummaryModal } from '@/components/session/SessionSummaryModal'
 import { playChime } from '@/components/audio/Chime'
 import {
@@ -160,12 +161,79 @@ export default function ClockInPage() {
     requestScreenWakeLock()
   }
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     const data = stopTimer()
     setSummaryData(data)
     stopLockScreenSession()
     playChime(soundMuted)
     setShowSummary(true)
+
+    // Immediate database persist to guarantee zero data loss
+    if (data && data.secondsElapsed > 0) {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const isComplete =
+            data.secondsElapsed >= (data.targetSeconds || 0) && (data.targetSeconds || 0) > 0
+
+          const { data: savedSession, error: saveErr } = await (supabase.from('sessions') as any)
+            .insert({
+              user_id: user.id,
+              type: data.discipline,
+              duration_seconds: data.secondsElapsed,
+              target_duration_seconds: data.targetSeconds,
+              is_complete: isComplete,
+              verse_reference: data.verseReference || null,
+              focus_type: data.focusType || 'quick',
+              focus_timeline: (data.focusTimeline as any) || null,
+              started_at: data.startedAt || new Date().toISOString(),
+              ended_at: data.endedAt || new Date().toISOString(),
+            })
+            .select('id')
+            .maybeSingle()
+
+          if (!saveErr && savedSession?.id) {
+            setSummaryData((prev) => (prev ? { ...prev, sessionId: savedSession.id } : prev))
+          }
+
+          // Credit devotion minutes to user_stats
+          const durationMins = Math.floor(data.secondsElapsed / 60)
+          if (durationMins > 0) {
+            try {
+              const { data: currentStats } = await (supabase
+                .from('user_stats') as any)
+                .select('*')
+                .eq('user_id', user.id)
+                .maybeSingle()
+
+              if (currentStats) {
+                await (supabase.from('user_stats') as any)
+                  .update({
+                    total_devotion_mins: (currentStats.total_devotion_mins || 0) + durationMins,
+                    total_sessions: (currentStats.total_sessions || 0) + 1,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('user_id', user.id)
+              } else {
+                await (supabase.from('user_stats') as any).insert({
+                  user_id: user.id,
+                  total_devotion_mins: durationMins,
+                  total_sessions: 1,
+                })
+              }
+            } catch (statsErr) {
+              console.warn('user_stats update note:', statsErr)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error saving ended session to database:', err)
+      }
+    }
   }
 
   const strokeOffset = DASH_ARRAY - (progressPercentage / 100) * DASH_ARRAY

@@ -197,26 +197,75 @@ export function SessionSummaryModal({
         return
       }
 
-      const { data: sessionRecord, error: sessionErr } = await supabase
-        .from('sessions')
-        .insert({
-          user_id: user.id,
-          type: sessionData.discipline,
-          duration_seconds: sessionData.secondsElapsed,
-          target_duration_seconds: sessionData.targetSeconds,
-          is_complete: true,
-          reflection: reflection.trim() || null,
-          verse_reference: sessionData.verseReference || null,
-          focus_type: sessionData.focusType || 'quick',
-          focus_timeline: (sessionData.focusTimeline as any) || null,
-          shared_to_square: Boolean(shareToSquare && isBothComplete),
-          started_at: sessionData.startedAt,
-          ended_at: new Date().toISOString(),
-        })
-        .select()
-        .single()
+      let sessionRecord: any = null
 
-      if (sessionErr) throw sessionErr
+      if (sessionData.sessionId) {
+        const { data: updated, error: updateErr } = await supabase
+          .from('sessions')
+          .update({
+            reflection: reflection.trim() || null,
+            shared_to_square: Boolean(shareToSquare && isBothComplete),
+          })
+          .eq('id', sessionData.sessionId)
+          .select()
+          .maybeSingle()
+
+        if (!updateErr && updated) {
+          sessionRecord = updated
+        }
+      }
+
+      if (!sessionRecord) {
+        const { data: inserted, error: sessionErr } = await supabase
+          .from('sessions')
+          .insert({
+            user_id: user.id,
+            type: sessionData.discipline,
+            duration_seconds: sessionData.secondsElapsed,
+            target_duration_seconds: sessionData.targetSeconds,
+            is_complete: true,
+            reflection: reflection.trim() || null,
+            verse_reference: sessionData.verseReference || null,
+            focus_type: sessionData.focusType || 'quick',
+            focus_timeline: (sessionData.focusTimeline as any) || null,
+            shared_to_square: Boolean(shareToSquare && isBothComplete),
+            started_at: sessionData.startedAt,
+            ended_at: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        if (sessionErr) throw sessionErr
+        sessionRecord = inserted
+
+        // Update user_stats if this was a fresh insert
+        const durationMins = Math.floor(sessionData.secondsElapsed / 60)
+        if (durationMins > 0) {
+          try {
+            const { data: currentStats } = await (supabase
+              .from('user_stats') as any)
+              .select('*')
+              .eq('user_id', user.id)
+              .maybeSingle()
+
+            if (currentStats) {
+              await (supabase.from('user_stats') as any)
+                .update({
+                  total_devotion_mins: (currentStats.total_devotion_mins || 0) + durationMins,
+                  total_sessions: (currentStats.total_sessions || 0) + 1,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('user_id', user.id)
+            } else {
+              await (supabase.from('user_stats') as any).insert({
+                user_id: user.id,
+                total_devotion_mins: durationMins,
+                total_sessions: 1,
+              })
+            }
+          } catch {}
+        }
+      }
 
       if (shareToSquare && isBothComplete) {
         const postText =

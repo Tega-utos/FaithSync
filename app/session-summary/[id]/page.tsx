@@ -34,7 +34,7 @@ export default function SessionSummaryPage() {
   const [todayStudyMins, setTodayStudyMins] = useState(0)
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
-  const [session, setSession] = useState<{
+  interface SessionDetail {
     id: string
     type: string
     duration_seconds: number
@@ -50,31 +50,44 @@ export default function SessionSummaryPage() {
       prompt?: string
       verseText?: string
     }> | null
+    shared_to_square?: boolean
     created_at: string
-  }>({
-    id: sessionId,
-    type: 'prayer',
-    duration_seconds: 900,
-    reflection: 'Staying anchored in His grace and seeking divine guidance.',
-    verse_reference: 'Hebrews 6:19',
-    focus_type: 'quick',
-    focus_timeline: null,
-    created_at: new Date().toISOString(),
-  })
+  }
+
+  const [session, setSession] = useState<SessionDetail | null>(null)
 
   useEffect(() => {
     async function loadSession() {
       try {
         const supabase = createClient()
-        if (sessionId && sessionId !== 'latest' && sessionId !== 'temp') {
-          const { data: found } = await supabase
-            .from('sessions')
-            .select('*')
-            .eq('id', sessionId)
-            .single()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-          if (found) {
-            setSession(found as any)
+        if (user) {
+          if (sessionId && sessionId !== 'latest' && sessionId !== 'temp') {
+            const { data: found } = await supabase
+              .from('sessions')
+              .select('*')
+              .eq('id', sessionId)
+              .maybeSingle()
+
+            if (found) {
+              setSession(found as any)
+            }
+          } else {
+            // Fetch most recent session for this user
+            const { data: latest } = await supabase
+              .from('sessions')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            if (latest) {
+              setSession(latest as any)
+            }
           }
         }
 
@@ -96,16 +109,27 @@ export default function SessionSummaryPage() {
     loadSession()
   }, [sessionId])
 
-  const mins = Math.floor(session.duration_seconds / 60)
-  const secs = session.duration_seconds % 60
+  if (loading && !session) {
+    return (
+      <div className="command-center-container px-4 sm:px-6 pt-16 flex flex-col items-center justify-center space-y-3 min-h-[60vh]">
+        <CircleNotch size={28} className="animate-spin text-[#FBBF24]" />
+        <p className="text-xs font-bold text-text-secondary">Loading session receipt...</p>
+      </div>
+    )
+  }
+
+  const durationSecs = session?.duration_seconds || 0
+  const mins = Math.floor(durationSecs / 60)
+  const secs = durationSecs % 60
   const formattedDuration = `${mins}m ${secs > 0 ? `${secs}s` : ''}`
+  const isAlreadyShared = Boolean(session?.shared_to_square)
 
   const isPrayerComplete = todayPrayerMins >= prayerTarget
   const isStudyComplete = todayStudyMins >= studyTarget
   const isBothComplete = isPrayerComplete && isStudyComplete
 
   const handleShareToSquare = async () => {
-    if (!isBothComplete) return
+    if (!isBothComplete || !session || isAlreadyShared) return
     setSharing(true)
     try {
       const res = await fetch('/api/session/share', {
@@ -117,6 +141,10 @@ export default function SessionSummaryPage() {
           customReflection: includeReflection ? session.reflection : null,
         }),
       })
+
+      if (res.ok) {
+        setSession((prev) => (prev ? { ...prev, shared_to_square: true } : prev))
+      }
 
       invalidateMemoryCache('square_feed_posts')
       router.push('/square')
@@ -308,33 +336,45 @@ export default function SessionSummaryPage() {
 
       {/* Action Buttons */}
       <div className="space-y-3 pt-1">
-        <button
-          type="button"
-          onClick={handleShareToSquare}
-          disabled={!isBothComplete || sharing}
-          className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
-            !isBothComplete
-              ? 'bg-[#E5E7EB] text-text-muted cursor-not-allowed shadow-none'
-              : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] hover:bg-[#262626] dark:hover:bg-white/80 active:scale-95 cursor-pointer shadow-black/15'
-          }`}
-        >
-          {sharing ? (
-            <>
-              <CircleNotch size={16} className="animate-spin" />
-              <span>Publishing Record...</span>
-            </>
-          ) : !isBothComplete ? (
-            <>
-              <Lock size={18} className="text-text-muted" />
-              <span>Complete Both Targets to Share</span>
-            </>
-          ) : (
-            <>
-              <Globe size={18} className="text-[#FBBF24]" />
-              <span>Share to Community Square</span>
-            </>
-          )}
-        </button>
+        {isAlreadyShared ? (
+          <Link href="/square" className="block">
+            <button
+              type="button"
+              className="w-full py-4 px-6 rounded-2xl font-black text-sm shadow-md bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Check size={18} weight="bold" />
+              <span>Shared to Community Square ✓ (View Feed)</span>
+            </button>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={handleShareToSquare}
+            disabled={!isBothComplete || sharing}
+            className={`w-full py-4 px-6 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${
+              !isBothComplete
+                ? 'bg-[#E5E7EB] dark:bg-neutral-800 text-text-muted cursor-not-allowed shadow-none'
+                : 'bg-[#0E0E0E] dark:bg-[#FBBF24] text-white dark:text-[#1A1610] hover:bg-[#262626] dark:hover:bg-[#F59E0B] active:scale-95 cursor-pointer shadow-black/15'
+            }`}
+          >
+            {sharing ? (
+              <>
+                <CircleNotch size={16} className="animate-spin" />
+                <span>Publishing Record...</span>
+              </>
+            ) : !isBothComplete ? (
+              <>
+                <Lock size={18} className="text-text-muted" />
+                <span>Complete Both Targets to Share</span>
+              </>
+            ) : (
+              <>
+                <Globe size={18} className="text-[#FBBF24] dark:text-[#1A1610]" />
+                <span>Share to Community Square</span>
+              </>
+            )}
+          </button>
+        )}
 
         <Link href="/" className="block">
           <button
