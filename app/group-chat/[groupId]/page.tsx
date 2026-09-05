@@ -1177,7 +1177,12 @@ export default function GroupChatPage() {
         <button
           type="submit"
           disabled={!inputContent.trim() || isSubmitting}
-          className="p-2.5 rounded-2xl bg-[#0E0E0E] dark:bg-[#1E1B16] text-white dark:text-[#F5F1E8] border border-transparent dark:border-white/15 hover:bg-[#262626] dark:hover:bg-[#2A241C] disabled:opacity-30 transition-all shrink-0 cursor-pointer"
+          className={`p-2.5 rounded-2xl transition-all shrink-0 ${
+            inputContent.trim() && !isSubmitting
+              ? 'bg-[#FBBF24] hover:bg-[#F59E0B] text-[#1A1610] shadow-md shadow-[#FBBF24]/20 border border-[#D97706]/40 active:scale-95 cursor-pointer'
+              : 'bg-neutral-200/80 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 border border-neutral-300/40 dark:border-white/10 cursor-not-allowed opacity-70'
+          }`}
+          title={inputContent.trim() ? 'Send message' : 'Type a message to send'}
         >
           <PaperPlaneTilt size={16} weight="fill" />
         </button>
