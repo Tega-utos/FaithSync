@@ -1267,28 +1267,38 @@ function SquarePageContent() {
                         </button>
 
                         {openReactionPickerPostId === post.id && (
-                          <div className="absolute left-0 bottom-8 sm:bottom-auto sm:top-8 z-30 bg-card border border-border rounded-2xl shadow-xl p-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
-                            {FAITH_REACTIONS.map((r) => {
-                              const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
-                              const IconComponent = r.Icon
-                              return (
-                                <button
-                                  key={r.key}
-                                  type="button"
-                                  onClick={() => handleToggleReaction(post.id, r.key)}
-                                  className={`p-2 rounded-xl hover:scale-125 transition-transform flex flex-col items-center gap-1 ${
-                                    isSelected ? 'bg-[#EBF3EE] dark:bg-emerald-950/30' : 'hover:bg-card-hover'
-                                  }`}
-                                  title={r.label}
-                                >
-                                  <IconComponent size={16} weight="fill" className={r.color} />
-                                  <span className="text-[9px] font-bold text-text-secondary">
-                                    {r.label}
-                                  </span>
-                                </button>
-                              )
-                            })}
-                          </div>
+                          <>
+                            {/* Backdrop overlay for tap-outside to close */}
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() => setOpenReactionPickerPostId(null)}
+                            />
+
+                            <div className="absolute right-0 sm:right-auto sm:left-0 bottom-full mb-2 sm:mb-0 sm:bottom-auto sm:top-full sm:mt-2 z-30 bg-card/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-neutral-700/90 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-2.5rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
+                              {FAITH_REACTIONS.map((r) => {
+                                const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
+                                const IconComponent = r.Icon
+                                return (
+                                  <button
+                                    key={r.key}
+                                    type="button"
+                                    onClick={() => handleToggleReaction(post.id, r.key)}
+                                    className={`w-10 sm:w-11 py-1.5 rounded-xl hover:scale-110 active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shrink-0 cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-[#EBF3EE] dark:bg-emerald-950/50 border border-[#234537]/30 dark:border-emerald-600/40 text-[#234537] dark:text-emerald-400 font-bold'
+                                        : 'hover:bg-card-hover text-text-secondary'
+                                    }`}
+                                    title={r.label}
+                                  >
+                                    <IconComponent size={16} weight="fill" className={r.color} />
+                                    <span className="text-[9px] font-bold select-none leading-none pt-0.5">
+                                      {r.label}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
