@@ -238,7 +238,7 @@ export default function MonthlyReflectionPage() {
               value={journalText}
               onChange={(e) => setJournalText(e.target.value)}
               placeholder="Where did you see God move this month? How has your spiritual discipline grown, and what are your intentions for the month ahead?"
-              className="w-full p-4 bg-surface border border-border rounded-2xl text-xs text-text-primary placeholder-[#9095A1] focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all resize-none shadow-xs leading-relaxed"
+              className="w-full p-4 bg-surface border border-border rounded-2xl text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all resize-none shadow-xs leading-relaxed"
             />
           </div>
 
@@ -251,7 +251,7 @@ export default function MonthlyReflectionPage() {
               value={verseReference}
               onChange={(e) => setVerseReference(e.target.value)}
               placeholder="e.g. Psalm 23:1-3, Romans 8:28"
-              className="w-full px-3.5 py-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all shadow-xs"
+              className="w-full px-3.5 py-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-[#FBBF24] focus:bg-card transition-all shadow-xs"
             />
           </div>
         </div>
@@ -277,7 +277,7 @@ export default function MonthlyReflectionPage() {
               onChange={(e) => setShareToSquare(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-10 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0E0E0E]" />
+            <div className="w-10 h-6 bg-[#E5E7EB] dark:bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0E0E0E] dark:peer-checked:bg-[#FBBF24]" />
           </label>
         </div>
 
