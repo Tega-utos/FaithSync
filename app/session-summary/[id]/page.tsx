@@ -34,6 +34,7 @@ export default function SessionSummaryPage() {
   const [todayStudyMins, setTodayStudyMins] = useState(0)
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
+  const [isDevotionComplete, setIsDevotionComplete] = useState(false)
   interface SessionDetail {
     id: string
     type: string
@@ -94,10 +95,18 @@ export default function SessionSummaryPage() {
         // Fetch fresh devotion totals & targets
         const dashData = await fetchDashboardData(true)
         if (dashData) {
-          setTodayPrayerMins(dashData.prayerMinutes || 0)
-          setTodayStudyMins(dashData.studyMinutes || 0)
-          setPrayerTarget(dashData.prayerTarget || 15)
-          setStudyTarget(dashData.studyTarget || 15)
+          const pMins = dashData.prayerMinutes || 0
+          const sMins = dashData.studyMinutes || 0
+          const pT = dashData.prayerTarget || 15
+          const sT = dashData.studyTarget || 15
+          setTodayPrayerMins(pMins)
+          setTodayStudyMins(sMins)
+          setPrayerTarget(pT)
+          setStudyTarget(sT)
+          setIsDevotionComplete(Boolean(
+            dashData.isDevotionComplete ||
+            (pMins >= pT && sMins >= sT)
+          ))
         }
       } catch (err) {
         console.error('Session summary load error:', err)
@@ -126,7 +135,11 @@ export default function SessionSummaryPage() {
 
   const isPrayerComplete = todayPrayerMins >= prayerTarget
   const isStudyComplete = todayStudyMins >= studyTarget
-  const isBothComplete = isPrayerComplete && isStudyComplete
+  const isBothComplete = Boolean(
+    isDevotionComplete ||
+    (isPrayerComplete && isStudyComplete) ||
+    (todayPrayerMins >= prayerTarget && todayStudyMins >= studyTarget)
+  )
 
   const handleShareToSquare = async () => {
     if (!isBothComplete || !session || isAlreadyShared) return

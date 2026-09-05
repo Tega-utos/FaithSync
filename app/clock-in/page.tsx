@@ -200,6 +200,12 @@ export default function ClockInPage() {
             setSummaryData((prev) => (prev ? { ...prev, sessionId: savedSession.id } : prev))
           }
 
+          // Invalidate cache immediately so dashboard & momentum rings update without delay
+          invalidateMemoryCache()
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('faithsync_session_updated'))
+          }
+
           // Credit devotion minutes to user_stats
           const durationMins = Math.floor(data.secondsElapsed / 60)
           if (durationMins > 0) {

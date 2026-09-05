@@ -20,6 +20,8 @@ import { useTimer, TimerSessionData } from '@/context/TimerContext'
 import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { getLocalDateKey } from '@/lib/utils/date'
 
+import { fetchDashboardData } from '@/features/dashboard/services/dashboardService'
+
 export interface SessionSummaryModalProps {
   isOpen: boolean
   onClose: () => void
@@ -45,6 +47,7 @@ export function SessionSummaryModal({
   const [todayStudyMins, setTodayStudyMins] = useState(0)
   const [prayerTarget, setPrayerTarget] = useState(15)
   const [studyTarget, setStudyTarget] = useState(15)
+  const [isDevotionComplete, setIsDevotionComplete] = useState(false)
   const [primaryBuddy, setPrimaryBuddy] = useState<{ id: string; connectionId: string; name: string } | null>(null)
   const [nudged, setNudged] = useState(false)
 
@@ -77,43 +80,21 @@ export function SessionSummaryModal({
 
         if (!user) return
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferences')
-          .eq('id', user.id)
-          .single()
+        // Invalidate cache and fetch fresh dashboard data for complete accuracy
+        invalidateMemoryCache()
+        const dashData = await fetchDashboardData(true)
 
-        const rawPrefs = (profile?.preferences as any) || {}
-        const pTarget = rawPrefs.prayerTarget || rawPrefs.targets?.prayer || 15
-        const sTarget = rawPrefs.studyTarget || rawPrefs.wordTarget || rawPrefs.targets?.study || 15
-        setPrayerTarget(pTarget)
-        setStudyTarget(sTarget)
-
-        const startOfToday = new Date()
-        startOfToday.setHours(0, 0, 0, 0)
-
-        const { data: todaySessions } = await supabase
-          .from('sessions')
-          .select('type, duration_seconds, is_group, group_id')
-          .eq('user_id', user.id)
-          .gte('started_at', startOfToday.toISOString())
-
-        let pSecs = 0
-        let sSecs = 0
-        ;(todaySessions || []).forEach((s: any) => {
-          // Group sessions are fellowship only and do NOT count toward personal time
-          if (s.is_group || s.type === 'group' || s.group_id) return
-          if (s.type === 'prayer') pSecs += s.duration_seconds || 0
-          if (s.type === 'study' || s.type === 'word') sSecs += s.duration_seconds || 0
-        })
-
-        if (sessionData) {
-          if (sessionData.discipline === 'prayer') pSecs += sessionData.secondsElapsed
-          if (sessionData.discipline === 'study') sSecs += sessionData.secondsElapsed
+        if (dashData) {
+          setTodayPrayerMins(dashData.prayerMinutes || 0)
+          setTodayStudyMins(dashData.studyMinutes || 0)
+          setPrayerTarget(dashData.prayerTarget || 15)
+          setStudyTarget(dashData.studyTarget || 15)
+          setIsDevotionComplete(Boolean(
+            dashData.isDevotionComplete ||
+            ((dashData.prayerMinutes || 0) >= (dashData.prayerTarget || 15) &&
+             (dashData.studyMinutes || 0) >= (dashData.studyTarget || 15))
+          ))
         }
-
-        setTodayPrayerMins(Math.floor(pSecs / 60))
-        setTodayStudyMins(Math.floor(sSecs / 60))
 
         const { data: buddyRows } = await supabase
           .from('buddies')
@@ -157,7 +138,11 @@ export function SessionSummaryModal({
 
   const isPrayerComplete = todayPrayerMins >= prayerTarget
   const isStudyComplete = todayStudyMins >= studyTarget
-  const isBothComplete = isPrayerComplete && isStudyComplete
+  const isBothComplete = Boolean(
+    isDevotionComplete ||
+    (isPrayerComplete && isStudyComplete) ||
+    (todayPrayerMins >= prayerTarget && todayStudyMins >= studyTarget)
+  )
 
   const handleNudgeBuddy = async () => {
     if (!primaryBuddy) return
