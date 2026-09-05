@@ -191,7 +191,7 @@ export function BottomNav() {
   return (
     <nav
       id="bottom-nav"
-      className="faithsync-bottom-nav fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center pb-[max(14px,env(safe-area-inset-bottom))] px-3 sm:px-4"
+      className="faithsync-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-30 pointer-events-none flex justify-center pb-[max(14px,env(safe-area-inset-bottom))] px-3 sm:px-4"
     >
       <div className="w-full max-w-[min(380px,calc(100vw-24px))] pointer-events-auto bg-white/85 dark:bg-[#18140E]/90 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.08] rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_1px_1px_rgba(255,255,255,0.05)] px-2 py-1.5 grid grid-cols-3 items-center gap-1.5 transition-all">
         {/* ========================================================================= */}

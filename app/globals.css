@@ -344,25 +344,72 @@ h1, h2, h3, h4, h5, h6 {
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom phone frame container on desktop, full screen on mobile */
-.command-center-container {
-  max-width: 480px;
+/* ═══════════════════════════════════════════════════════════
+   ADAPTIVE MULTI-DEVICE RESPONSIVE LAYOUT SYSTEM
+   Device Class 1: Mobile (≤480px)
+   Device Class 2: Tablet (481px–1024px)
+   Device Class 3: Desktop (1025px–1919px)
+   Device Class 4: TV / Large Screen (≥1920px, 10-foot UI)
+   ═══════════════════════════════════════════════════════════ */
+
+.command-center-container,
+.phone-frame {
   width: 100%;
   margin: 0 auto;
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--bg-surface);
   position: relative;
-  box-shadow: 0 0 50px -10px rgba(0, 0, 0, 0.08);
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.phone-frame {
-  max-width: 480px;
-  width: 100%;
-  margin: 0 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
-  position: relative;
+/* Mobile (≤480px) */
+@media screen and (max-width: 480px) {
+  .command-center-container,
+  .phone-frame {
+    max-width: 100%;
+  }
+}
+
+/* Tablet (481px - 1024px) */
+@media screen and (min-width: 481px) and (max-width: 1024px) {
+  .command-center-container,
+  .phone-frame {
+    max-width: 768px;
+  }
+}
+
+/* Desktop (1025px - 1919px) */
+@media screen and (min-width: 1025px) and (max-width: 1919px) {
+  .command-center-container,
+  .phone-frame {
+    max-width: 1280px;
+  }
+}
+
+/* TV / Large Screen (≥1920px, 10-Foot UI) */
+@media screen and (min-width: 1920px) {
+  .command-center-container,
+  .phone-frame {
+    max-width: 1600px;
+  }
+
+  /* Scale typography for 10-foot viewing distance */
+  html {
+    font-size: 18px;
+  }
+
+  /* Prominent D-pad Remote Focus Ring */
+  [tabindex]:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 5px solid #FBBF24 !important;
+    outline-offset: 6px !important;
+    transform: scale(1.02);
+    transition: transform 0.15s ease, outline 0.15s ease;
+  }
 }
 
 /* Safe Area Inset Helpers */

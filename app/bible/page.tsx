@@ -298,8 +298,8 @@ export default function BiblePage() {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#FAF9F6] dark:bg-neutral-950 text-[#1A1A1A] dark:text-neutral-100 pb-28 relative">
       {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-card/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-border dark:border-neutral-800 px-2 sm:px-4 py-2 shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar flex-nowrap py-0.5">
+      <header className="sticky top-0 z-40 bg-card/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-border dark:border-neutral-800 px-2 sm:px-6 py-2 shadow-sm">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar flex-nowrap py-0.5">
           {/* Back Button */}
           <button
             type="button"
@@ -390,7 +390,7 @@ export default function BiblePage() {
       </header>
 
       {/* Scripture Chapter Content */}
-      <main className="max-w-xl mx-auto px-5 sm:px-6 pt-6 space-y-6">
+      <main className="max-w-3xl lg:max-w-4xl mx-auto px-5 sm:px-8 pt-6 space-y-6">
         <div className="text-center space-y-1 pb-4 border-b border-border dark:border-neutral-800">
           <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text-primary dark:text-neutral-100">
             {selectedBook} {selectedChapter}

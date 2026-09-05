@@ -65,19 +65,93 @@ export function Header() {
     user?.email?.charAt(0)?.toUpperCase() ||
     'M'
 
+  const isHome = pathname === '/' || pathname === '/home'
+  const isClockIn = pathname === '/clock-in'
+  const isSync = pathname?.startsWith('/sync') || pathname?.startsWith('/accountability') || pathname?.startsWith('/find-buddy')
+  const isSquare = pathname?.startsWith('/square')
+  const isBible = pathname?.startsWith('/bible')
+  const isMilestones = pathname?.startsWith('/milestones')
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-surface/90 backdrop-blur-md px-4 sm:px-6 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-border/70">
-      <div className="max-w-[480px] mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full bg-surface/90 backdrop-blur-md px-4 sm:px-6 md:px-8 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-border/70">
+      <div className="max-w-[1280px] 2xl:max-w-[1600px] mx-auto flex items-center justify-between gap-4">
         {/* Brand Logo */}
-        <Link href="/home" className="flex items-center gap-2">
-          <Logo height={19} />
+        <Link href="/home" className="flex items-center gap-2 shrink-0">
+          <Logo height={20} />
         </Link>
 
-        {/* Center / Active Timer Pill */}
+        {/* Desktop & Tablet Navigation Links (md+) */}
+        <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+          <Link
+            href="/home"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              isHome
+                ? 'bg-black/5 dark:bg-white/10 text-text-primary dark:text-[#F5F1E8]'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/clock-in"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              isClockIn
+                ? 'bg-[#FBBF24]/20 text-[#B38F24] dark:text-amber-400 font-extrabold'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            <span>Clock-In</span>
+            {session?.isActive && (
+              <span className="w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
+            )}
+          </Link>
+          <Link
+            href="/sync"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              isSync
+                ? 'bg-black/5 dark:bg-white/10 text-text-primary dark:text-[#F5F1E8]'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            SynC Buddies
+          </Link>
+          <Link
+            href="/square"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              isSquare
+                ? 'bg-black/5 dark:bg-white/10 text-text-primary dark:text-[#F5F1E8]'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            Square
+          </Link>
+          <Link
+            href="/bible"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              isBible
+                ? 'bg-black/5 dark:bg-white/10 text-text-primary dark:text-[#F5F1E8]'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            Bible
+          </Link>
+          <Link
+            href="/milestones"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              isMilestones
+                ? 'bg-black/5 dark:bg-white/10 text-text-primary dark:text-[#F5F1E8]'
+                : 'text-text-secondary hover:text-text-primary hover:bg-subtle/50'
+            }`}
+          >
+            Milestones
+          </Link>
+        </nav>
+
+        {/* Center / Active Timer Pill (Mobile only, on desktop it's in nav) */}
         {session?.isActive && (
           <Link
             href="/clock-in"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#B38F24] dark:text-amber-400 animate-pulse"
+            className="md:hidden flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/15 dark:bg-amber-500/20 border border-[#FBBF24]/40 dark:border-amber-500/30 text-[#B38F24] dark:text-amber-400 animate-pulse"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] animate-ping" />
             <span className="text-xs font-mono font-bold">{formattedTime}</span>
