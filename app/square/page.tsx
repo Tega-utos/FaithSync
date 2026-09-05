@@ -351,6 +351,29 @@ function SquarePageContent() {
     }
 
     loadSquarePosts()
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel('square_realtime_feed')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'square_posts' },
+        () => {
+          loadSquarePosts()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'square_reactions' },
+        () => {
+          loadSquarePosts()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   // Discord-Style Reactions State & Handlers
