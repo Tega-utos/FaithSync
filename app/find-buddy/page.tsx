@@ -335,7 +335,7 @@ export default function FindBuddyPage() {
     }
 
     // 3. Activity Level Filter
-    if (filterActivity === 'daily' && u.activityLevel !== 'Daily Active') {
+    if (filterActivity === 'daily' && (u.streakDays || 0) === 0 && !u.activityLevel.toLowerCase().includes('active')) {
       return false
     }
 

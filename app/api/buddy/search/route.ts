@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     // 2. Query profiles
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, buddy_code, church')
+      .select('id, display_name, avatar_url, buddy_code, church, preferences')
       .neq('id', user.id)
 
     if (query) {
@@ -47,8 +47,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ results: [] })
     }
 
+    // 3. Query real user stats for streaks & activity
+    const profileIds = (profiles || []).map((p: any) => p.id)
+    let statsMap: Record<string, any> = {}
+    if (profileIds.length > 0) {
+      const { data: stats } = await (supabase.from('user_stats') as any)
+        .select('*')
+        .in('user_id', profileIds)
+
+      if (stats && Array.isArray(stats)) {
+        for (const s of stats) {
+          statsMap[s.user_id] = s
+        }
+      }
+    }
+
     const results = (profiles || []).map((p: any) => {
       const conn = statusMap[p.id]
+      const uStats = statsMap[p.id] || {}
+      const streak = uStats.current_streak ?? (p.preferences?.admin_adjusted_streak ?? 0)
+      const isDailyActive = streak > 0 || (uStats.total_sessions || 0) > 0
+
       return {
         id: p.id,
         name: p.display_name || 'A Believer',
@@ -56,9 +75,9 @@ export async function GET(req: NextRequest) {
         avatarUrl: p.avatar_url,
         church: p.church || '',
         buddyCode: p.buddy_code || '',
-        streakDays: 0,
-        activityLevel: 'Daily Active',
-        goalLength: '15m Daily',
+        streakDays: streak,
+        activityLevel: streak > 0 ? `${streak}d Streak` : isDailyActive ? 'Active' : 'Believer',
+        goalLength: 'Daily Devotion',
         connectionStatus: conn ? conn.status : 'none',
         connectionId: conn ? conn.connectionId : null,
       }

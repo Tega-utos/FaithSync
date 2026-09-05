@@ -53,6 +53,7 @@ interface IncomingRequestItem {
 
 interface SquareActivityItem {
   id: string
+  partnerId: string
   type: 'outgoing' | 'incoming'
   targetName: string
   targetInitial: string
@@ -159,6 +160,47 @@ export default function SyncPage() {
             lastMessage: 'Let’s clock in together!',
           }))
         )
+
+        // Fetch Square Connection Requests
+        try {
+          const { data: squareConns } = await (supabase.from('buddies') as any)
+            .select(`
+              id,
+              user_id,
+              buddy_id,
+              status,
+              created_at,
+              user_profile:profiles!buddies_user_id_fkey(display_name),
+              buddy_profile:profiles!buddies_buddy_id_fkey(display_name)
+            `)
+            .eq('connection_type', 'square')
+            .eq('status', 'pending')
+            .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+
+          if (squareConns && Array.isArray(squareConns)) {
+            setSquareActivities(
+              squareConns.map((sq: any) => {
+                const isOut = sq.user_id === user.id
+                const target = isOut ? sq.buddy_profile : sq.user_profile
+                const name = target?.display_name || 'A Believer'
+                const partnerId = isOut ? sq.buddy_id : sq.user_id
+                return {
+                  id: sq.id,
+                  partnerId,
+                  type: isOut ? 'outgoing' : 'incoming',
+                  targetName: name,
+                  targetInitial: name.charAt(0).toUpperCase(),
+                  timeAgo: new Date(sq.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                  introMessage: 'Connected from Community Square',
+                }
+              })
+            )
+          } else {
+            setSquareActivities([])
+          }
+        } catch {
+          setSquareActivities([])
+        }
 
         if (!unsubscribe) {
           unsubscribe = subscribeToBuddyUpdates(user.id, () => {
@@ -477,72 +519,74 @@ export default function SyncPage() {
           </div>
 
           {/* Square Activity Section */}
-          <div className="space-y-2 pt-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
-              Square Connection Activity
-            </span>
+          {squareActivities.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
+                Square Connection Activity ({squareActivities.length})
+              </span>
 
-            <div className="space-y-2.5">
-              {squareActivities.map((sq) => (
-                <div key={sq.id} className="faith-card p-3.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-[10px] flex items-center justify-center">
-                        {sq.targetInitial}
+              <div className="space-y-2.5">
+                {squareActivities.map((sq) => (
+                  <div key={sq.id} className="faith-card p-3.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-[10px] flex items-center justify-center">
+                          {sq.targetInitial}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-text-primary">{sq.targetName}</p>
+                          <p className="text-[9px] text-text-secondary font-mono">{sq.timeAgo}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-text-primary">{sq.targetName}</p>
-                        <p className="text-[9px] text-text-secondary font-mono">{sq.timeAgo}</p>
-                      </div>
+
+                      {sq.type === 'outgoing' ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-surface text-text-secondary border border-border text-[10px] font-bold">
+                          Awaiting Response
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const supabase = createClient()
+                                await supabase.from('buddies').update({ status: 'accepted' }).eq('id', sq.id)
+                              } catch {}
+                              setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
+                              router.push(`/buddy-chat/${sq.partnerId}`)
+                            }}
+                            className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 cursor-pointer"
+                          >
+                            Accept & Chat
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const supabase = createClient()
+                                await supabase.from('buddies').delete().eq('id', sq.id)
+                              } catch {}
+                              setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
+                            }}
+                            className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26] dark:text-red-400 cursor-pointer"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    {sq.type === 'outgoing' ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-surface text-text-secondary border border-border text-[10px] font-bold">
-                        Awaiting Response
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const supabase = createClient()
-                              await supabase.from('buddies').update({ status: 'accepted' }).eq('id', sq.id)
-                            } catch {}
-                            setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
-                            router.push('/buddy-chat/sq-partner')
-                          }}
-                          className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80"
-                        >
-                          Accept & Chat
-                        </button>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const supabase = createClient()
-                              await supabase.from('buddies').delete().eq('id', sq.id)
-                            } catch {}
-                            setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
-                          }}
-                          className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26] dark:text-red-400"
-                        >
-                          Decline
-                        </button>
+                    {sq.introMessage && (
+                      <div className="p-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary italic flex items-start gap-2">
+                        <Quotes size={14} className="text-[#FBBF24] shrink-0 mt-0.5" />
+                        <span>&ldquo;{sq.introMessage}&rdquo;</span>
                       </div>
                     )}
                   </div>
-
-                  {sq.introMessage && (
-                    <div className="p-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary italic flex items-start gap-2">
-                      <Quotes size={14} className="text-[#FBBF24] shrink-0 mt-0.5" />
-                      <span>&ldquo;{sq.introMessage}&rdquo;</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
