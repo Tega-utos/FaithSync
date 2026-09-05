@@ -551,7 +551,7 @@ export default function ClockInPage() {
               strokeDashoffset={(2 * Math.PI * 84) - (progressPercentage / 100) * (2 * Math.PI * 84)}
               strokeLinecap="round"
               fill="transparent"
-              className={`transition-all duration-1000 ease-linear ${
+              className={`transition-[stroke-dashoffset] duration-300 ease-out ${
                 isPastLap1 ? 'text-[#FBBF24]' : 'text-[#0E0E0E] dark:text-[#F5F1E8]'
               }`}
             />
@@ -565,7 +565,7 @@ export default function ClockInPage() {
               </span>
             )}
 
-            <div className="font-mono-tabular text-4xl sm:text-5xl font-bold tracking-tight text-text-primary">
+            <div className="font-mono tabular-nums text-4xl sm:text-5xl font-bold tracking-tight text-text-primary">
               {formattedTime}
             </div>
 

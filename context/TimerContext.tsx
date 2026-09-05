@@ -203,9 +203,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       })
     }
 
-    // 1000ms aligned ticker for seamless 1-second cadence
+    // 200ms high-precision sampling eliminates 1-second interval drift and lag
     syncElapsed()
-    intervalRef.current = setInterval(syncElapsed, 1000)
+    intervalRef.current = setInterval(syncElapsed, 200)
 
     // Background & Tab Switching: Keep devotion running seamlessly across tab switches & screen lock
     const handleVisibilityChange = () => {
