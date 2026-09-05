@@ -55,8 +55,8 @@ function extractMinsFromContent(content: string): { prayerMins: number; studyMin
   return { prayerMins, studyMins }
 }
 
-type FilterType = 'all' | 'reflections' | 'prayers' | 'struggles' | 'testimonies' | 'records'
-type IntentType = 'prayer' | 'struggle' | 'testimony' | 'reflection' | 'record'
+type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
+type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
 
 export const FAITH_REACTIONS = [
   { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537] dark:text-emerald-400' },
@@ -158,10 +158,10 @@ function SquarePageContent() {
 
     if (shouldCompose || verseParam) {
       setIsComposeOpen(true)
-      if (intentParam && ['prayer', 'struggle', 'testimony', 'reflection', 'record'].includes(intentParam)) {
+      if (intentParam && ['prayer', 'struggle', 'testimony', 'record'].includes(intentParam)) {
         setSelectedIntent(intentParam as IntentType)
       } else {
-        setSelectedIntent('reflection')
+        setSelectedIntent('record')
       }
       setComposeStep('draft')
 
@@ -857,19 +857,15 @@ function SquarePageContent() {
     }
 
     if (activeFilter === 'all') return true
-    if (activeFilter === 'reflections')
-      return (
-        p.post_type === 'reflection' ||
-        p.post_type === 'scripture' ||
-        (p.post_type !== 'record' && Boolean(p.scripture_reference || p.verse_reference))
-      )
     if (activeFilter === 'prayers') return p.post_type === 'prayer' || p.post_type === 'prayer_request'
     if (activeFilter === 'struggles') return p.post_type === 'struggle'
     if (activeFilter === 'testimonies') return p.post_type === 'testimony'
     if (activeFilter === 'records')
       return (
+        p.post_type === 'reflection' ||
         p.post_type === 'record' ||
-        (p.content.startsWith('Completed') && p.post_type !== 'reflection')
+        p.content.startsWith('Completed') ||
+        p.content.includes('Daily Devotion')
       )
     return true
   })
@@ -939,11 +935,10 @@ function SquarePageContent() {
         <div className="flex items-center gap-1.5 min-w-max">
           {[
             { id: 'all', label: 'All Entries' },
-            { id: 'reflections', label: 'Reflections' },
             { id: 'prayers', label: 'Prayers' },
             { id: 'struggles', label: 'Struggles' },
             { id: 'testimonies', label: 'Testimonies' },
-            { id: 'records', label: 'Clock-In Records' },
+            { id: 'records', label: 'Records' },
           ].map((tab) => {
             const isActive = activeFilter === tab.id
             return (
@@ -1010,13 +1005,11 @@ function SquarePageContent() {
             const isPrayer = post.post_type === 'prayer' || post.post_type === 'prayer_request'
             const isStruggle = post.post_type === 'struggle'
             const isTestimony = post.post_type === 'testimony'
-            const isReflection =
-              post.post_type === 'reflection' ||
-              post.post_type === 'scripture' ||
-              (post.post_type !== 'record' && Boolean(post.scripture_reference || post.verse_reference))
             const isRecord =
-              (post.post_type === 'record' || post.content.startsWith('Completed')) &&
-              post.post_type !== 'reflection'
+              post.post_type === 'reflection' ||
+              post.post_type === 'record' ||
+              post.content.startsWith('Completed') ||
+              post.content.includes('Daily Devotion')
 
             const timeStr = new Date(post.created_at).toLocaleDateString([], {
               month: 'short',
@@ -1088,15 +1081,10 @@ function SquarePageContent() {
                         <Sparkle size={12} weight="fill" />
                         <span>Testimony</span>
                       </span>
-                    ) : isReflection ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
-                        <BookOpen size={12} weight="bold" />
-                        <span>Reflection</span>
-                      </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
-                        <Clock size={12} weight="bold" />
-                        <span>Clock-In Record</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
+                        <Clock size={12} />
+                        <span>Record</span>
                       </span>
                     )}
 
@@ -1173,29 +1161,23 @@ function SquarePageContent() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
                           Daily Clock-In Proof
                         </span>
-                        <span className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-2.5 py-0.5 rounded-full border border-[#234537]/25 dark:border-emerald-700/30">
+                        <span className="text-[10px] font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-[#234537]/20 dark:border-emerald-700/25">
                           Verified Altar ✓
                         </span>
                       </div>
 
                       {/* 2x2 Grid */}
                       <div className="grid grid-cols-2 gap-2.5">
-                        <div className="p-3 rounded-xl bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <HandsPraying size={13} weight="fill" className="text-[#234537] dark:text-emerald-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#234537] dark:text-emerald-400">Prayer</span>
-                          </div>
-                          <span className="text-sm sm:text-base font-black font-mono text-[#234537] dark:text-emerald-400 block">
+                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
+                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Prayer</span>
+                          <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
                             {post.prayerMins || 15} mins
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <BookOpen size={13} weight="fill" className="text-[#D97706] dark:text-[#FBBF24]" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D97706] dark:text-[#FBBF24]">Study</span>
-                          </div>
-                          <span className="text-sm sm:text-base font-black font-mono text-[#D97706] dark:text-[#FBBF24] block">
+                        <div className="p-2.5 rounded-xl bg-card border border-border space-y-0.5">
+                          <span className="text-[9px] font-bold uppercase text-text-secondary block">Study</span>
+                          <span className="text-sm font-extrabold font-mono text-[#FBBF24]">
                             {post.studyMins || 15} mins
                           </span>
                         </div>
@@ -1206,9 +1188,9 @@ function SquarePageContent() {
                         <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
                           All-Time Days Active
                         </span>
-                        <div className="flex items-center gap-1.5">
-                          <Fire size={17} weight="fill" className="text-[#FBBF24]" />
-                          <span className="text-base font-black font-mono text-text-primary">
+                        <div className="flex items-center gap-1">
+                          <Fire size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+                          <span className="text-base font-black font-mono text-[#234537] dark:text-emerald-400">
                             {post.authorStreak ?? 0} {(post.authorStreak === 1) ? 'Day' : 'Days'} &amp; Counting
                           </span>
                         </div>
@@ -1655,7 +1637,7 @@ function SquarePageContent() {
                 {/* 4. Devotion & Scripture Reflection */}
                 <div
                   onClick={() => {
-                    setSelectedIntent('reflection')
+                    setSelectedIntent('record')
                     setComposeStep('draft')
                   }}
                   className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] dark:border-emerald-700 transition-all group"
@@ -1693,7 +1675,7 @@ function SquarePageContent() {
                       { id: 'prayer', label: 'Prayer' },
                       { id: 'struggle', label: 'Struggle' },
                       { id: 'testimony', label: 'Testimony' },
-                      { id: 'reflection', label: 'Reflection' },
+                      { id: 'record', label: 'Reflection' },
                     ].map((cat) => {
                       const isSel = selectedIntent === cat.id
                       return (
