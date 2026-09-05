@@ -1238,18 +1238,6 @@ export default function BuddyChatPage() {
         onSubmit={handleSendMessage}
         className="p-3 bg-card border-t border-border flex items-center gap-2 shrink-0 pb-6 sm:pb-3"
       >
-        {/* Prominent Timer Button on the Far Left (Hidden for Square Connections) */}
-        {!isSquareConnection && (
-          <button
-            type="button"
-            onClick={() => setIsInviteModalOpen(true)}
-            className="p-2.5 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/50 text-[#FBBF24] hover:bg-[#FBBF24] hover:text-white transition-all shadow-xs shrink-0 cursor-pointer"
-            title="Setup Clock-In Timer"
-          >
-            <Clock size={20} weight="bold" />
-          </button>
-        )}
-
         {/* Text Input Field */}
         <input
           type="text"
