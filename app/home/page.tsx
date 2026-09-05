@@ -12,6 +12,7 @@ import {
   CheckCircle,
   X,
   Clock,
+  Timer,
   HandsPraying,
   HandWaving,
   ShareNetwork,
@@ -395,20 +396,13 @@ export default function HomePage() {
       <Link href="/clock-in" className="block group">
         <button
           type="button"
-          className="w-full bg-[#0E0E0E] dark:bg-[#1C1813] border border-black/10 dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] py-4 px-6 rounded-2xl flex items-center justify-between font-extrabold text-base shadow-xl shadow-black/20 dark:shadow-[0_4px_24px_rgba(251,191,36,0.15)] group-hover:bg-[#1f1f1f] dark:group-hover:bg-[#241E18] dark:group-hover:border-[#FBBF24]/80 group-active:scale-[0.99] transition-all"
+          className="w-full bg-[#0E0E0E] dark:bg-[#1C1813] border border-black/10 dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] py-4 px-6 rounded-2xl flex items-center justify-between font-extrabold text-base shadow-xl shadow-black/20 dark:shadow-[0_4px_24px_rgba(251,191,36,0.15)] group-hover:bg-[#1f1f1f] dark:group-hover:bg-[#241E18] dark:group-hover:border-[#FBBF24]/80 group-active:scale-[0.99] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FBBF24]/15 border border-[#FBBF24]/30 flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-timer-active.svg"
-                alt="Clock In"
-                width={20}
-                height={20}
-                className="w-5 h-5 object-contain"
-              />
+            <div className="w-10 h-10 rounded-xl bg-[#FBBF24] text-[#1A1610] flex items-center justify-center shadow-md shadow-[#FBBF24]/20 shrink-0">
+              <Timer size={22} weight="fill" className="text-[#1A1610]" />
             </div>
-            <span className="tracking-tight text-white dark:text-[#F5F1E8]">Clock In Now</span>
+            <span className="tracking-tight text-white dark:text-[#F5F1E8] text-base font-extrabold">Clock In Now</span>
           </div>
           <CaretRight size={20} className="text-[#FBBF24] group-hover:translate-x-1 transition-transform" />
         </button>
