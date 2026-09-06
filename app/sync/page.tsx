@@ -241,7 +241,7 @@ export default function SyncPage() {
   const handleIgnoreRequest = async (reqId: string) => {
     try {
       await deleteBuddyConnection(reqId)
-      setIncomingRequests((prev) => prev.filter((r) => r.id !== reqId))
+      mutateBuddies()
     } catch (err) {
       console.error('Ignore error:', err)
     }
@@ -275,8 +275,7 @@ export default function SyncPage() {
       setCreatedGroupId(res.id)
       setCreatedInviteCode(res.code)
 
-      const updatedGroups = await fetchGroups()
-      setGroups(updatedGroups)
+      mutateGroups()
       setCreateGroupStep('success')
     } catch (err: any) {
       console.error('Create group error:', err)
@@ -296,8 +295,7 @@ export default function SyncPage() {
 
     const res = await joinGroupByCode(joinCodeInput)
     if (res.success && res.group) {
-      const updatedGroups = await fetchGroups()
-      setGroups(updatedGroups)
+      mutateGroups()
       setIsJoinGroupOpen(false)
       setJoinCodeInput('')
       router.push(`/group-chat/${res.group.id}`)

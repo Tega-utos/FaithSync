@@ -42,74 +42,83 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
   const supabase = createClient()
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
-  const [groupsRes, liveSessionsRes, liveMessagesRes] = await Promise.all([
-    supabase
-      .from('groups')
-      .select(`
-        id,
-        name,
-        category,
-        church,
-        code,
-        guidelines,
-        is_private,
-        group_members (count)
-      `)
-      .eq('is_private', false)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('sessions')
-      .select('id, group_id, type, started_at')
-      .eq('is_complete', false)
-      .not('group_id', 'is', null)
-      .gte('started_at', twoHoursAgo),
-    supabase
-      .from('messages')
-      .select('id, group_id, meta, created_at')
-      .eq('message_type', 'clockin_invite')
-      .not('group_id', 'is', null)
-      .gte('created_at', twoHoursAgo),
-  ])
+  try {
+    const [groupsRes, membersRes, liveSessionsRes, liveMessagesRes] = await Promise.all([
+      supabase
+        .from('groups')
+        .select('id, name, category, church, code, guidelines, is_private, created_at')
+        .order('created_at', { ascending: false }),
+      supabase.from('group_members').select('group_id'),
+      supabase
+        .from('sessions')
+        .select('id, group_id, type, started_at')
+        .eq('is_complete', false)
+        .not('group_id', 'is', null)
+        .gte('started_at', twoHoursAgo),
+      supabase
+        .from('messages')
+        .select('id, group_id, meta, created_at')
+        .eq('message_type', 'clockin_invite')
+        .not('group_id', 'is', null)
+        .gte('created_at', twoHoursAgo),
+    ])
 
-  if (groupsRes.error || !groupsRes.data) return []
+    if (groupsRes.error || !groupsRes.data) {
+      if (groupsRes.error) console.error('fetchGroups error:', groupsRes.error)
+      return []
+    }
 
-  const activeGroupIds = new Set<string>()
-
-  if (liveSessionsRes.data) {
-    liveSessionsRes.data.forEach((s: any) => {
-      if (s.group_id) activeGroupIds.add(s.group_id)
-    })
-  }
-
-  if (liveMessagesRes.data) {
-    const now = Date.now()
-    liveMessagesRes.data.forEach((m: any) => {
-      if (m.group_id && m.meta) {
-        const startMs = m.meta.startedAt
-          ? new Date(m.meta.startedAt).getTime()
-          : new Date(m.created_at).getTime()
-        const durationMins = Number(m.meta.durationMins) || 15
-        if (now < startMs + durationMins * 60 * 1000) {
-          activeGroupIds.add(m.group_id)
+    const memberCounts = new Map<string, number>()
+    if (membersRes.data) {
+      membersRes.data.forEach((m: any) => {
+        if (m.group_id) {
+          memberCounts.set(m.group_id, (memberCounts.get(m.group_id) || 0) + 1)
         }
-      }
-    })
+      })
+    }
+
+    const activeGroupIds = new Set<string>()
+
+    if (liveSessionsRes.data) {
+      liveSessionsRes.data.forEach((s: any) => {
+        if (s.group_id) activeGroupIds.add(s.group_id)
+      })
+    }
+
+    if (liveMessagesRes.data) {
+      const now = Date.now()
+      liveMessagesRes.data.forEach((m: any) => {
+        if (m.group_id && m.meta) {
+          const startMs = m.meta.startedAt
+            ? new Date(m.meta.startedAt).getTime()
+            : new Date(m.created_at).getTime()
+          const durationMins = Number(m.meta.durationMins) || 15
+          if (now < startMs + durationMins * 60 * 1000) {
+            activeGroupIds.add(m.group_id)
+          }
+        }
+      })
+    }
+
+    const filtered = groupsRes.data.filter((g: any) => !g.is_private)
+    const result = filtered.map((g: any) => ({
+      id: g.id,
+      name: g.name,
+      category: g.category,
+      church: g.church || 'Local Assembly',
+      code: g.code || `SYNC-${g.id.slice(0, 6).toUpperCase()}`,
+      guidelines: g.guidelines,
+      memberCount: memberCounts.get(g.id) || 1,
+      isLive: activeGroupIds.has(g.id),
+      activeTimeToday: '30m',
+    }))
+
+    setMemoryCache(cacheKey, result)
+    return result
+  } catch (err) {
+    console.error('fetchGroups unexpected error:', err)
+    return []
   }
-
-  const result = groupsRes.data.map((g: any) => ({
-    id: g.id,
-    name: g.name,
-    category: g.category,
-    church: g.church || 'Local Assembly',
-    code: g.code || `SYNC-${g.id.slice(0, 6).toUpperCase()}`,
-    guidelines: g.guidelines,
-    memberCount: g.group_members?.[0]?.count || 1,
-    isLive: activeGroupIds.has(g.id),
-    activeTimeToday: '30m',
-  }))
-
-  setMemoryCache(cacheKey, result)
-  return result
 }
 
 export async function fetchGroupById(groupId: string): Promise<GroupItem | null> {

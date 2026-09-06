@@ -309,121 +309,137 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
   const supabase = createClient()
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
-  // Fetch active connections, ongoing sessions, and recent clockin invites in parallel
-  const [buddiesRes, sessionsRes, messagesRes] = await Promise.all([
-    supabase
+  try {
+    // 1. Fetch buddy connections
+    const { data: buddiesRows, error: buddiesErr } = await supabase
       .from('buddies')
-      .select(`
-        id,
-        user_id,
-        buddy_id,
-        status,
-        created_at,
-        user_profile:profiles!buddies_user_id_fkey(display_name, avatar_url, buddy_code),
-        buddy_profile:profiles!buddies_buddy_id_fkey(display_name, avatar_url, buddy_code)
-      `)
+      .select('id, user_id, buddy_id, status, created_at')
       .or(`user_id.eq.${currentUserId},buddy_id.eq.${currentUserId}`)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('sessions')
-      .select('id, user_id, type, started_at')
-      .eq('is_complete', false)
-      .gte('started_at', twoHoursAgo),
-    supabase
-      .from('messages')
-      .select('id, sender_id, recipient_id, content, message_type, meta, created_at')
-      .eq('message_type', 'clockin_invite')
-      .gte('created_at', twoHoursAgo),
-  ])
+      .order('created_at', { ascending: false })
 
-  if (buddiesRes.error || !buddiesRes.data) {
-    console.error('getMyBuddies error:', buddiesRes.error)
-    return { active: [], pendingIncoming: [], pendingOutgoing: [] }
-  }
+    if (buddiesErr || !buddiesRows || buddiesRows.length === 0) {
+      if (buddiesErr) console.error('getMyBuddies error:', buddiesErr)
+      return { active: [], pendingIncoming: [], pendingOutgoing: [] }
+    }
 
-  // Build live users map
-  const liveUsersMap = new Map<string, { discipline: 'prayer' | 'study'; focusText?: string }>()
+    // 2. Collect unique partner IDs
+    const partnerIds = Array.from(
+      new Set(
+        buddiesRows.map((r: any) => (r.user_id === currentUserId ? r.buddy_id : r.user_id)).filter(Boolean)
+      )
+    )
 
-  if (sessionsRes.data) {
-    sessionsRes.data.forEach((s: any) => {
-      if (s.user_id) {
-        liveUsersMap.set(s.user_id, {
-          discipline: s.type === 'study' ? 'study' : 'prayer',
-        })
-      }
-    })
-  }
+    // 3. Fetch partner profiles, active sessions, and live messages in parallel
+    const [profilesRes, sessionsRes, messagesRes] = await Promise.all([
+      partnerIds.length > 0
+        ? supabase.from('profiles').select('id, display_name, avatar_url, buddy_code').in('id', partnerIds)
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from('sessions')
+        .select('id, user_id, type, started_at')
+        .eq('is_complete', false)
+        .gte('started_at', twoHoursAgo),
+      supabase
+        .from('messages')
+        .select('id, sender_id, recipient_id, content, message_type, meta, created_at')
+        .eq('message_type', 'clockin_invite')
+        .gte('created_at', twoHoursAgo),
+    ])
 
-  if (messagesRes.data) {
-    const now = Date.now()
-    messagesRes.data.forEach((m: any) => {
-      if (m.meta) {
-        const startMs = m.meta.startedAt
-          ? new Date(m.meta.startedAt).getTime()
-          : new Date(m.created_at).getTime()
-        const durationMins = Number(m.meta.durationMins) || 15
-        if (now < startMs + durationMins * 60 * 1000) {
-          if (m.sender_id) {
-            liveUsersMap.set(m.sender_id, {
-              discipline: m.meta.discipline === 'study' ? 'study' : 'prayer',
-              focusText: m.meta.focusText,
-            })
+    const profilesMap = new Map<string, any>()
+    if (profilesRes.data) {
+      profilesRes.data.forEach((p: any) => {
+        if (p?.id) profilesMap.set(p.id, p)
+      })
+    }
+
+    // 4. Build live users map
+    const liveUsersMap = new Map<string, { discipline: 'prayer' | 'study'; focusText?: string }>()
+
+    if (sessionsRes.data) {
+      sessionsRes.data.forEach((s: any) => {
+        if (s.user_id) {
+          liveUsersMap.set(s.user_id, {
+            discipline: s.type === 'study' ? 'study' : 'prayer',
+          })
+        }
+      })
+    }
+
+    if (messagesRes.data) {
+      const now = Date.now()
+      messagesRes.data.forEach((m: any) => {
+        if (m.meta) {
+          const startMs = m.meta.startedAt
+            ? new Date(m.meta.startedAt).getTime()
+            : new Date(m.created_at).getTime()
+          const durationMins = Number(m.meta.durationMins) || 15
+          if (now < startMs + durationMins * 60 * 1000) {
+            if (m.sender_id) {
+              liveUsersMap.set(m.sender_id, {
+                discipline: m.meta.discipline === 'study' ? 'study' : 'prayer',
+                focusText: m.meta.focusText,
+              })
+            }
           }
+        }
+      })
+    }
+
+    const active: BuddyConnectionItem[] = []
+    const pendingIncoming: BuddyConnectionItem[] = []
+    const pendingOutgoing: BuddyConnectionItem[] = []
+
+    buddiesRows.forEach((row: any) => {
+      const isRequester = row.user_id === currentUserId
+      const partnerId = isRequester ? row.buddy_id : row.user_id
+      const partner = profilesMap.get(partnerId)
+      const partnerName = partner?.display_name || 'A Believer'
+
+      const liveInfo = liveUsersMap.get(partnerId)
+      const isLive = Boolean(liveInfo)
+      const liveDisc = liveInfo?.discipline || 'prayer'
+
+      const item: BuddyConnectionItem = {
+        id: row.id,
+        userId: row.user_id,
+        buddyId: row.buddy_id,
+        status: row.status,
+        partnerId,
+        partnerName,
+        partnerInitial: partnerName.charAt(0).toUpperCase(),
+        partnerAvatar: partner?.avatar_url || null,
+        partnerChurch: 'Local Assembly',
+        partnerBuddyCode: partner?.buddy_code || '',
+        isRequester,
+        createdAt: row.created_at,
+        isOnline: isLive,
+        isLiveNow: isLive,
+        liveDiscipline: liveDisc,
+        lastActive: isLive ? 'Clocked in now' : 'Active today',
+        lastMessage: isLive
+          ? `🔴 ${liveDisc === 'prayer' ? 'Prayer' : 'Scripture Study'} Clock-In Ongoing • Tap to join!`
+          : 'Let’s clock in together!',
+      }
+
+      if (row.status === 'accepted') {
+        active.push(item)
+      } else if (row.status === 'pending') {
+        if (isRequester) {
+          pendingOutgoing.push(item)
+        } else {
+          pendingIncoming.push(item)
         }
       }
     })
+
+    const result = { active, pendingIncoming, pendingOutgoing }
+    setMemoryCache(cacheKey, result)
+    return result
+  } catch (err) {
+    console.error('getMyBuddies unexpected error:', err)
+    return { active: [], pendingIncoming: [], pendingOutgoing: [] }
   }
-
-  const active: BuddyConnectionItem[] = []
-  const pendingIncoming: BuddyConnectionItem[] = []
-  const pendingOutgoing: BuddyConnectionItem[] = []
-
-  buddiesRes.data.forEach((row: any) => {
-    const isRequester = row.user_id === currentUserId
-    const partner = isRequester ? row.buddy_profile : row.user_profile
-    const partnerId = isRequester ? row.buddy_id : row.user_id
-    const partnerName = partner?.display_name || 'A Believer'
-
-    const liveInfo = liveUsersMap.get(partnerId)
-    const isLive = Boolean(liveInfo)
-    const liveDisc = liveInfo?.discipline || 'prayer'
-
-    const item: BuddyConnectionItem = {
-      id: row.id,
-      userId: row.user_id,
-      buddyId: row.buddy_id,
-      status: row.status,
-      partnerId,
-      partnerName,
-      partnerInitial: partnerName.charAt(0).toUpperCase(),
-      partnerAvatar: partner?.avatar_url || null,
-      partnerChurch: partner?.church || 'Local Assembly',
-      partnerBuddyCode: partner?.buddy_code || '',
-      isRequester,
-      createdAt: row.created_at,
-      isOnline: isLive,
-      isLiveNow: isLive,
-      liveDiscipline: liveDisc,
-      lastActive: isLive ? 'Clocked in now' : 'Active today',
-      lastMessage: isLive
-        ? `🔴 ${liveDisc === 'prayer' ? 'Prayer' : 'Scripture Study'} Clock-In Ongoing • Tap to join!`
-        : 'Let’s clock in together!',
-    }
-
-    if (row.status === 'accepted') {
-      active.push(item)
-    } else if (row.status === 'pending') {
-      if (isRequester) {
-        pendingOutgoing.push(item)
-      } else {
-        pendingIncoming.push(item)
-      }
-    }
-  })
-
-  const result = { active, pendingIncoming, pendingOutgoing }
-  setMemoryCache(cacheKey, result)
-  return result
 }
 
 /**
