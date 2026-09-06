@@ -43,7 +43,7 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
   try {
-    const [groupsRes, membersRes, liveSessionsRes, liveMessagesRes] = await Promise.all([
+    const [groupsRes, membersRes, liveSessionsRes, liveMessagesRes, liveGroupMessagesRes] = await Promise.all([
       supabase
         .from('groups')
         .select('id, name, category, church, code, guidelines, is_private, created_at')
@@ -60,6 +60,11 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
         .select('id, group_id, meta, created_at')
         .eq('message_type', 'clockin_invite')
         .not('group_id', 'is', null)
+        .gte('created_at', twoHoursAgo),
+      supabase
+        .from('group_messages')
+        .select('id, group_id, meta, created_at')
+        .eq('message_type', 'clockin_invite')
         .gte('created_at', twoHoursAgo),
     ])
 
@@ -85,20 +90,23 @@ export async function fetchGroups(forceFresh = false): Promise<GroupItem[]> {
       })
     }
 
-    if (liveMessagesRes.data) {
-      const now = Date.now()
-      liveMessagesRes.data.forEach((m: any) => {
-        if (m.group_id && m.meta) {
-          const startMs = m.meta.startedAt
-            ? new Date(m.meta.startedAt).getTime()
-            : new Date(m.created_at).getTime()
-          const durationMins = Number(m.meta.durationMins) || 15
-          if (now < startMs + durationMins * 60 * 1000) {
-            activeGroupIds.add(m.group_id)
-          }
+    const now = Date.now()
+    const allLiveMessages = [
+      ...(liveMessagesRes.data || []),
+      ...(liveGroupMessagesRes.data || []),
+    ]
+
+    allLiveMessages.forEach((m: any) => {
+      if (m.group_id && m.meta) {
+        const startMs = m.meta.startedAt
+          ? new Date(m.meta.startedAt).getTime()
+          : new Date(m.created_at).getTime()
+        const durationMins = Number(m.meta.durationMins) || 15
+        if (now < startMs + durationMins * 60 * 1000) {
+          activeGroupIds.add(m.group_id)
         }
-      })
-    }
+      }
+    })
 
     const filtered = groupsRes.data.filter((g: any) => !g.is_private)
     const result = filtered.map((g: any) => ({

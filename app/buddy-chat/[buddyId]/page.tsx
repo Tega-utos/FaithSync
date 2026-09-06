@@ -706,12 +706,20 @@ export default function BuddyChatPage() {
       timelineSegments: [],
     }
 
+    setLiveDiscipline('prayer')
+    setLiveTargetMins(15)
+    setLiveFocusText('Daily accountability prayer together')
+    setLiveTimelineSegments([])
+    setLiveDurationSecs(0)
+    setIsLiveOverlayOpen(true)
+    playChime()
+
     const sent = await sendBuddyMessage(buddyId, currentUser.id, contentText, 'clockin_invite', metaObj)
     if (sent) {
       setMessages((prev) => [...prev, sent as any])
     }
 
-    setToastMessage(`Clock-in invite sent to ${buddyName} ⏱️`)
+    setToastMessage(`Live clock-in started with ${buddyName}! ⏱️`)
     setTimeout(() => setToastMessage(null), 3000)
 
     try {

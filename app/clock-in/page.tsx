@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -117,9 +117,14 @@ export default function ClockInPage() {
     }
   }, [isRunning])
 
+  const activeSessionIdRef = useRef<string | null>(null)
+
   const handleStart = async () => {
     // Request permission in context
     requestSessionNotificationPermission()
+
+    const targetMinutes = focusMode === 'timeline' ? timelineTotalMins : 15
+    const focusText = focusMode === 'timeline' ? `${timelineSegments.length} Guided Segments` : focusInput
 
     if (focusMode === 'timeline') {
       startTimer(
@@ -143,6 +148,32 @@ export default function ClockInPage() {
         []
       )
       startLockScreenSession(null, selectedDiscipline)
+    }
+
+    // Write active uncompleted session so buddies see live clock-in on chat list
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: activeRow } = await (supabase.from('sessions') as any)
+          .insert({
+            user_id: user.id,
+            type: selectedDiscipline,
+            duration_seconds: 0,
+            target_duration_seconds: targetMinutes * 60,
+            is_complete: false,
+            started_at: new Date().toISOString(),
+            reflection: focusText || null,
+          })
+          .select('id')
+          .maybeSingle()
+
+        if (activeRow?.id) {
+          activeSessionIdRef.current = activeRow.id
+        }
+      }
+    } catch (e) {
+      console.warn('Active session write note:', e)
     }
   }
 
@@ -175,24 +206,45 @@ export default function ClockInPage() {
           const isComplete =
             data.secondsElapsed >= (data.targetSeconds || 0) && (data.targetSeconds || 0) > 0
 
-          const { data: savedSession, error: saveErr } = await (supabase.from('sessions') as any)
-            .insert({
-              user_id: user.id,
-              type: data.discipline,
-              duration_seconds: data.secondsElapsed,
-              target_duration_seconds: data.targetSeconds,
-              is_complete: isComplete,
-              verse_reference: data.verseReference || null,
-              focus_type: data.focusType || 'quick',
-              focus_timeline: (data.focusTimeline as any) || null,
-              started_at: data.startedAt || new Date().toISOString(),
-              ended_at: data.endedAt || new Date().toISOString(),
-            })
-            .select('id')
-            .maybeSingle()
+          let savedSessionId = activeSessionIdRef.current
 
-          if (!saveErr && savedSession?.id) {
-            setSummaryData((prev) => (prev ? { ...prev, sessionId: savedSession.id } : prev))
+          if (savedSessionId) {
+            await (supabase.from('sessions') as any)
+              .update({
+                duration_seconds: data.secondsElapsed,
+                target_duration_seconds: data.targetSeconds,
+                is_complete: isComplete,
+                verse_reference: data.verseReference || null,
+                focus_type: data.focusType || 'quick',
+                focus_timeline: (data.focusTimeline as any) || null,
+                ended_at: data.endedAt || new Date().toISOString(),
+              })
+              .eq('id', savedSessionId)
+          } else {
+            const { data: savedSession } = await (supabase.from('sessions') as any)
+              .insert({
+                user_id: user.id,
+                type: data.discipline,
+                duration_seconds: data.secondsElapsed,
+                target_duration_seconds: data.targetSeconds,
+                is_complete: isComplete,
+                verse_reference: data.verseReference || null,
+                focus_type: data.focusType || 'quick',
+                focus_timeline: (data.focusTimeline as any) || null,
+                started_at: data.startedAt || new Date().toISOString(),
+                ended_at: data.endedAt || new Date().toISOString(),
+              })
+              .select('id')
+              .maybeSingle()
+            if (savedSession?.id) {
+              savedSessionId = savedSession.id
+            }
+          }
+
+          activeSessionIdRef.current = null
+
+          if (savedSessionId) {
+            setSummaryData((prev) => (prev ? { ...prev, sessionId: savedSessionId } : prev))
           }
 
           // Invalidate cache immediately so dashboard & momentum rings update without delay

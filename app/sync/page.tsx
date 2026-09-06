@@ -206,6 +206,14 @@ export default function SyncPage() {
                   mutateGroups()
                 }
               )
+              .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'group_messages' },
+                () => {
+                  mutateBuddies()
+                  mutateGroups()
+                }
+              )
               .subscribe()
 
             unsubscribe = () => {
