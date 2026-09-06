@@ -55,8 +55,8 @@ function extractMinsFromContent(content: string): { prayerMins: number; studyMin
   return { prayerMins, studyMins }
 }
 
-type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'records'
-type IntentType = 'prayer' | 'struggle' | 'testimony' | 'record'
+type FilterType = 'all' | 'prayers' | 'struggles' | 'testimonies' | 'reflections' | 'records'
+type IntentType = 'prayer' | 'struggle' | 'testimony' | 'reflection'
 
 export const FAITH_REACTIONS = [
   { key: 'amen', label: 'Amen', Icon: HandsPraying, color: 'text-[#234537] dark:text-emerald-400' },
@@ -165,10 +165,10 @@ function SquarePageContent() {
 
     if (shouldCompose || verseParam) {
       setIsComposeOpen(true)
-      if (intentParam && ['prayer', 'struggle', 'testimony', 'record'].includes(intentParam)) {
+      if (intentParam && ['prayer', 'struggle', 'testimony', 'reflection'].includes(intentParam)) {
         setSelectedIntent(intentParam as IntentType)
       } else {
-        setSelectedIntent('record')
+        setSelectedIntent('reflection')
       }
       setComposeStep('draft')
 
@@ -495,120 +495,35 @@ function SquarePageContent() {
     setPostError(null)
     try {
       const supabase = createClient()
-      let user = currentUser
-      if (!user) {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser()
-        user = authUser
-        if (authUser) setCurrentUser(authUser)
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
       }
 
-      if (!user) {
-        setPostError('You must be logged in to publish a post.')
-        router.push('/login')
-        return
+      const res = await fetch('/api/square/post', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          title: postTitle.trim() || undefined,
+          content: postContent.trim(),
+          postType: selectedIntent, // 'prayer' | 'struggle' | 'testimony' | 'reflection'
+          isAnonymous,
+          scriptureReference: attachedScripture?.reference || null,
+          scriptureVersionId: attachedScripture?.versionId || 'web',
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to publish post to Square')
       }
 
-      const combinedContent = postTitle.trim()
-        ? `**${postTitle.trim()}**\n\n${postContent.trim()}`
-        : postContent.trim()
-
-      const normalizedPostType =
-        selectedIntent === 'prayer'
-          ? 'prayer_request'
-          : selectedIntent === 'struggle'
-          ? 'struggle'
-          : selectedIntent === 'testimony'
-          ? 'testimony'
-          : selectedIntent === 'record'
-          ? 'record'
-          : 'reflection'
-
-      let newPostId: string | null = null
-
-      // Tier 1: Full insert with all extended schema fields
-      const { data: newPost, error: insertError } = await supabase
-        .from('square_posts')
-        .insert({
-          user_id: user.id,
-          content: combinedContent,
-          post_type: normalizedPostType,
-          is_anonymous: isAnonymous,
-          scripture_reference: attachedScripture?.reference || null,
-          scripture_version_id: attachedScripture?.versionId || null,
-          verse_reference: attachedScripture?.reference || null,
-        })
-        .select('id')
-        .maybeSingle()
-
-      if (insertError) {
-        console.warn('Tier 1 insert note, trying Tier 2 baseline insert:', insertError.message)
-        // Tier 2: Baseline insert with core columns
-        const { data: fallbackPost, error: fallbackError } = await supabase
-          .from('square_posts')
-          .insert({
-            user_id: user.id,
-            content: combinedContent,
-            post_type: normalizedPostType,
-            is_anonymous: Boolean(isAnonymous),
-            verse_reference: attachedScripture?.reference || null,
-          })
-          .select('id')
-          .maybeSingle()
-
-        if (fallbackError) {
-          console.warn('Tier 2 insert note, trying Tier 3 fallback with reflection type:', fallbackError.message)
-          // Tier 3: If legacy check constraint rejects post_type, insert as reflection
-          const { data: tier3Post, error: tier3Error } = await supabase
-            .from('square_posts')
-            .insert({
-              user_id: user.id,
-              content: combinedContent,
-              post_type: 'reflection',
-              is_anonymous: Boolean(isAnonymous),
-              verse_reference: attachedScripture?.reference || null,
-            })
-            .select('id')
-            .maybeSingle()
-
-          if (tier3Error) {
-            throw tier3Error
-          }
-          newPostId = tier3Post?.id || `sp-${Date.now()}`
-        } else {
-          newPostId = fallbackPost?.id || `sp-${Date.now()}`
-        }
-      } else {
-        newPostId = newPost?.id || `sp-${Date.now()}`
+      if (data.post) {
+        setPosts((prev) => [data.post, ...prev.filter((p) => p.id !== data.post.id)])
       }
-
-      const realAuthorStreak = user ? await calculateUserStreak(user.id, supabase) : 0
-      const { prayerMins: pubPrayer, studyMins: pubStudy } = extractMinsFromContent(combinedContent)
-
-      const optimisticPost: SquarePostItem = {
-        id: newPostId,
-        user_id: isAnonymous ? '' : user.id,
-        content: combinedContent,
-        verse_reference: attachedScripture?.reference || null,
-        scripture_reference: attachedScripture?.reference || null,
-        scripture_version_id: attachedScripture?.versionId || 'web',
-        post_type: normalizedPostType,
-        created_at: new Date().toISOString(),
-        is_anonymous: Boolean(isAnonymous),
-        authorName: isAnonymous
-          ? 'Anonymous Member'
-          : user.user_metadata?.full_name || user.user_metadata?.display_name || 'Believer',
-        authorAvatar: isAnonymous ? null : user.user_metadata?.avatar_url,
-        authorChurch: isAnonymous ? 'Community Square' : (user.user_metadata?.church || ''),
-        authorStreak: realAuthorStreak,
-        prayerMins: pubPrayer || (normalizedPostType === 'record' ? 15 : undefined),
-        studyMins: pubStudy || undefined,
-        reactions: {},
-        commentCount: 0,
-      }
-
-      setPosts((prev) => [optimisticPost, ...prev])
+      mutatePosts()
       setIsComposeOpen(false)
       setPostTitle('')
       setPostContent('')
@@ -681,7 +596,7 @@ function SquarePageContent() {
 
   // Filter Logic with 30-Day Expiration Rule
   const filteredPosts = posts.filter((p) => {
-    // 30-Day Expiration Rule: Prayers and Struggles expire after 30 days. Testimonies and Records are Permanent.
+    // 30-Day Expiration Rule: Prayers and Struggles expire after 30 days. Testimonies, Reflections, and Records are Permanent.
     const isExpiringType =
       p.post_type === 'prayer' || p.post_type === 'prayer_request' || p.post_type === 'struggle'
     if (isExpiringType && p.created_at) {
@@ -695,13 +610,17 @@ function SquarePageContent() {
     if (activeFilter === 'prayers') return p.post_type === 'prayer' || p.post_type === 'prayer_request'
     if (activeFilter === 'struggles') return p.post_type === 'struggle'
     if (activeFilter === 'testimonies') return p.post_type === 'testimony'
-    if (activeFilter === 'records')
+    if (activeFilter === 'reflections') {
+      const isAutoRecord = p.content.startsWith('Completed') || p.content.includes('Daily Devotion')
+      return p.post_type === 'reflection' && !isAutoRecord
+    }
+    if (activeFilter === 'records') {
       return (
-        p.post_type === 'reflection' ||
         p.post_type === 'record' ||
         p.content.startsWith('Completed') ||
         p.content.includes('Daily Devotion')
       )
+    }
     return true
   })
 
@@ -773,6 +692,7 @@ function SquarePageContent() {
             { id: 'prayers', label: 'Prayers' },
             { id: 'struggles', label: 'Struggles' },
             { id: 'testimonies', label: 'Testimonies' },
+            { id: 'reflections', label: 'Reflections' },
             { id: 'records', label: 'Records' },
           ].map((tab) => {
             const isActive = activeFilter === tab.id
@@ -841,10 +761,10 @@ function SquarePageContent() {
             const isStruggle = post.post_type === 'struggle'
             const isTestimony = post.post_type === 'testimony'
             const isRecord =
-              post.post_type === 'reflection' ||
               post.post_type === 'record' ||
               post.content.startsWith('Completed') ||
               post.content.includes('Daily Devotion')
+            const isReflection = !isRecord && (post.post_type === 'reflection' || (!isPrayer && !isStruggle && !isTestimony))
 
             const timeStr = new Date(post.created_at).toLocaleDateString([], {
               month: 'short',
@@ -907,7 +827,7 @@ function SquarePageContent() {
                         <span>Prayer</span>
                       </span>
                     ) : isStruggle ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-subtle text-[#262626] text-[10px] font-bold inline-flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-subtle text-[#262626] dark:text-neutral-300 text-[10px] font-bold inline-flex items-center gap-1">
                         <ShieldWarning size={12} />
                         <span>Struggle</span>
                       </span>
@@ -915,6 +835,11 @@ function SquarePageContent() {
                       <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 text-[#FBBF24] text-[10px] font-bold inline-flex items-center gap-1">
                         <Sparkle size={12} weight="fill" />
                         <span>Testimony</span>
+                      </span>
+                    ) : isReflection ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
+                        <BookOpen size={12} weight="bold" />
+                        <span>Reflection</span>
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
@@ -1472,7 +1397,7 @@ function SquarePageContent() {
                 {/* 4. Devotion & Scripture Reflection */}
                 <div
                   onClick={() => {
-                    setSelectedIntent('record')
+                    setSelectedIntent('reflection')
                     setComposeStep('draft')
                   }}
                   className="faith-card p-3.5 flex items-center justify-between cursor-pointer hover:border-[#234537] dark:border-emerald-700 transition-all group"
@@ -1510,7 +1435,7 @@ function SquarePageContent() {
                       { id: 'prayer', label: 'Prayer' },
                       { id: 'struggle', label: 'Struggle' },
                       { id: 'testimony', label: 'Testimony' },
-                      { id: 'record', label: 'Reflection' },
+                      { id: 'reflection', label: 'Reflection' },
                     ].map((cat) => {
                       const isSel = selectedIntent === cat.id
                       return (
@@ -1551,7 +1476,9 @@ function SquarePageContent() {
                         ? 'Prayer Request'
                         : selectedIntent === 'struggle'
                         ? 'Struggle Details'
-                        : 'Testimony Story'}
+                        : selectedIntent === 'testimony'
+                        ? 'Testimony Story'
+                        : 'Scripture Reflection'}
                     </label>
                     <span
                       className={`text-[10px] font-mono font-bold ${
@@ -1572,7 +1499,9 @@ function SquarePageContent() {
                         ? 'What do you want the community to pray with you about?'
                         : selectedIntent === 'struggle'
                         ? 'What difficulty or challenge are you bringing before God and the church?'
-                        : 'How has God moved in your life and answered prayer?'
+                        : selectedIntent === 'testimony'
+                        ? 'How has God moved in your life and answered prayer?'
+                        : 'Share what God spoke to you through this scripture or devotion...'
                     }
                     className="w-full p-3.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all resize-none shadow-xs"
                   />
