@@ -120,7 +120,7 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
   if (userIdsToFetch.length > 0) {
     const { data: profileRows } = await (supabase
       .from('profiles') as any)
-      .select('id, display_name, full_name, username, avatar_url, church')
+      .select('id, display_name, full_name, username, avatar_url, church, email')
       .in('id', userIdsToFetch)
 
     ;(profileRows || []).forEach((pr: any) => {
@@ -186,6 +186,39 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
     )
   }
 
+  const resolveAuthorName = (author: any, isSelf: boolean) => {
+    if (author) {
+      if (author.display_name && author.display_name.trim()) return author.display_name.trim()
+      if (author.full_name && author.full_name.trim()) return author.full_name.trim()
+      if (author.username && author.username.trim()) return author.username.trim()
+      if (author.email && typeof author.email === 'string' && author.email.includes('@')) {
+        const handle = author.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+        if (handle) {
+          return handle
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ')
+        }
+      }
+    }
+    if (isSelf && user) {
+      const meta = user.user_metadata || {}
+      if (meta.full_name && meta.full_name.trim()) return meta.full_name.trim()
+      if (meta.name && meta.name.trim()) return meta.name.trim()
+      if (meta.display_name && meta.display_name.trim()) return meta.display_name.trim()
+      if (user.email && typeof user.email === 'string' && user.email.includes('@')) {
+        const handle = user.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+        if (handle) {
+          return handle
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ')
+        }
+      }
+    }
+    return 'Believer'
+  }
+
   return dbPosts.map((p: any) => {
     const author = p.profiles || authorMap[p.user_id] || {}
     const isAnon = Boolean(
@@ -194,11 +227,10 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
       p.is_anonymous === 1 ||
       p.is_anonymous === 't'
     )
-    const rawName = author.display_name || author.full_name || author.username
-    const fallbackSelf = user && p.user_id === user.id ? user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me' : 'A Believer'
+    const isSelf = Boolean(user && p.user_id === user.id)
     const authorDisplayName = isAnon
       ? 'Anonymous Member'
-      : (rawName || fallbackSelf)
+      : resolveAuthorName(author, isSelf)
     const authorChurchName = isAnon ? 'Community Square' : (author.church || 'Local Assembly')
 
     const { prayerMins: pMins, studyMins: sMins } = extractMinsFromContent(p.content || '')
@@ -215,7 +247,7 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
       created_at: p.created_at || new Date().toISOString(),
       is_anonymous: isAnon,
       authorName: authorDisplayName,
-      authorAvatar: isAnon ? null : author.avatar_url || null,
+      authorAvatar: isAnon ? null : author.avatar_url || (isSelf ? user?.user_metadata?.avatar_url : null) || null,
       authorChurch: authorChurchName,
       authorStreak: isAnon ? 0 : (streakMap[p.user_id] || 0),
       prayerMins: pMins || (p.post_type === 'record' ? 15 : undefined),

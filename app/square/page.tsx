@@ -186,14 +186,47 @@ function SquarePageContent() {
       setCurrentUser(user)
 
       if (user) {
+        const meta = user.user_metadata || {}
+        let resolvedName =
+          (meta.full_name && meta.full_name.trim()) ||
+          (meta.name && meta.name.trim()) ||
+          (meta.display_name && meta.display_name.trim()) ||
+          null
+
+        if (!resolvedName && user.email) {
+          const handle = user.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+          if (handle) {
+            resolvedName = handle
+              .split(' ')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ')
+          }
+        }
+
         const { data: prof } = await (supabase
           .from('profiles') as any)
-          .select('id, display_name, full_name, username, avatar_url, church')
+          .select('id, display_name, full_name, username, avatar_url, church, email')
           .eq('id', user.id)
           .maybeSingle()
 
         if (prof) {
+          if ((!prof.display_name || !prof.display_name.trim()) && resolvedName) {
+            await (supabase.from('profiles') as any)
+              .update({ display_name: resolvedName, full_name: prof.full_name || resolvedName })
+              .eq('id', user.id)
+            prof.display_name = resolvedName
+          }
           setUserProfile(prof)
+        } else if (resolvedName) {
+          const newProf = {
+            id: user.id,
+            display_name: resolvedName,
+            full_name: resolvedName,
+            email: user.email || null,
+            church: 'Local Assembly',
+          }
+          await (supabase.from('profiles') as any).upsert(newProf, { onConflict: 'id' })
+          setUserProfile(newProf)
         }
       }
     }
@@ -497,15 +530,25 @@ function SquarePageContent() {
 
     // 3. Persist via Server API Route & Client Supabase
     try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
       await fetch('/api/square/toggle-anonymous', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ postId, isAnonymous: nextIsAnon }),
       })
-      const supabase = createClient()
+
       await (supabase.from('square_posts') as any)
         .update({ is_anonymous: nextIsAnon })
         .eq('id', postId)
+
+      mutatePosts()
     } catch (err) {
       console.error('Failed to update anonymity:', err)
     }
@@ -513,6 +556,9 @@ function SquarePageContent() {
 
   const handleDeletePost = async (postId: string) => {
     setActiveMenuPostId(null)
+    const postToDelete = posts.find((p) => p.id === postId)
+
+    // 1. Optimistic removal from UI state
     setPosts((prev) => prev.filter((p) => p.id !== postId))
 
     try {
@@ -522,16 +568,42 @@ function SquarePageContent() {
       }
     } catch (_) {}
 
+    // 2. Persist delete on server & database
     try {
-      await fetch('/api/square/delete', {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const res = await fetch('/api/square/delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ postId }),
       })
-      const supabase = createClient()
-      await (supabase.from('square_posts') as any).delete().eq('id', postId)
-    } catch (err) {
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error(json.error || 'Failed to delete post from server')
+      }
+
+      // Cleanup client-side if possible
+      try {
+        await (supabase.from('square_reactions') as any).delete().eq('post_id', postId)
+        await (supabase.from('square_comments') as any).delete().eq('post_id', postId)
+        await (supabase.from('square_posts') as any).delete().eq('id', postId)
+      } catch (_) {}
+
+      mutatePosts()
+    } catch (err: any) {
       console.error('Failed to delete post:', err)
+      // Rollback optimistic removal on critical failure
+      if (postToDelete) {
+        setPosts((prev) => [postToDelete, ...prev])
+      }
+      alert(err?.message || 'Could not delete post. Please check your connection and try again.')
     }
   }
 
@@ -859,30 +931,59 @@ function SquarePageContent() {
                         </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center border border-white shadow-sm overflow-hidden">
-                        {post.authorAvatar ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={post.authorAvatar}
-                            alt={post.authorName || 'Believer'}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span>{(post.authorName || 'B').charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-text-primary">
-                          {post.authorName || 'A Believer'}
-                        </p>
-                        <p className="text-[10px] text-text-secondary">
-                          {post.authorChurch || 'Local Assembly'} • {timeStr}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  ) : (() => {
+                      const isSelf = Boolean(
+                        currentUser &&
+                        (post.author_id === currentUser.id || post.user_id === currentUser.id)
+                      )
+                      const displayAuthorName =
+                        post.authorName &&
+                        post.authorName !== 'Believer' &&
+                        post.authorName !== 'A Believer'
+                          ? post.authorName
+                          : isSelf
+                          ? userProfile?.display_name ||
+                            userProfile?.full_name ||
+                            currentUser?.user_metadata?.full_name ||
+                            currentUser?.user_metadata?.name ||
+                            'Believer'
+                          : post.authorName || 'Believer'
+
+                      const displayAvatar =
+                        post.authorAvatar || (isSelf ? (userProfile?.avatar_url || currentUser?.user_metadata?.avatar_url) : null)
+
+                      const displayChurch =
+                        post.authorChurch && post.authorChurch !== 'Local Assembly'
+                          ? post.authorChurch
+                          : isSelf
+                          ? userProfile?.church || currentUser?.user_metadata?.church || 'Local Assembly'
+                          : post.authorChurch || 'Local Assembly'
+
+                      return (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center border border-white shadow-sm overflow-hidden">
+                            {displayAvatar ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={displayAvatar}
+                                alt={displayAuthorName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>{displayAuthorName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-text-primary">
+                              {displayAuthorName}
+                            </p>
+                            <p className="text-[10px] text-text-secondary">
+                              {displayChurch} • {timeStr}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                   <div className="flex items-center gap-2">
                     {isPrayer ? (

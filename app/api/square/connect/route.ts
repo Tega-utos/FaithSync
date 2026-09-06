@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 async function getAuthenticatedUser(req: NextRequest | Request, supabase: any) {
@@ -48,10 +48,26 @@ export async function GET(req: NextRequest) {
     const senderIds = Array.from(new Set((incomingRows || []).map((r: any) => r.user_id)))
     const profileMap: Record<string, any> = {}
 
+    const formatBelieverName = (prof: any) => {
+      if (prof?.display_name && prof.display_name.trim()) return prof.display_name.trim()
+      if (prof?.full_name && prof.full_name.trim()) return prof.full_name.trim()
+      if (prof?.username && prof.username.trim()) return prof.username.trim()
+      if (prof?.email && typeof prof.email === 'string' && prof.email.includes('@')) {
+        const handle = prof.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+        if (handle) {
+          return handle
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ')
+        }
+      }
+      return 'Believer'
+    }
+
     if (senderIds.length > 0) {
       const { data: senderProfiles } = await (supabase
         .from('profiles') as any)
-        .select('id, display_name, full_name, username, avatar_url, church')
+        .select('id, display_name, full_name, username, avatar_url, church, email')
         .in('id', senderIds)
 
       ;(senderProfiles || []).forEach((p: any) => {
@@ -62,7 +78,7 @@ export async function GET(req: NextRequest) {
     // Fetch intro messages for incoming requests
     const incomingRequests = (incomingRows || []).map((reqRow: any) => {
       const prof = profileMap[reqRow.user_id] || {}
-      const rawName = prof.display_name || prof.full_name || prof.username || 'A Believer'
+      const rawName = formatBelieverName(prof)
       return {
         id: reqRow.id,
         senderId: reqRow.user_id,
@@ -91,7 +107,7 @@ export async function GET(req: NextRequest) {
     if (activePartnerIds.length > 0) {
       const { data: partnerProfiles } = await (supabase
         .from('profiles') as any)
-        .select('id, display_name, full_name, username, avatar_url, church')
+        .select('id, display_name, full_name, username, avatar_url, church, email')
         .in('id', activePartnerIds)
 
       ;(partnerProfiles || []).forEach((p: any) => {

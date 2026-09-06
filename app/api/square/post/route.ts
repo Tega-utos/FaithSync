@@ -132,19 +132,69 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Fetch author profile details
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name, full_name, username, avatar_url, church')
+    // 4. Fetch and self-heal author profile details
+    const { data: profile } = await (supabase
+      .from('profiles') as any)
+      .select('id, display_name, full_name, username, avatar_url, church, email')
       .eq('id', user.id)
       .maybeSingle()
 
-    const rawName = profile?.display_name || profile?.full_name || profile?.username || user.user_metadata?.full_name || user.user_metadata?.display_name
-    const authorName = isAnonymous
-      ? 'Anonymous Member'
-      : (rawName || 'A Believer')
-    const authorAvatar = isAnonymous ? null : profile?.avatar_url || user.user_metadata?.avatar_url || null
-    const authorChurch = isAnonymous ? 'Community Square' : profile?.church || user.user_metadata?.church || 'Local Assembly'
+    // Determine the most accurate believer name
+    const meta = user.user_metadata || {}
+    let resolvedName =
+      (profile?.display_name && profile.display_name.trim()) ||
+      (profile?.full_name && profile.full_name.trim()) ||
+      (profile?.username && profile.username.trim()) ||
+      (meta.full_name && meta.full_name.trim()) ||
+      (meta.name && meta.name.trim()) ||
+      (meta.display_name && meta.display_name.trim()) ||
+      (meta.user_name && meta.user_name.trim()) ||
+      null
+
+    if (!resolvedName) {
+      const emailToUse = profile?.email || user.email
+      if (emailToUse && emailToUse.includes('@')) {
+        const handle = emailToUse.split('@')[0].replace(/[._-]+/g, ' ').trim()
+        if (handle) {
+          resolvedName = handle
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ')
+        }
+      }
+    }
+
+    if (!resolvedName) {
+      resolvedName = 'Believer'
+    }
+
+    const resolvedChurch =
+      profile?.church || meta.church || 'Local Assembly'
+    const resolvedAvatar =
+      profile?.avatar_url || meta.avatar_url || null
+
+    // Self-heal profile if missing or incomplete so subsequent feed queries have the authentic name
+    if (!profile || !profile.display_name) {
+      try {
+        await (supabase.from('profiles') as any).upsert(
+          {
+            id: user.id,
+            display_name: resolvedName,
+            full_name: profile?.full_name || meta.full_name || resolvedName,
+            email: user.email || profile?.email || undefined,
+            church: resolvedChurch,
+            avatar_url: resolvedAvatar,
+          },
+          { onConflict: 'id' }
+        )
+      } catch (profSaveErr) {
+        console.warn('Profile auto-heal non-blocking error:', profSaveErr)
+      }
+    }
+
+    const authorName = isAnonymous ? 'Anonymous Member' : resolvedName
+    const authorAvatar = isAnonymous ? null : resolvedAvatar
+    const authorChurch = isAnonymous ? 'Community Square' : resolvedChurch
 
     return NextResponse.json({
       success: true,

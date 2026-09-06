@@ -63,6 +63,12 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'postId is required' }, { status: 400 })
     }
 
+    // Delete child reactions and comments first to prevent foreign key constraint issues
+    try {
+      await (supabase.from('square_reactions') as any).delete().eq('post_id', postId)
+      await (supabase.from('square_comments') as any).delete().eq('post_id', postId)
+    } catch (_) {}
+
     // Delete post unconditionally (Super Admin override)
     const { error } = await (supabase.from('square_posts') as any)
       .delete()

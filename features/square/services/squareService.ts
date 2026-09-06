@@ -32,7 +32,8 @@ export async function fetchSquarePosts(currentUserId?: string): Promise<SquarePo
       verse_reference,
       post_type,
       created_at,
-      profiles (display_name, avatar_url, preferences),
+      is_anonymous,
+      profiles (id, display_name, full_name, username, avatar_url, church, email, preferences),
       square_reactions (user_id, reaction_type)
     `)
     .order('created_at', { ascending: false })
@@ -40,6 +41,9 @@ export async function fetchSquarePosts(currentUserId?: string): Promise<SquarePo
   if (error || !posts) return []
 
   return posts.map((p: any) => {
+    const isAnon = Boolean(p.is_anonymous)
+    const prof = p.profiles || {}
+    const rawName = prof.display_name || prof.full_name || prof.username || (prof.email ? prof.email.split('@')[0] : 'Believer')
     const reactions = p.square_reactions || []
     const amenReactions = reactions.filter((r: any) => r.reaction_type === 'amen')
     const applaudReactions = reactions.filter((r: any) => r.reaction_type === 'applaud')
@@ -49,15 +53,16 @@ export async function fetchSquarePosts(currentUserId?: string): Promise<SquarePo
 
     return {
       id: p.id,
-      user_id: p.user_id,
+      user_id: isAnon ? '' : p.user_id,
       content: p.content,
       verse_reference: p.verse_reference,
       post_type: p.post_type,
       created_at: p.created_at,
-      authorName: p.profiles?.display_name || 'A Believer',
-      authorAvatar: p.profiles?.avatar_url,
-      authorChurch: 'Faith Community',
-      authorStreak: 7,
+      is_anonymous: isAnon,
+      authorName: isAnon ? 'Anonymous Member' : rawName,
+      authorAvatar: isAnon ? null : prof.avatar_url,
+      authorChurch: isAnon ? 'Community Square' : (prof.church || 'Local Assembly'),
+      authorStreak: isAnon ? 0 : 7,
       amenCount: amenReactions.length,
       hasAmened,
       reactCount: applaudReactions.length,

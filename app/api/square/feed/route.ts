@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 async function getAuthenticatedUser(req: NextRequest | Request, supabase: any) {
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
     if (userIds.length > 0) {
       const { data: profileRows, error: profileErr } = await (supabase
         .from('profiles') as any)
-        .select('id, display_name, full_name, username, avatar_url, church, preferences')
+        .select('id, display_name, full_name, username, avatar_url, church, email, preferences')
         .in('id', userIds)
 
       if (!profileErr && profileRows) {
@@ -120,6 +120,40 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    // Helper: format clean display name
+    const resolveAuthorName = (prof: any, isSelf: boolean) => {
+      if (prof) {
+        if (prof.display_name && prof.display_name.trim()) return prof.display_name.trim()
+        if (prof.full_name && prof.full_name.trim()) return prof.full_name.trim()
+        if (prof.username && prof.username.trim()) return prof.username.trim()
+        if (prof.email && typeof prof.email === 'string' && prof.email.includes('@')) {
+          const handle = prof.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+          if (handle) {
+            return handle
+              .split(' ')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ')
+          }
+        }
+      }
+      if (isSelf && currentUser) {
+        const meta = currentUser.user_metadata || {}
+        if (meta.full_name && meta.full_name.trim()) return meta.full_name.trim()
+        if (meta.name && meta.name.trim()) return meta.name.trim()
+        if (meta.display_name && meta.display_name.trim()) return meta.display_name.trim()
+        if (currentUser.email && typeof currentUser.email === 'string' && currentUser.email.includes('@')) {
+          const handle = currentUser.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+          if (handle) {
+            return handle
+              .split(' ')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ')
+          }
+        }
+      }
+      return 'Believer'
+    }
+
     // 6. Format and enrich post items
     const enrichedPosts = posts.map((p: any) => {
       const isAnon = Boolean(
@@ -129,12 +163,11 @@ export async function GET(req: NextRequest) {
         p.is_anonymous === 't'
       )
 
+      const isSelf = Boolean(currentUser && p.user_id === currentUser.id)
       const prof = profileMap[p.user_id] || {}
-      const rawName = prof.display_name || prof.full_name || prof.username
-      const fallbackSelf = currentUser && p.user_id === currentUser.id ? currentUser.user_metadata?.full_name || currentUser.user_metadata?.display_name || 'Me' : 'A Believer'
-      const authorName = isAnon ? 'Anonymous Member' : (rawName || fallbackSelf)
+      const authorName = isAnon ? 'Anonymous Member' : resolveAuthorName(prof, isSelf)
       const authorChurch = isAnon ? 'Community Square' : (prof.church || 'Local Assembly')
-      const authorAvatar = isAnon ? null : (prof.avatar_url || null)
+      const authorAvatar = isAnon ? null : (prof.avatar_url || (isSelf ? currentUser?.user_metadata?.avatar_url : null) || null)
       const authorStreak = isAnon ? 0 : (streakMap[p.user_id] ?? (prof.preferences?.admin_adjusted_streak ?? 0))
 
       const { prayerMins, studyMins } = extractMinsFromContent(p.content || '')

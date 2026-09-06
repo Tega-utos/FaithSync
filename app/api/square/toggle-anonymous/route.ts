@@ -1,7 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(req: Request) {
+async function getAuthenticatedUser(req: NextRequest | Request, supabase: any) {
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1]
+    const { data: userData } = await supabase.auth.getUser(token)
+    if (userData?.user) return userData.user
+  }
+  const { data: userData } = await supabase.auth.getUser()
+  return userData?.user || null
+}
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { postId, isAnonymous } = body
@@ -11,9 +22,7 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const user = await getAuthenticatedUser(req, supabase)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
