@@ -35,6 +35,7 @@ import {
   HandsPraying,
   PaintBrush,
   ShieldCheck,
+  ChatCircle,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { shareOrCopyCode } from '@/lib/utils/syncCodes'
@@ -44,6 +45,7 @@ import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { updateTargetHistory } from '@/lib/utils/targetHistory'
 import { getLocalDateKey } from '@/lib/utils/date'
+import { registerPushSubscription } from '@/lib/notifications/webPushClient'
 
 interface BuddyPartner {
   id: string
@@ -153,8 +155,14 @@ export default function ProfilePage() {
   const [notifDailyReminders, setNotifDailyReminders] = useState(true)
   const [notifBuddyNudges, setNotifBuddyNudges] = useState(true)
   const [notifBuddyClockins, setNotifBuddyClockins] = useState(true)
+  const [notifBuddyLiveSessions, setNotifBuddyLiveSessions] = useState(true)
   const [notifBuddyScheduled, setNotifBuddyScheduled] = useState(true)
+  const [notifSquareComments, setNotifSquareComments] = useState(true)
+  const [notifIntercessions, setNotifIntercessions] = useState(true)
+  const [notifStreakReminders, setNotifStreakReminders] = useState(true)
   const [notifGroupActivity, setNotifGroupActivity] = useState(true)
+  const [pushPermissionStatus, setPushPermissionStatus] = useState<string>('default')
+  const [isSubscribingPush, setIsSubscribingPush] = useState(false)
   const [reviewDayOfWeek, setReviewDayOfWeek] = useState('Sunday')
   const [reviewReminderTime, setReviewReminderTime] = useState('18:00')
   const [monthReviewSchedule, setMonthReviewSchedule] = useState('last_day')
@@ -223,7 +231,11 @@ export default function ProfilePage() {
         setNotifDailyReminders(prefs.notifDailyReminders ?? true)
         setNotifBuddyNudges(prefs.notifBuddyNudges ?? true)
         setNotifBuddyClockins(prefs.notifBuddyClockins ?? true)
+        setNotifBuddyLiveSessions(prefs.notifBuddyLiveSessions ?? true)
         setNotifBuddyScheduled(prefs.notifBuddyScheduled ?? true)
+        setNotifSquareComments(prefs.notifSquareComments ?? true)
+        setNotifIntercessions(prefs.notifIntercessions ?? true)
+        setNotifStreakReminders(prefs.notifStreakReminders ?? true)
         setNotifGroupActivity(prefs.notifGroupActivity ?? true)
         setReviewDayOfWeek(prefs.reviewDayOfWeek || 'Sunday')
         setReviewReminderTime(prefs.reviewReminderTime || '18:00')
@@ -673,9 +685,40 @@ export default function ProfilePage() {
     }
   }
 
+  // Check Push Notification Permission on modal open
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPushPermissionStatus(Notification.permission)
+    }
+  }, [isNotificationsOpen])
+
+  // 1-Tap Enable Web Push Notifications
+  const handleEnablePush = async () => {
+    setIsSubscribingPush(true)
+    try {
+      const res = await registerPushSubscription()
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        setPushPermissionStatus(Notification.permission)
+      }
+      if (res.success) {
+        setToastMessage('Push notifications enabled ✓')
+        setTimeout(() => setToastMessage(null), 3000)
+      } else if (res.error) {
+        alert(res.error)
+      }
+    } catch (err) {
+      console.error('Push enable error:', err)
+    } finally {
+      setIsSubscribingPush(false)
+    }
+  }
+
   // Save Notification Preferences
   const handleSaveNotifications = async () => {
     setIsNotificationsOpen(false)
+    setToastMessage('Notification preferences saved ✓')
+    setTimeout(() => setToastMessage(null), 3000)
+
     try {
       const supabase = createClient()
       const {
@@ -695,7 +738,11 @@ export default function ProfilePage() {
         notifDailyReminders,
         notifBuddyNudges,
         notifBuddyClockins,
+        notifBuddyLiveSessions,
         notifBuddyScheduled,
+        notifSquareComments,
+        notifIntercessions,
+        notifStreakReminders,
         notifGroupActivity,
         reviewDayOfWeek,
         reviewReminderTime,
@@ -1683,122 +1730,275 @@ export default function ProfilePage() {
       {/* Notifications Modal */}
       {isNotificationsOpen && (
         <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
-            <div className="flex items-center justify-between pb-1 border-b border-border">
-              <h3 className="text-sm font-bold text-text-primary">Push Notification Preferences</h3>
-              <button onClick={() => setIsNotificationsOpen(false)} className="text-text-secondary hover:text-text-primary p-1">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95 no-scrollbar">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Bell size={18} weight="fill" className="text-[#FBBF24]" />
+                <h3 className="text-sm font-bold text-text-primary">Notification Preferences</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen(false)}
+                className="text-text-secondary hover:text-text-primary p-1 rounded-xl cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs">
+            {/* Device Push Permission Status Banner */}
+            <div className="p-3.5 rounded-2xl bg-card border border-border space-y-2.5 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-text-primary">Daily Clock-In Reminders</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifDailyReminders}
-                  onClick={() => setNotifDailyReminders(!notifDailyReminders)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
-                    notifDailyReminders ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                      notifDailyReminders ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${pushPermissionStatus === 'granted' ? 'bg-emerald-500 animate-pulse' : pushPermissionStatus === 'denied' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                  <span className="text-xs font-bold text-text-primary">
+                    {pushPermissionStatus === 'granted'
+                      ? 'Device Push Active'
+                      : pushPermissionStatus === 'denied'
+                      ? 'Push Blocked by Browser'
+                      : 'Push Not Enabled'}
+                  </span>
+                </div>
+                {pushPermissionStatus !== 'granted' && (
+                  <button
+                    type="button"
+                    disabled={isSubscribingPush}
+                    onClick={handleEnablePush}
+                    className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[11px] font-bold shadow-xs hover:bg-[#262626] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isSubscribingPush ? 'Enabling...' : 'Enable Push'}
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                {pushPermissionStatus === 'granted'
+                  ? 'Your device is configured to receive instant devotion alarms, buddy alerts, and prayer requests.'
+                  : 'Enable device push to receive alarms when off-app and get alerted when your buddy joins the altar.'}
+              </p>
+            </div>
+
+            {/* Notification Sections */}
+            <div className="space-y-4 text-xs">
+              {/* Domain 1: Accountability & Live Sync */}
+              <div className="space-y-2.5 pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
+                  <Fire size={12} weight="fill" className="text-[#EA2C26]" />
+                  <span>Accountability & Live Sync</span>
+                </span>
+
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
+                  {/* Buddy Live Altar Started */}
+                  <div className="flex items-center justify-between py-1">
+                    <div>
+                      <span className="font-bold text-text-primary block">Live Altar Started</span>
+                      <span className="text-[10px] text-text-secondary">Alert when buddy taps in for a live prayer/study</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifBuddyLiveSessions}
+                      onClick={() => setNotifBuddyLiveSessions(!notifBuddyLiveSessions)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifBuddyLiveSessions ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifBuddyLiveSessions ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Notify on Buddy Devotion Completed */}
+                  <div className="flex items-center justify-between py-1 border-t border-border-light">
+                    <div>
+                      <span className="font-bold text-text-primary block">Devotion Completed</span>
+                      <span className="text-[10px] text-text-secondary">Celebratory alert when buddy hits their goal</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifBuddyClockins}
+                      onClick={() => setNotifBuddyClockins(!notifBuddyClockins)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifBuddyClockins ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifBuddyClockins ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Buddy Nudges */}
+                  <div className="flex items-center justify-between py-1 border-t border-border-light">
+                    <div>
+                      <span className="font-bold text-text-primary block">Buddy Encouragement Nudges</span>
+                      <span className="text-[10px] text-text-secondary">Alerts when your partner nudges you to show up</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifBuddyNudges}
+                      onClick={() => setNotifBuddyNudges(!notifBuddyNudges)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifBuddyNudges ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifBuddyNudges ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-text-primary block">Buddy Nudge Alerts</span>
-                  <span className="text-[10px] text-text-secondary">Push alerts when your partner nudges you</span>
+              {/* Domain 2: Community Square & 3-Day Intercession */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
+                  <ChatCircle size={12} weight="bold" className="text-sky-500" />
+                  <span>Community Square & Intercession</span>
+                </span>
+
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
+                  {/* Square Comments */}
+                  <div className="flex items-center justify-between py-1">
+                    <div>
+                      <span className="font-bold text-text-primary block">Reflection Comments</span>
+                      <span className="text-[10px] text-text-secondary">Alert when someone encourages or comments on your post</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifSquareComments}
+                      onClick={() => setNotifSquareComments(!notifSquareComments)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifSquareComments ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifSquareComments ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* 3-Day Intercessions */}
+                  <div className="flex items-center justify-between py-1 border-t border-border-light">
+                    <div>
+                      <span className="font-bold text-text-primary block">3-Day Intercession Match</span>
+                      <span className="text-[10px] text-text-secondary">When a partner connects or concludes a prayer focus</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifIntercessions}
+                      onClick={() => setNotifIntercessions(!notifIntercessions)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifIntercessions ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifIntercessions ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifBuddyNudges}
-                  onClick={() => setNotifBuddyNudges(!notifBuddyNudges)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
-                    notifBuddyNudges ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                      notifBuddyNudges ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
 
-              {/* Notify on Buddy Clock-In Toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-text-primary block">Notify on Buddy Clock-In</span>
-                  <span className="text-[10px] text-text-secondary">Send push alert when buddy completes a session</span>
+              {/* Domain 3: Daily Devotion & Streaks */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
+                  <Clock size={12} weight="bold" className="text-[#FBBF24]" />
+                  <span>Daily Habits & Streaks</span>
+                </span>
+
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
+                  {/* Evening Streak at Risk Alert */}
+                  <div className="flex items-center justify-between py-1">
+                    <div>
+                      <span className="font-bold text-text-primary block">8:30 PM Streak at Risk Warning</span>
+                      <span className="text-[10px] text-text-secondary">Nudge before midnight if 0 minutes logged today</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifStreakReminders}
+                      onClick={() => setNotifStreakReminders(!notifStreakReminders)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifStreakReminders ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifStreakReminders ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Scheduled Devotion Alarms */}
+                  <div className="flex items-center justify-between py-1 border-t border-border-light">
+                    <div>
+                      <span className="font-bold text-text-primary block">Daily Devotion Alarms</span>
+                      <span className="text-[10px] text-text-secondary">Reminders at your scheduled prayer/study times</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifDailyReminders}
+                      onClick={() => setNotifDailyReminders(!notifDailyReminders)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifDailyReminders ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifDailyReminders ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifBuddyClockins}
-                  onClick={() => setNotifBuddyClockins(!notifBuddyClockins)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
-                    notifBuddyClockins ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                      notifBuddyClockins ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
 
-              {/* Scheduled Buddy Clock-Ins Toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-text-primary block">Buddy Scheduled Clock-Ins</span>
-                  <span className="text-[10px] text-text-secondary">Alerts when buddy schedules a session & when it starts</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifBuddyScheduled}
-                  onClick={() => setNotifBuddyScheduled(!notifBuddyScheduled)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
-                    notifBuddyScheduled ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                      notifBuddyScheduled ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
+              {/* Domain 4: Group Altars */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
+                  <Users size={12} weight="bold" className="text-emerald-500" />
+                  <span>Group Altars & Cohorts</span>
+                </span>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-text-primary block">Group Activity & Live Sessions</span>
-                  <span className="text-[10px] text-text-secondary">Cohort live waves and community updates</span>
+                <div className="space-y-2 bg-card p-3 rounded-2xl border border-border">
+                  <div className="flex items-center justify-between py-1">
+                    <div>
+                      <span className="font-bold text-text-primary block">Cohort Live Altars</span>
+                      <span className="text-[10px] text-text-secondary">Alert when a member starts a group devotion</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifGroupActivity}
+                      onClick={() => setNotifGroupActivity(!notifGroupActivity)}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
+                        notifGroupActivity ? 'bg-[#0E0E0E] dark:bg-[#234537]' : 'bg-[#E5E7EB] dark:bg-neutral-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          notifGroupActivity ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifGroupActivity}
-                  onClick={() => setNotifGroupActivity(!notifGroupActivity)}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer shrink-0 ${
-                    notifGroupActivity ? 'bg-[#0E0E0E]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div
-                    className={`bg-card w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                      notifGroupActivity ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
 
               {/* Weekly Review Schedule */}
@@ -1878,7 +2078,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={handleSaveNotifications}
-              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-2xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Check size={16} weight="bold" className="text-[#FBBF24]" />
               <span>Save Notification Preferences</span>

@@ -63,19 +63,68 @@ export async function POST(req: NextRequest) {
     let notifTitle = title || 'FaithSync Notification'
     let notifBody = message || 'You have a new devotion alert.'
     let routeUrl = url
+    let notifIcon = 'bell'
 
     if (type === 'clockin_invite') {
-      notifTitle = 'Clock-In Invitation'
-      notifBody = `${senderName} invited you to join a live Clock-In session!`
+      notifTitle = title || 'Clock-In Invitation'
+      notifBody = message || `${senderName} invited you to join a live Clock-In session!`
       if (!routeUrl) routeUrl = `/buddy-chat/${user.id}`
+      notifIcon = 'timer'
+    } else if (type === 'buddy_clockin_started') {
+      notifTitle = title || 'Live Altar Started'
+      notifBody = message || `🔥 ${senderName} is on the Altar! Tapped in — tap to join live.`
+      if (!routeUrl) routeUrl = `/buddy-chat/${user.id}?joinLive=true`
+      notifIcon = 'fire'
+    } else if (type === 'buddy_clockin_completed') {
+      notifTitle = title || 'Devotion Completed'
+      notifBody = message || `🎉 ${senderName} completed their devotion session!`
+      if (!routeUrl) routeUrl = `/buddy-chat/${user.id}`
+      notifIcon = 'fire'
+    } else if (type === 'buddy_request') {
+      notifTitle = title || 'Accountability Request'
+      notifBody = message || `${senderName} sent you an accountability partner request.`
+      if (!routeUrl) routeUrl = '/sync'
+      notifIcon = 'user_plus'
+    } else if (type === 'buddy_accepted') {
+      notifTitle = title || 'Accountability Accepted'
+      notifBody = message || `${senderName} accepted your request! You are now walking together.`
+      if (!routeUrl) routeUrl = `/buddy-chat/${user.id}`
+      notifIcon = 'user_plus'
+    } else if (type === 'square_comment') {
+      notifTitle = title || 'Reflection Encouragement'
+      notifBody = message || `${senderName} commented on your reflection.`
+      if (!routeUrl) routeUrl = '/square'
+      notifIcon = 'chat_circle'
+    } else if (type === 'intercession_connected') {
+      notifTitle = title || 'Intercession Connected'
+      notifBody = message || `🙏 ${senderName} joined to pray for your 3-day request.`
+      if (!routeUrl) routeUrl = '/square'
+      notifIcon = 'hands_praying'
+    } else if (type === 'intercession_completed') {
+      notifTitle = title || '3-Day Intercession Concluded'
+      notifBody = message || `✨ Your 3-day prayer altar with ${senderName} has concluded.`
+      if (!routeUrl) routeUrl = '/square'
+      notifIcon = 'sparkle'
+    } else if (type === 'streak_at_risk') {
+      notifTitle = title || 'Protect Your Streak'
+      notifBody = message || '🔥 Keep your altar burning! Clock in before midnight.'
+      if (!routeUrl) routeUrl = '/clock-in'
+      notifIcon = 'fire'
+    } else if (type === 'daily_reminder') {
+      notifTitle = title || 'Time for Devotion'
+      notifBody = message || '🌅 Take 15 minutes to center your spirit in Scripture & Prayer.'
+      if (!routeUrl) routeUrl = '/clock-in'
+      notifIcon = 'timer'
     } else if (type === 'wave' || type === 'group_session') {
-      notifTitle = 'Live Cohort Devotion'
-      notifBody = `${senderName} started a live session in your group!`
+      notifTitle = title || 'Live Cohort Devotion'
+      notifBody = message || `${senderName} started a live session in your group!`
       if (!routeUrl) routeUrl = groupId ? `/group-chat/${groupId}` : '/sync'
+      notifIcon = 'fire'
     } else if (type === 'nudge') {
-      notifTitle = 'Accountability Nudge'
-      notifBody = `${senderName} sent you an encouragement nudge: "Keep showing up!"`
+      notifTitle = title || 'Accountability Nudge'
+      notifBody = message || `${senderName} sent you an encouragement: "Keep showing up!"`
       if (!routeUrl) routeUrl = `/buddy-chat/${user.id}`
+      notifIcon = 'hands_praying'
     }
 
     if (!routeUrl) routeUrl = '/sync'
@@ -103,7 +152,7 @@ export async function POST(req: NextRequest) {
         type: type || 'nudge',
         is_read: false,
         route_url: routeUrl,
-        icon_type: type === 'clockin_invite' ? 'timer' : type === 'wave' ? 'fire' : 'hands_praying',
+        icon_type: notifIcon,
       }))
 
       try {

@@ -300,6 +300,27 @@ export function SquareCommentDrawer({
         setComments((prev) =>
           prev.map((c) => (c.id === tempId ? { ...c, id: inserted.id } : c))
         )
+
+        // Dispatch in-app notification and web push to post author (if not self-comment)
+        if (post.user_id && post.user_id !== currentUser.id) {
+          try {
+            const snippet = text.length > 60 ? `${text.slice(0, 57)}...` : text
+            const authorLabel = isAnonymous ? 'A believer' : myName
+            fetch('/api/notifications/push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                targetUserId: post.user_id,
+                type: 'square_comment',
+                title: 'Reflection Encouragement',
+                message: `${authorLabel} encouraged your reflection: "${snippet}"`,
+                url: '/square',
+              }),
+            }).catch(() => {})
+          } catch (notifSendErr) {
+            console.error('Comment notification dispatch note:', notifSendErr)
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to save comment:', err)

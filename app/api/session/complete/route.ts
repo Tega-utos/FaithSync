@@ -167,19 +167,18 @@ export async function POST(req: Request) {
           })
 
           if (allowedPartnerIds.length > 0) {
-            const notifs = allowedPartnerIds.map((pId) => ({
-              user_id: pId,
-              sender_id: user.id,
+            const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+            await dispatchServerNotification({
+              supabase,
+              senderId: user.id,
+              senderName,
+              targetUserIds: allowedPartnerIds,
               type: 'buddy_clockin_completed',
               title: `${senderName} Clocked In!`,
-              text: `${senderName} completed ${durationMins}m of ${disciplineLabel}.`,
-              route_url: `/history`,
-              icon_type: 'fire',
-              is_read: false,
-              created_at: new Date().toISOString(),
-            }))
-
-            await (supabase.from('notifications') as any).insert(notifs)
+              message: `🎉 ${senderName} completed ${durationMins}m of ${disciplineLabel}!`,
+              url: `/history`,
+              icon: 'fire',
+            })
           }
         }
       } catch (notifErr) {

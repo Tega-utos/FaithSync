@@ -26,6 +26,7 @@ import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { WeeklyProgress } from '@/features/dashboard/components/WeeklyProgress'
 import { getVerseOfTheDay } from '@/lib/scripture'
 import { Modal } from '@/components/ui/Modal'
+import { checkAndTriggerDevotionAlerts } from '@/lib/notifications/devotionScheduler'
 
 const DASH_ARRAY = 282.74 // 2 * PI * 45
 
@@ -166,6 +167,39 @@ export default function HomePage() {
       }
     }
   }, [router, mutate])
+
+  // Devotion Reminders & Evening Streak at Risk Alert Check
+  useEffect(() => {
+    async function triggerAlerts() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user && swrDashboard) {
+          const todayTotal = (swrDashboard.prayerMinutes || 0) + (swrDashboard.studyMinutes || 0)
+          const currentStreak = swrDashboard.streakDays || 0
+
+          let userPrefs: any = {}
+          try {
+            const raw = localStorage.getItem('faithsync_user_notif_prefs')
+            if (raw) userPrefs = JSON.parse(raw)
+          } catch {}
+
+          checkAndTriggerDevotionAlerts({
+            userId: user.id,
+            preferences: userPrefs,
+            todayTotalMins: todayTotal,
+            currentStreak,
+          })
+        }
+      } catch (err) {
+        console.error('Devotion check note:', err)
+      }
+    }
+
+    if (swrDashboard) {
+      triggerAlerts()
+    }
+  }, [swrDashboard])
 
   // Nudge Partner Handler (with 400ms Haptic Feedback Emulation)
   const handleNudge = async (e: React.MouseEvent, buddyId: string, connectionId: string) => {

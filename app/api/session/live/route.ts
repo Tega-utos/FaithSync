@@ -131,12 +131,72 @@ export async function POST(req: NextRequest) {
     // 2. START / SYNC FALLBACKS
     if (action === 'start') {
       const now = new Date().toISOString()
+      const startDiscipline = discipline || 'prayer'
+      const startTargetMins = targetMins || 15
+      const disciplineLabel = startDiscipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+
+      // Optionally notify buddies of live altar session
+      if (body.notifyPartners !== false) {
+        try {
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          const senderName = senderProfile?.display_name || user.user_metadata?.full_name || 'Your Buddy'
+
+          const { data: buddyRows } = await (supabase
+            .from('buddies') as any)
+            .select('user_id, buddy_id, permissions')
+            .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+            .eq('status', 'accepted')
+
+          if (buddyRows && buddyRows.length > 0) {
+            const partnerIds = buddyRows
+              .filter((b: any) => {
+                const perms = b.permissions || {}
+                return perms.sendNotificationOnStart !== false
+              })
+              .map((b: any) => (b.user_id === user.id ? b.buddy_id : b.user_id))
+
+            if (partnerIds.length > 0) {
+              const { data: partnerProfiles } = await (supabase
+                .from('profiles') as any)
+                .select('id, preferences')
+                .in('id', partnerIds)
+
+              const allowedIds = (partnerProfiles || [])
+                .filter((p: any) => (p?.preferences?.notifBuddyLiveSessions ?? true))
+                .map((p: any) => p.id)
+
+              if (allowedIds.length > 0) {
+                const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+                await dispatchServerNotification({
+                  supabase,
+                  senderId: user.id,
+                  senderName,
+                  targetUserIds: allowedIds,
+                  type: 'buddy_clockin_started',
+                  title: 'Live Altar Started',
+                  message: `🔥 ${senderName} is on the Altar! Tapped in for ${startTargetMins}m of ${disciplineLabel} — tap to join live.`,
+                  url: `/buddy-chat/${user.id}?joinLive=true`,
+                  icon: 'fire',
+                })
+              }
+            }
+          }
+        } catch (startNotifErr) {
+          console.error('Live altar start notification note:', startNotifErr)
+        }
+      }
+
       return NextResponse.json({
         success: true,
         roomId: liveRoomId || `room-${Date.now()}`,
         startedAt: now,
-        targetMins: targetMins || 15,
-        discipline: discipline || 'prayer',
+        targetMins: startTargetMins,
+        discipline: startDiscipline,
       })
     }
 
