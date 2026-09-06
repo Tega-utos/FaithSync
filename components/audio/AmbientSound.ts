@@ -9,9 +9,9 @@ class AmbientSoundEngine {
   private masterGain: GainNode | null = null
   private nodes: (AudioNode | number)[] = []
   private isPlaying: boolean = false
-  private isMuted: boolean = false
+  private isMuted: boolean = true
   private currentDiscipline: 'prayer' | 'study' = 'prayer'
-  private baseVolume: number = 0.35
+  private baseVolume: number = 0.12
 
   private initContext(): boolean {
     if (typeof window === 'undefined') return false
@@ -22,7 +22,7 @@ class AmbientSoundEngine {
         this.audioCtx = new AudioCtxClass()
       }
       if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume()
+        this.audioCtx.resume().catch(() => {})
       }
       if (!this.masterGain && this.audioCtx) {
         this.masterGain = this.audioCtx.createGain()
@@ -36,7 +36,7 @@ class AmbientSoundEngine {
     }
   }
 
-  public start(discipline: 'prayer' | 'study' = 'prayer', muted: boolean = false) {
+  public start(discipline: 'prayer' | 'study' = 'prayer', muted: boolean = true) {
     if (typeof window === 'undefined') return
     this.currentDiscipline = discipline
     this.isMuted = muted
@@ -48,8 +48,10 @@ class AmbientSoundEngine {
 
     const now = this.audioCtx.currentTime
     this.masterGain.gain.cancelScheduledValues(now)
-    this.masterGain.gain.setValueAtTime(0.001, now)
-    this.masterGain.gain.linearRampToValueAtTime(this.isMuted ? 0 : this.baseVolume, now + 1.2)
+    this.masterGain.gain.setValueAtTime(0.0001, now)
+    if (!this.isMuted) {
+      this.masterGain.gain.linearRampToValueAtTime(this.baseVolume, now + 1.2)
+    }
 
     if (discipline === 'prayer') {
       this.createPrayerDrone()
@@ -59,18 +61,16 @@ class AmbientSoundEngine {
   }
 
   /**
-   * Prayer Mode: Sacred Contemplative Drone
-   * Harmonious warm triad (E2 = 82.41Hz, B2 = 123.47Hz, E3 = 164.81Hz, G#3 = 207.65Hz)
-   * with a resonant lowpass filter for gentle, comforting prayer focus.
+   * Prayer Mode: Soft Peaceful Harmonic Atmosphere (whisper-soft chord, zero hum)
    */
   private createPrayerDrone() {
     if (!this.audioCtx || !this.masterGain) return
 
-    const freqs = [82.41, 123.47, 164.81, 207.65]
+    const freqs = [220.0, 277.18, 329.63, 440.0] // Warm peaceful A major choir chord
     const filter = this.audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(320, this.audioCtx.currentTime)
-    filter.Q.setValueAtTime(1.2, this.audioCtx.currentTime)
+    filter.frequency.setValueAtTime(400, this.audioCtx.currentTime)
+    filter.Q.setValueAtTime(0.5, this.audioCtx.currentTime)
     filter.connect(this.masterGain)
 
     freqs.forEach((freq, idx) => {
@@ -81,11 +81,11 @@ class AmbientSoundEngine {
       osc.type = 'sine'
       osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime)
 
-      // Slight detune for warm shimmering chorus
-      const detuneAmount = (idx - 1.5) * 4
+      // Very subtle detune
+      const detuneAmount = (idx - 1.5) * 2
       osc.detune.setValueAtTime(detuneAmount, this.audioCtx.currentTime)
 
-      const layerVol = idx === 0 ? 0.4 : 0.2
+      const layerVol = 0.04
       gain.gain.setValueAtTime(layerVol, this.audioCtx.currentTime)
 
       osc.connect(gain)

@@ -59,8 +59,16 @@ export function useWebRTCAudio({
   }, [])
 
   // 2. Setup Local Audio Stream & Speaking Decibel Monitor
-  const setupLocalAudio = useCallback(async () => {
-    if (localStreamRef.current) return localStreamRef.current
+  const setupLocalAudio = useCallback(async (startUnmuted = false): Promise<MediaStream | null> => {
+    if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
+      if (startUnmuted) {
+        localStreamRef.current.getAudioTracks().forEach((track) => {
+          track.enabled = true
+        })
+        setIsMicMuted(false)
+      }
+      return localStreamRef.current
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -72,14 +80,25 @@ export function useWebRTCAudio({
         video: false,
       })
 
-      // Ensure tracks start muted by default
+      // Set initial mute state
       stream.getAudioTracks().forEach((track) => {
-        track.enabled = false
+        track.enabled = startUnmuted
       })
 
       localStreamRef.current = stream
       setHasMicPermission(true)
-      setIsMicMuted(true)
+      setIsMicMuted(!startUnmuted)
+
+      // Add audio track to any existing peer connections
+      peerConnectionsRef.current.forEach(({ pc }) => {
+        const senders = pc.getSenders()
+        const hasAudio = senders.some((s) => s.track && s.track.kind === 'audio')
+        if (!hasAudio) {
+          stream.getAudioTracks().forEach((track) => {
+            pc.addTrack(track, stream)
+          })
+        }
+      })
 
       // Audio analysis for speaking detection
       try {
@@ -182,6 +201,7 @@ export function useWebRTCAudio({
       // Audio element to play remote stream
       const audioEl = new Audio()
       audioEl.autoplay = true
+      audioEl.volume = 1.0
       audioEl.muted = isSpeakerMuted
       ;(audioEl as any).playsInline = true
 
@@ -190,7 +210,7 @@ export function useWebRTCAudio({
         if (event.streams && event.streams[0]) {
           audioEl.srcObject = event.streams[0]
           audioEl.play().catch((playErr) => {
-            console.warn('Auto-play blocked or waiting for user interaction:', playErr)
+            console.warn('Auto-play audio note:', playErr)
           })
         }
       }
@@ -282,7 +302,7 @@ export function useWebRTCAudio({
     channelRef.current = channel
 
     // Initialize local audio on mount
-    setupLocalAudio().then(() => {
+    setupLocalAudio(false).then(() => {
       if (!isMounted) return
       setIsInitialized(true)
 
@@ -396,29 +416,44 @@ export function useWebRTCAudio({
 
   // 5. Toggle Local Microphone Mute / Unmute
   const toggleMic = useCallback(async () => {
-    if (!localStreamRef.current) {
-      await setupLocalAudio()
-    }
-
-    if (localStreamRef.current) {
-      const nextMuted = !isMicMuted
-      localStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !nextMuted
-      })
-      setIsMicMuted(nextMuted)
-
-      // Broadcast mute status to peers
-      if (channelRef.current && userId) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'mute_state',
-          payload: { peerId: userId, isMuted: nextMuted },
-        })
+    try {
+      let stream = localStreamRef.current
+      if (!stream || stream.getAudioTracks().length === 0 || stream.getAudioTracks()[0].readyState === 'ended') {
+        stream = await setupLocalAudio(true)
+        if (stream) {
+          setIsMicMuted(false)
+          return true
+        }
+        return false
       }
-      return !nextMuted
+
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume().catch(() => {})
+      }
+
+      const audioTrack = stream.getAudioTracks()[0]
+      if (audioTrack) {
+        const currentlyEnabled = audioTrack.enabled
+        const nextEnabled = !currentlyEnabled
+        audioTrack.enabled = nextEnabled
+        setIsMicMuted(!nextEnabled)
+
+        // Broadcast mute status to peers
+        if (channelRef.current && userId) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'mute_state',
+            payload: { peerId: userId, isMuted: !nextEnabled },
+          })
+        }
+        return nextEnabled
+      }
+      return false
+    } catch (err) {
+      console.error('Mic toggle error:', err)
+      return false
     }
-    return false
-  }, [isMicMuted, setupLocalAudio, userId])
+  }, [setupLocalAudio, userId])
 
   // 6. Toggle Speaker (Mute / Unmute incoming peer voice)
   const toggleSpeaker = useCallback(() => {

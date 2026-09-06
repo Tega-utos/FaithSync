@@ -194,7 +194,7 @@ export default function GroupChatPage() {
 
   // In-App Bible Reader & Ambient Sound in Live Session
   const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false)
-  const [isAmbientMuted, setIsAmbientMuted] = useState(false)
+  const [isAmbientMuted, setIsAmbientMuted] = useState(true)
   const lastActiveSegRef = useRef<number>(-1)
 
   // Ambient sound lifecycle during live session
