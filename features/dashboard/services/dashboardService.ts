@@ -159,7 +159,9 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   let todayStudySecs = todayData?.studySecs || 0
 
   let prayerMinutes = Math.floor(todayPrayerSecs / 60)
+  if (todayPrayerSecs >= 30 && prayerMinutes === 0) prayerMinutes = 1
   let studyMinutes = Math.floor(todayStudySecs / 60)
+  if (todayStudySecs >= 30 && studyMinutes === 0) studyMinutes = 1
 
   const todayMetrics = {
     prayerMins: prayerMinutes,

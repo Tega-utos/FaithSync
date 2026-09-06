@@ -92,11 +92,12 @@ export default function SessionSummaryPage() {
           }
         }
 
-        // Fetch fresh devotion totals & targets
+        // Invalidate cache and fetch fresh devotion totals & targets
+        invalidateMemoryCache()
         const dashData = await fetchDashboardData(true)
         if (dashData) {
-          const pMins = dashData.prayerMinutes || 0
-          const sMins = dashData.studyMinutes || 0
+          let pMins = dashData.prayerMinutes || 0
+          let sMins = dashData.studyMinutes || 0
           const pT = dashData.prayerTarget || 15
           const sT = dashData.studyTarget || 15
           setTodayPrayerMins(pMins)

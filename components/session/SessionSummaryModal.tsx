@@ -90,14 +90,24 @@ export function SessionSummaryModal({
         const dashData = await fetchDashboardData(true)
 
         if (dashData) {
-          setTodayPrayerMins(dashData.prayerMinutes || 0)
-          setTodayStudyMins(dashData.studyMinutes || 0)
-          setPrayerTarget(dashData.prayerTarget || 15)
-          setStudyTarget(dashData.studyTarget || 15)
+          const sessionMins = sessionData?.secondsElapsed ? Math.max(1, Math.round(sessionData.secondsElapsed / 60)) : 0
+          let pMins = dashData.prayerMinutes || 0
+          let sMins = dashData.studyMinutes || 0
+          if (sessionData?.discipline === 'prayer' && sessionMins > 0) {
+            pMins = Math.max(pMins, sessionMins)
+          } else if (sessionData?.discipline === 'study' && sessionMins > 0) {
+            sMins = Math.max(sMins, sessionMins)
+          }
+
+          const pTarget = dashData.prayerTarget || 15
+          const sTarget = dashData.studyTarget || 15
+          setTodayPrayerMins(pMins)
+          setTodayStudyMins(sMins)
+          setPrayerTarget(pTarget)
+          setStudyTarget(sTarget)
           setIsDevotionComplete(Boolean(
             dashData.isDevotionComplete ||
-            ((dashData.prayerMinutes || 0) >= (dashData.prayerTarget || 15) &&
-             (dashData.studyMinutes || 0) >= (dashData.studyTarget || 15))
+            (pMins >= pTarget && sMins >= sTarget)
           ))
         }
 
@@ -371,7 +381,7 @@ export function SessionSummaryModal({
       setSaving(false)
       onClose()
       if (onSaved) onSaved()
-      const targetId = sessionRecord?.id || 'latest'
+      const targetId = sessionRecord?.id || sessionData?.sessionId || 'latest'
       router.push(`/session-summary/${targetId}`)
     } catch (err: any) {
       setError(err?.message || 'Failed to save session.')

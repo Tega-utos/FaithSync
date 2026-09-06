@@ -21,6 +21,11 @@ import {
 } from '@phosphor-icons/react'
 import { useTimer, TimerSessionData } from '@/context/TimerContext'
 import { createClient } from '@/lib/supabase/client'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
+import { invalidateDashboardData } from '@/features/dashboard/hooks/useDashboardData'
+import { invalidateHistoryData } from '@/features/history/hooks/useHistoryData'
+import { invalidateMilestonesData } from '@/features/milestones/hooks/useMilestonesData'
+import { invalidateSquarePosts } from '@/features/square/hooks/useSquarePosts'
 import { SessionSummaryModal } from '@/components/session/SessionSummaryModal'
 import { playChime } from '@/components/audio/Chime'
 import {
@@ -192,7 +197,6 @@ export default function ClockInPage() {
     setSummaryData(data)
     stopLockScreenSession()
     playChime(soundMuted)
-    setShowSummary(true)
 
     // Immediate database persist to guarantee zero data loss
     if (data && data.secondsElapsed > 0) {
@@ -204,7 +208,7 @@ export default function ClockInPage() {
 
         if (user) {
           const isComplete =
-            data.secondsElapsed >= (data.targetSeconds || 0) && (data.targetSeconds || 0) > 0
+            (data.secondsElapsed >= (data.targetSeconds || 0)) && (data.targetSeconds || 0) > 0
 
           let savedSessionId = activeSessionIdRef.current
 
@@ -247,8 +251,12 @@ export default function ClockInPage() {
             setSummaryData((prev) => (prev ? { ...prev, sessionId: savedSessionId } : prev))
           }
 
-          // Invalidate cache immediately so dashboard & momentum rings update without delay
+          // Invalidate all client & SWR caches immediately
           invalidateMemoryCache()
+          invalidateDashboardData()
+          invalidateHistoryData()
+          invalidateMilestonesData()
+          invalidateSquarePosts()
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('faithsync_session_updated'))
           }
@@ -283,13 +291,13 @@ export default function ClockInPage() {
             }
           }
         }
-      } catch (err) {
-        console.error('Error saving ended session to database:', err)
+      } catch (e) {
+        console.error('Session end persist error:', e)
       }
     }
+
+    setShowSummary(true)
   }
-
-
 
   return (
     <div className="command-center-container px-4 sm:px-6 pt-3 pb-32 sm:pb-36 min-h-[92vh] flex flex-col justify-between">

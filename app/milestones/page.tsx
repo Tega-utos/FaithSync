@@ -118,7 +118,17 @@ import { useMilestonesData } from '@/features/milestones/hooks/useMilestonesData
 
 export default function MilestonesPage() {
   const router = useRouter()
-  const { stats, isLoading: loading } = useMilestonesData()
+  const { stats, isLoading: loading, mutate } = useMilestonesData()
+
+  useEffect(() => {
+    const handleUpdate = () => mutate()
+    window.addEventListener('faithsync_session_updated', handleUpdate)
+    window.addEventListener('focus', handleUpdate)
+    return () => {
+      window.removeEventListener('faithsync_session_updated', handleUpdate)
+      window.removeEventListener('focus', handleUpdate)
+    }
+  }, [mutate])
 
   // Time conversion: hours and minutes
   const hours = Math.floor(stats.totalMinutes / 60)

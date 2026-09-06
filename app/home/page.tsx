@@ -22,6 +22,7 @@ import {
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { useDashboardData } from '@/features/dashboard/hooks/useDashboardData'
+import { invalidateMemoryCache } from '@/lib/cache/clientCache'
 import { WeeklyProgress } from '@/features/dashboard/components/WeeklyProgress'
 import { getVerseOfTheDay } from '@/lib/scripture'
 import { Modal } from '@/components/ui/Modal'
@@ -106,8 +107,43 @@ export default function HomePage() {
 
     checkOnboarding()
 
-    const handleSessionUpdate = () => mutate()
+    const handleSessionUpdate = () => {
+      invalidateMemoryCache()
+      mutate()
+    }
     window.addEventListener('faithsync_session_updated', handleSessionUpdate)
+    window.addEventListener('focus', handleSessionUpdate)
+
+    // Realtime Supabase Channel for Instant Session & Buddy Synchronization
+    let sessionChannel: any = null
+    async function setupRealtimeSync() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          sessionChannel = supabase
+            .channel(`home_live_sync_${user.id}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'sessions' },
+              () => {
+                invalidateMemoryCache()
+                mutate()
+              }
+            )
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'buddies' },
+              () => {
+                invalidateMemoryCache()
+                mutate()
+              }
+            )
+            .subscribe()
+        }
+      } catch {}
+    }
+    setupRealtimeSync()
 
     // Push Notification Permissions (The "Silent Ask")
     async function requestNotificationPermission() {
@@ -123,6 +159,11 @@ export default function HomePage() {
 
     return () => {
       window.removeEventListener('faithsync_session_updated', handleSessionUpdate)
+      window.removeEventListener('focus', handleSessionUpdate)
+      if (sessionChannel) {
+        const supabase = createClient()
+        supabase.removeChannel(sessionChannel)
+      }
     }
   }, [router, mutate])
 
@@ -173,20 +214,16 @@ export default function HomePage() {
       })
     }
 
-    setDashboard((prev) => ({
-      ...prev,
-      pendingRequests: prev.pendingRequests.filter((r) => r.id !== reqId),
-    }))
+    invalidateMemoryCache()
+    mutate()
   }
 
   // The Silent Ignore Rule: Deletes row from database and explicitly does NOT notify sender
   const handleIgnore = async (reqId: string) => {
     const supabase = createClient()
     await supabase.from('buddies').delete().eq('id', reqId)
-    setDashboard((prev) => ({
-      ...prev,
-      pendingRequests: prev.pendingRequests.filter((r) => r.id !== reqId),
-    }))
+    invalidateMemoryCache()
+    mutate()
   }
 
   const prayerTarget = Math.max(dashboard.prayerTarget || 15, 1)

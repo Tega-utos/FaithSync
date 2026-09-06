@@ -45,21 +45,20 @@ export async function fetchMilestonesData(): Promise<MilestoneStats | null> {
   }
 
   const verifiedSessions = allSessions.filter(
-    (s) =>
-      s.is_complete ||
-      (s.duration_seconds > 0 &&
-        s.duration_seconds >= (s.target_duration_seconds || 0))
+    (s) => s.is_complete || (s.duration_seconds && s.duration_seconds > 0)
   )
 
   let totalPrayerSecs = 0
   let totalStudySecs = 0
 
-  verifiedSessions.forEach((s) => {
-    if (s.type === 'prayer') {
-      totalPrayerSecs += s.duration_seconds
-    }
-    if (s.type === 'study' || s.type === 'word') {
-      totalStudySecs += s.duration_seconds
+  allSessions.forEach((s) => {
+    const secs = s.duration_seconds || 0
+    if (secs > 0) {
+      if (s.type === 'prayer') {
+        totalPrayerSecs += secs
+      } else if (s.type === 'study' || s.type === 'word') {
+        totalStudySecs += secs
+      }
     }
   })
 

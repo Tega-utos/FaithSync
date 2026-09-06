@@ -39,7 +39,17 @@ import { useHistoryData } from '@/features/history/hooks/useHistoryData'
 
 export default function HistoryPage() {
   const router = useRouter()
-  const { dailySummaries, prayerTarget, studyTarget, userName, isLoading: loading } = useHistoryData()
+  const { dailySummaries, prayerTarget, studyTarget, userName, isLoading: loading, mutate } = useHistoryData()
+
+  useEffect(() => {
+    const handleUpdate = () => mutate()
+    window.addEventListener('faithsync_session_updated', handleUpdate)
+    window.addEventListener('focus', handleUpdate)
+    return () => {
+      window.removeEventListener('faithsync_session_updated', handleUpdate)
+      window.removeEventListener('focus', handleUpdate)
+    }
+  }, [mutate])
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {

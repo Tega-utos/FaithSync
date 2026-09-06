@@ -151,6 +151,13 @@ export default function DateSessionsPage() {
     }
 
     loadDateSessions()
+
+    window.addEventListener('faithsync_session_updated', loadDateSessions)
+    window.addEventListener('focus', loadDateSessions)
+    return () => {
+      window.removeEventListener('faithsync_session_updated', loadDateSessions)
+      window.removeEventListener('focus', loadDateSessions)
+    }
   }, [dateParam])
 
   const formattedDate = dateParam

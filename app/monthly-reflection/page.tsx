@@ -82,6 +82,13 @@ export default function MonthlyReflectionPage() {
     }
 
     loadMonthlyStats()
+
+    window.addEventListener('faithsync_session_updated', loadMonthlyStats)
+    window.addEventListener('focus', loadMonthlyStats)
+    return () => {
+      window.removeEventListener('faithsync_session_updated', loadMonthlyStats)
+      window.removeEventListener('focus', loadMonthlyStats)
+    }
   }, [router])
 
   // Save Monthly Reflection
