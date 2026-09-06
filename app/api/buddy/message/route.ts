@@ -1,7 +1,52 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(req: Request) {
+async function getAuthenticatedUser(req: NextRequest | Request, supabase: any) {
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1]
+    const { data: userData } = await supabase.auth.getUser(token)
+    if (userData?.user) return userData.user
+  }
+  const { data: userData } = await supabase.auth.getUser()
+  return userData?.user || null
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const buddyId = searchParams.get('buddyId')
+
+    if (!buddyId) {
+      return NextResponse.json({ error: 'buddyId is required' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+    const user = await getAuthenticatedUser(req, supabase)
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: messages, error } = await (supabase
+      .from('messages') as any)
+      .select('id, sender_id, recipient_id, content, message_type, meta, created_at')
+      .or(`and(sender_id.eq.${user.id},recipient_id.eq.${buddyId}),and(sender_id.eq.${buddyId},recipient_id.eq.${user.id})`)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+
+    return NextResponse.json({
+      success: true,
+      messages: messages || [],
+    })
+  } catch (error: any) {
+    console.error('Buddy messages GET error:', error)
+    return NextResponse.json({ error: error?.message || 'Failed to fetch messages' }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { recipientId, content, messageType = 'text', meta = {} } = body
@@ -11,9 +56,7 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const user = await getAuthenticatedUser(req, supabase)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

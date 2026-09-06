@@ -474,30 +474,93 @@ export function subscribeToBuddyUpdates(
 }
 
 /**
- * Real-time Chat Functions
+ * Real-time Chat Functions with Persistent Backend & Local Cache
  */
 export async function fetchBuddyMessages(buddyId: string, currentUserId: string): Promise<BuddyChatMessage[]> {
-  const supabase = createClient()
+  const cacheKey = `faithsync_buddy_msgs_${buddyId}`
 
-  // 1. Fetch messages matching sender/recipient pair
-  const { data: messages, error } = await supabase
-    .from('messages')
-    .select('*')
-    .or(
-      `and(sender_id.eq.${currentUserId},recipient_id.eq.${buddyId}),and(sender_id.eq.${buddyId},recipient_id.eq.${currentUserId})`
-    )
-    .order('created_at', { ascending: true })
+  // 1. Try server API route first
+  try {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
 
-  if (error || !messages) return []
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
 
-  return (messages || []).map((m: any) => ({
-    id: m.id,
-    sender_id: m.sender_id,
-    content: m.content,
-    message_type: m.message_type as any,
-    meta: m.meta,
-    created_at: m.created_at,
-  }))
+    const res = await fetch(`/api/buddy/message?buddyId=${encodeURIComponent(buddyId)}`, {
+      method: 'GET',
+      headers,
+    })
+
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.messages)) {
+        const msgs: BuddyChatMessage[] = data.messages.map((m: any) => ({
+          id: m.id,
+          sender_id: m.sender_id,
+          content: m.content,
+          message_type: m.message_type as any,
+          meta: m.meta,
+          created_at: m.created_at,
+        }))
+
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(msgs))
+          } catch (_) {}
+        }
+        return msgs
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Buddy messages server fetch note:', apiErr)
+  }
+
+  // 2. Direct client query fallback
+  try {
+    const supabase = createClient()
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(
+        `and(sender_id.eq.${currentUserId},recipient_id.eq.${buddyId}),and(sender_id.eq.${buddyId},recipient_id.eq.${currentUserId})`
+      )
+      .order('created_at', { ascending: true })
+
+    if (!error && Array.isArray(messages)) {
+      const msgs: BuddyChatMessage[] = messages.map((m: any) => ({
+        id: m.id,
+        sender_id: m.sender_id,
+        content: m.content,
+        message_type: m.message_type as any,
+        meta: m.meta,
+        created_at: m.created_at,
+      }))
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(msgs))
+        } catch (_) {}
+      }
+      return msgs
+    }
+  } catch (clientErr) {
+    console.warn('Buddy messages client fetch note:', clientErr)
+  }
+
+  // 3. Return local storage cache if offline or error
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        return JSON.parse(cached)
+      }
+    } catch (_) {}
+  }
+
+  return []
 }
 
 export async function sendBuddyMessage(
@@ -507,13 +570,20 @@ export async function sendBuddyMessage(
   messageType: string = 'text',
   meta?: any
 ): Promise<BuddyChatMessage | null> {
+  const cacheKey = `faithsync_buddy_msgs_${buddyId}`
   const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
 
-  // 1. Try server API route first for authenticated server-side insertion & RLS bypass
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`
+  }
+
+  // 1. Try server API route first for authenticated server-side insertion & notification dispatch
   try {
     const res = await fetch('/api/buddy/message', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         recipientId: buddyId,
         content: content.trim(),
@@ -523,7 +593,7 @@ export async function sendBuddyMessage(
     })
     const data = await res.json()
     if (res.ok && data.message) {
-      return {
+      const msg: BuddyChatMessage = {
         id: data.message.id,
         sender_id: data.message.sender_id,
         content: data.message.content,
@@ -531,8 +601,21 @@ export async function sendBuddyMessage(
         meta: data.message.meta,
         created_at: data.message.created_at,
       }
+
+      // Update local cache
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+          const updated = [...cached.filter((m: any) => m.id !== msg.id), msg]
+          localStorage.setItem(cacheKey, JSON.stringify(updated))
+        } catch (_) {}
+      }
+
+      return msg
     }
-  } catch {}
+  } catch (apiErr) {
+    console.warn('Send buddy message API route note:', apiErr)
+  }
 
   // 2. Direct client fallback insert
   try {
@@ -544,6 +627,7 @@ export async function sendBuddyMessage(
         content: content.trim(),
         message_type: messageType,
         meta: meta || null,
+        created_at: new Date().toISOString(),
       })
       .select('*')
       .single()
@@ -553,7 +637,7 @@ export async function sendBuddyMessage(
       return null
     }
 
-    return {
+    const msg: BuddyChatMessage = {
       id: newMsg.id,
       sender_id: newMsg.sender_id,
       content: newMsg.content,
@@ -561,6 +645,17 @@ export async function sendBuddyMessage(
       meta: (newMsg as any).meta,
       created_at: newMsg.created_at,
     }
+
+    // Update local cache
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+        const updated = [...cached.filter((m: any) => m.id !== msg.id), msg]
+        localStorage.setItem(cacheKey, JSON.stringify(updated))
+      } catch (_) {}
+    }
+
+    return msg
   } catch (clientErr) {
     console.error('Client message insert exception:', clientErr)
     return null

@@ -286,50 +286,106 @@ export async function joinGroupByCode(rawCode: string): Promise<{ success: boole
 }
 
 export async function fetchGroupMessages(groupId: string): Promise<GroupChatMessage[]> {
-  const supabase = createClient()
+  const cacheKey = `faithsync_grp_msgs_${groupId}`
 
-  const { data: messages, error } = await (supabase
-    .from('group_messages') as any)
-    .select(`
-      id,
-      sender_id,
-      content,
-      message_type,
-      meta,
-      created_at
-    `)
-    .eq('group_id', groupId)
-    .order('created_at', { ascending: true })
+  // 1. Try server API route first
+  try {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
 
-  if (error || !messages) return []
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
 
-  const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id))).filter(Boolean) as string[]
-  const profileMap: Record<string, string> = {}
-
-  if (senderIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, display_name, username')
-      .in('id', senderIds)
-
-    ;(profiles || []).forEach((p) => {
-      profileMap[p.id] = p.display_name || p.username || 'Member'
+    const res = await fetch(`/api/group/message?groupId=${encodeURIComponent(groupId)}`, {
+      method: 'GET',
+      headers,
     })
+
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data.messages)) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(data.messages))
+          } catch (_) {}
+        }
+        return data.messages
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Group messages server fetch note:', apiErr)
   }
 
-  return messages.map((m: any) => {
-    const pName = profileMap[m.sender_id] || 'Member'
-    return {
-      id: m.id,
-      sender_id: m.sender_id,
-      sender_name: pName,
-      sender_initial: pName.charAt(0).toUpperCase(),
-      content: m.content,
-      created_at: m.created_at,
-      message_type: m.message_type,
-      meta: m.meta,
+  // 2. Direct client query fallback
+  try {
+    const supabase = createClient()
+    const { data: messages, error } = await (supabase
+      .from('group_messages') as any)
+      .select(`
+        id,
+        sender_id,
+        content,
+        message_type,
+        meta,
+        created_at
+      `)
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: true })
+
+    if (!error && Array.isArray(messages)) {
+      const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id))).filter(Boolean) as string[]
+      const profileMap: Record<string, string> = {}
+
+      if (senderIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, username')
+          .in('id', senderIds)
+
+        ;(profiles || []).forEach((p) => {
+          profileMap[p.id] = p.display_name || p.username || 'Member'
+        })
+      }
+
+      const formatted = messages.map((m: any) => {
+        const pName = profileMap[m.sender_id] || 'Member'
+        return {
+          id: m.id,
+          sender_id: m.sender_id,
+          sender_name: pName,
+          sender_initial: pName.charAt(0).toUpperCase(),
+          content: m.content,
+          created_at: m.created_at,
+          message_type: m.message_type,
+          meta: m.meta,
+        }
+      })
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(formatted))
+        } catch (_) {}
+      }
+
+      return formatted
     }
-  })
+  } catch (clientErr) {
+    console.warn('Group messages client fetch note:', clientErr)
+  }
+
+  // 3. Return local cache if offline or on network error
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        return JSON.parse(cached)
+      }
+    } catch (_) {}
+  }
+
+  return []
 }
 
 export async function sendGroupMessage(
@@ -338,37 +394,91 @@ export async function sendGroupMessage(
   messageType: string = 'text',
   meta?: any
 ): Promise<GroupChatMessage | null> {
+  const cacheKey = `faithsync_grp_msgs_${groupId}`
   const supabase = createClient()
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  if (!user) return null
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`
+  }
 
-  const { data: newMsg, error } = await (supabase
-    .from('group_messages') as any)
-    .insert({
-      group_id: groupId,
-      sender_id: user.id,
-      content,
-      message_type: messageType,
-      meta: meta || null,
+  // 1. Try server API route first
+  try {
+    const res = await fetch('/api/group/message', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        groupId,
+        content: content.trim(),
+        messageType,
+        meta,
+      }),
     })
-    .select('*')
-    .single()
 
-  if (error || !newMsg) return null
+    if (res.ok) {
+      const data = await res.json()
+      if (data.message) {
+        if (typeof window !== 'undefined') {
+          try {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+            const updated = [...cached.filter((m: any) => m.id !== data.message.id), data.message]
+            localStorage.setItem(cacheKey, JSON.stringify(updated))
+          } catch (_) {}
+        }
+        return data.message
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Group message API route note:', apiErr)
+  }
 
-  const pName = user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me'
-  return {
-    id: newMsg.id,
-    sender_id: newMsg.sender_id,
-    sender_name: pName,
-    sender_initial: pName.charAt(0).toUpperCase(),
-    content: newMsg.content,
-    created_at: newMsg.created_at,
-    message_type: newMsg.message_type,
-    meta: newMsg.meta,
+  // 2. Direct client fallback insert
+  try {
+    const user = session?.user
+    if (!user) return null
+
+    const { data: newMsg, error } = await (supabase
+      .from('group_messages') as any)
+      .insert({
+        group_id: groupId,
+        sender_id: user.id,
+        content,
+        message_type: messageType,
+        meta: meta || null,
+        created_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single()
+
+    if (error || !newMsg) return null
+
+    const pName = user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me'
+    const formatted: GroupChatMessage = {
+      id: newMsg.id,
+      sender_id: newMsg.sender_id,
+      sender_name: pName,
+      sender_initial: pName.charAt(0).toUpperCase(),
+      content: newMsg.content,
+      created_at: newMsg.created_at,
+      message_type: newMsg.message_type,
+      meta: newMsg.meta,
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
+        const updated = [...cached.filter((m: any) => m.id !== formatted.id), formatted]
+        localStorage.setItem(cacheKey, JSON.stringify(updated))
+      } catch (_) {}
+    }
+
+    return formatted
+  } catch (clientErr) {
+    console.error('Client group message insert error:', clientErr)
+    return null
   }
 }
 
