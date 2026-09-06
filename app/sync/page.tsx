@@ -39,6 +39,10 @@ interface BuddyItem {
   church: string
   isOnline: boolean
   isLiveNow?: boolean
+  liveDiscipline?: 'prayer' | 'study'
+  liveFocusText?: string
+  liveStartedAt?: string
+  liveDurationMins?: number
   lastActive: string
   lastMessage: string
 }
@@ -200,6 +204,10 @@ export default function SyncPage() {
     church: c.partnerChurch,
     isOnline: Boolean(c.isOnline || c.isLiveNow),
     isLiveNow: Boolean(c.isLiveNow),
+    liveDiscipline: c.liveDiscipline,
+    liveFocusText: c.liveFocusText,
+    liveStartedAt: c.liveStartedAt,
+    liveDurationMins: c.liveDurationMins,
     lastActive: c.lastActive || 'Active today',
     lastMessage: c.lastMessage || 'Let’s clock in together!',
   }))
@@ -513,7 +521,7 @@ export default function SyncPage() {
           )}
 
           {/* Buddies List */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                 Active Accountability Buddies
@@ -522,6 +530,60 @@ export default function SyncPage() {
                 {buddies.length} / 3 Active Buddies
               </span>
             </div>
+
+            {/* Pinned Live Altar Ongoing Alert */}
+            {buddies.some((b) => b.isLiveNow) && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-transparent border border-rose-500/30 dark:border-rose-500/20 shadow-sm space-y-3 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2.5 w-2.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    </span>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                      Live Clock-In Ongoing
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-text-secondary bg-surface px-2 py-0.5 rounded-full border border-border">
+                    Real-Time SynC Room
+                  </span>
+                </div>
+                {buddies
+                  .filter((b) => b.isLiveNow)
+                  .map((liveBuddy) => (
+                    <div
+                      key={`live-banner-${liveBuddy.id}`}
+                      className="flex items-center justify-between gap-3 bg-surface/90 dark:bg-neutral-900/80 p-3 rounded-xl border border-rose-500/20 shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-rose-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                            {liveBuddy.initial}
+                          </div>
+                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-surface" />
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <p className="text-xs font-bold text-text-primary truncate">
+                            {liveBuddy.name} is in Live {liveBuddy.liveDiscipline === 'study' ? 'Scripture Study' : 'Prayer'}
+                          </p>
+                          {liveBuddy.liveFocusText && (
+                            <p className="text-[11px] text-text-secondary truncate italic">
+                              &ldquo;{liveBuddy.liveFocusText}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Link
+                        href={`/buddy-chat/${liveBuddy.id}?joinLive=true`}
+                        className="shrink-0 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-transform active:scale-95"
+                      >
+                        <Fire size={14} weight="fill" className="text-amber-300" />
+                        <span>Join Live Altar</span>
+                      </Link>
+                    </div>
+                  ))}
+              </div>
+            )}
 
             {isBuddiesInitialLoading ? (
               <div className="py-12 text-center text-xs text-text-secondary">Loading buddies...</div>
@@ -549,45 +611,81 @@ export default function SyncPage() {
             ) : (
               <div className="space-y-2">
                 <div className="faith-card divide-y divide-border-light overflow-hidden">
-                  {buddies.map((buddy) => (
-                    <Link
-                      key={buddy.id}
-                      href={`/buddy-chat/${buddy.id}`}
-                      className="p-3.5 flex items-center justify-between hover:bg-surface transition-colors block group"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center">
-                            {buddy.initial}
-                          </div>
-                          {buddy.isOnline && (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#22C55E] border-2 border-white ring-1 ring-black/5" />
-                          )}
-                        </div>
+                  {buddies.map((buddy) => {
+                    const isLive = Boolean(buddy.isLiveNow)
 
-                        <div className="space-y-0.5 min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
-                              {buddy.name}
-                            </p>
-                            {buddy.isLiveNow ? (
-                              <span className="px-1.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[9px] font-extrabold flex items-center gap-1 shrink-0 animate-pulse">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                                LIVE NOW
+                    return (
+                      <Link
+                        key={buddy.id}
+                        href={isLive ? `/buddy-chat/${buddy.id}?joinLive=true` : `/buddy-chat/${buddy.id}`}
+                        className={`p-3.5 flex items-center justify-between transition-colors block group ${
+                          isLive
+                            ? 'bg-rose-500/5 dark:bg-rose-950/20 hover:bg-rose-500/10'
+                            : 'hover:bg-surface'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="relative shrink-0">
+                            <div
+                              className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center shadow-xs ${
+                                isLive
+                                  ? 'bg-rose-600 text-white border border-rose-400'
+                                  : 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]'
+                              }`}
+                            >
+                              {buddy.initial}
+                            </div>
+                            {isLive ? (
+                              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border-2 border-white dark:border-neutral-900"></span>
                               </span>
-                            ) : (
-                              <span className="text-[9px] text-text-muted font-mono shrink-0">{buddy.lastActive}</span>
-                            )}
+                            ) : buddy.isOnline ? (
+                              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#22C55E] border-2 border-white ring-1 ring-black/5" />
+                            ) : null}
                           </div>
-                          <p className={`text-[11px] truncate max-w-[200px] sm:max-w-xs ${buddy.isLiveNow ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-text-secondary'}`}>
-                            {buddy.lastMessage}
-                          </p>
-                        </div>
-                      </div>
 
-                      <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0 ml-2" />
-                    </Link>
-                  ))}
+                          <div className="space-y-0.5 min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
+                                {buddy.name}
+                              </p>
+                              {isLive ? (
+                                <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[8.5px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 animate-pulse shadow-xs">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                  {buddy.liveDiscipline === 'study' ? 'LIVE STUDY' : 'LIVE PRAYER'}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] text-text-muted font-mono shrink-0">{buddy.lastActive}</span>
+                              )}
+                            </div>
+                            <p
+                              className={`text-[11px] truncate max-w-[200px] sm:max-w-xs ${
+                                isLive
+                                  ? 'font-bold text-rose-600 dark:text-rose-400'
+                                  : 'text-text-secondary'
+                              }`}
+                            >
+                              {buddy.lastMessage}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          {isLive && (
+                            <span className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs flex items-center gap-1 shrink-0">
+                              <Fire size={13} weight="fill" className="text-amber-300" />
+                              <span>Join Altar</span>
+                            </span>
+                          )}
+                          <CaretRight
+                            size={16}
+                            className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0"
+                          />
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
 
                 {buddies.length < 3 ? (

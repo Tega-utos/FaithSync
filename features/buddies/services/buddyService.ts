@@ -26,6 +26,9 @@ export interface BuddyConnectionItem {
   isOnline?: boolean
   isLiveNow?: boolean
   liveDiscipline?: 'prayer' | 'study'
+  liveFocusText?: string
+  liveStartedAt?: string
+  liveDurationMins?: number
   lastActive?: string
   lastMessage?: string
 }
@@ -354,13 +357,23 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
     }
 
     // 4. Build live users map
-    const liveUsersMap = new Map<string, { discipline: 'prayer' | 'study'; focusText?: string }>()
+    const liveUsersMap = new Map<
+      string,
+      {
+        discipline: 'prayer' | 'study'
+        focusText?: string
+        startedAt?: string
+        durationMins?: number
+      }
+    >()
 
     if (sessionsRes.data) {
       sessionsRes.data.forEach((s: any) => {
         if (s.user_id) {
           liveUsersMap.set(s.user_id, {
             discipline: s.type === 'study' ? 'study' : 'prayer',
+            startedAt: s.started_at,
+            durationMins: 15,
           })
         }
       })
@@ -379,6 +392,8 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
               liveUsersMap.set(m.sender_id, {
                 discipline: m.meta.discipline === 'study' ? 'study' : 'prayer',
                 focusText: m.meta.focusText,
+                startedAt: m.meta.startedAt || m.created_at,
+                durationMins,
               })
             }
           }
@@ -416,9 +431,14 @@ export async function getMyBuddies(currentUserId: string, forceFresh = false): P
         isOnline: isLive,
         isLiveNow: isLive,
         liveDiscipline: liveDisc,
+        liveFocusText: liveInfo?.focusText,
+        liveStartedAt: liveInfo?.startedAt,
+        liveDurationMins: liveInfo?.durationMins,
         lastActive: isLive ? 'Clocked in now' : 'Active today',
         lastMessage: isLive
-          ? `🔴 ${liveDisc === 'prayer' ? 'Prayer' : 'Scripture Study'} Clock-In Ongoing • Tap to join!`
+          ? `🔴 Live ${liveDisc === 'prayer' ? 'Prayer' : 'Scripture Study'} Ongoing${
+              liveInfo?.focusText ? ` • "${liveInfo.focusText}"` : ''
+            } • Tap to join!`
           : 'Let’s clock in together!',
       }
 

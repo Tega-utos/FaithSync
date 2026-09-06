@@ -466,32 +466,60 @@ export default function HomePage() {
               <div className="space-y-2.5">
                 {dashboard.buddies.map((buddy) => {
                   const isNudged = nudgedState[buddy.id]
+                  const isLive = Boolean(buddy.isLiveNow)
 
                   return (
                     <div
                       key={buddy.id}
-                      onClick={() => router.push(`/buddy-chat/${buddy.id}`)}
-                      className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between gap-3 hover:border-[#FBBF24]/40 dark:border-white/15 hover:bg-subtle transition-all cursor-pointer"
+                      onClick={() => router.push(isLive ? `/buddy-chat/${buddy.id}?joinLive=true` : `/buddy-chat/${buddy.id}`)}
+                      className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                        isLive
+                          ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-500/40 dark:border-rose-500/30 hover:border-rose-500 shadow-xs'
+                          : 'bg-surface border border-border hover:border-[#FBBF24]/40 dark:border-white/15 hover:bg-subtle'
+                      }`}
                     >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <div className="relative">
-                          <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 ring-1 ring-black/5 dark:ring-white/20 font-bold text-xs flex items-center justify-center shadow-2xs">
+                      <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          <div
+                            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shadow-2xs ${
+                              isLive
+                                ? 'bg-rose-600 text-white border border-rose-400'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 ring-1 ring-black/5 dark:ring-white/20'
+                            }`}
+                          >
                             {buddy.initial}
                           </div>
-                          {buddy.isActiveNow && (
+                          {isLive ? (
+                            <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-1 ring-card"></span>
+                            </span>
+                          ) : buddy.isActiveNow ? (
                             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-card" />
-                          )}
+                          ) : null}
                         </div>
 
-                        <div className="truncate">
-                          <p className="text-xs font-bold text-text-primary truncate">{buddy.name}</p>
-                          <div className="flex items-center gap-1.5 text-[10px] text-text-secondary">
-                            {buddy.bothDone ? (
+                        <div className="truncate min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <p className="text-xs font-bold text-text-primary truncate">{buddy.name}</p>
+                            {isLive && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[8.5px] font-black uppercase tracking-wider shrink-0 animate-pulse flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-white animate-ping" />
+                                {buddy.liveDiscipline === 'study' ? 'Live Study' : 'Live Prayer'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-text-secondary truncate">
+                            {isLive ? (
+                              <span className="text-rose-600 dark:text-rose-400 font-semibold truncate">
+                                {buddy.liveFocusText ? `"${buddy.liveFocusText}"` : 'Clocked in now • Tap to join'}
+                              </span>
+                            ) : buddy.bothDone ? (
                               <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
                                 <CheckCircle size={12} weight="fill" /> Goals complete
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1">
+                              <span className="flex items-center gap-1 truncate">
                                 Pending:
                                 {!buddy.prayerDone && (
                                   <span className="inline-flex items-center gap-0.5 opacity-80">
@@ -509,39 +537,52 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={(e) => handleNudge(e, buddy.id, buddy.connectionId)}
-                          disabled={isNudged}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                            isNudged
-                              ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#1A1610] animate-nudge'
-                              : `bg-card border border-border text-text-primary hover:border-[#FBBF24]/60 dark:hover:border-[#FBBF24]/60 shadow-2xs ${
-                                  vibratingState[buddy.id] ? 'anim-vibrate' : ''
-                                }`
-                          }`}
-                        >
-                          {isNudged ? (
-                            <>
-                              <Check size={12} weight="bold" />
-                              <span>Sent! ✓</span>
-                            </>
-                          ) : (
-                            <>
-                              <HandWaving size={13} weight="fill" className="text-[#FBBF24]" />
-                              <span>Nudge</span>
-                            </>
-                          )}
-                        </button>
+                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {!isLive && (
+                          <button
+                            onClick={(e) => handleNudge(e, buddy.id, buddy.connectionId)}
+                            disabled={isNudged}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                              isNudged
+                                ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-[#1A1610] animate-nudge'
+                                : `bg-card border border-border text-text-primary hover:border-[#FBBF24]/60 dark:hover:border-[#FBBF24]/60 shadow-2xs ${
+                                    vibratingState[buddy.id] ? 'anim-vibrate' : ''
+                                  }`
+                            }`}
+                          >
+                            {isNudged ? (
+                              <>
+                                <Check size={12} weight="bold" />
+                                <span>Sent! ✓</span>
+                              </>
+                            ) : (
+                              <>
+                                <HandWaving size={13} weight="fill" className="text-[#FBBF24]" />
+                                <span>Nudge</span>
+                              </>
+                            )}
+                          </button>
+                        )}
 
-                        <Link
-                          href={`/buddy-chat/${buddy.id}`}
-                          className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-[#1C1813] border border-transparent dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] text-xs font-bold shadow-2xs hover:bg-[#262626] dark:hover:bg-[#231E18] dark:hover:border-[#FBBF24]/80 flex items-center gap-1 transition-all cursor-pointer"
-                          title={`SynC with ${buddy.name}`}
-                        >
-                          <ChatCircle size={13} weight="fill" className="text-[#FBBF24]" />
-                          <span>SynC</span>
-                        </Link>
+                        {isLive ? (
+                          <Link
+                            href={`/buddy-chat/${buddy.id}?joinLive=true`}
+                            className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm flex items-center gap-1 transition-all cursor-pointer animate-pulse"
+                            title={`Join Live Altar with ${buddy.name}`}
+                          >
+                            <Fire size={13} weight="fill" className="text-amber-300" />
+                            <span>Join Live</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/buddy-chat/${buddy.id}`}
+                            className="px-3 py-1.5 rounded-xl bg-[#0E0E0E] dark:bg-[#1C1813] border border-transparent dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] text-xs font-bold shadow-2xs hover:bg-[#262626] dark:hover:bg-[#231E18] dark:hover:border-[#FBBF24]/80 flex items-center gap-1 transition-all cursor-pointer"
+                            title={`SynC with ${buddy.name}`}
+                          >
+                            <ChatCircle size={13} weight="fill" className="text-[#FBBF24]" />
+                            <span>SynC</span>
+                          </Link>
+                        )}
                       </div>
                     </div>
                   )

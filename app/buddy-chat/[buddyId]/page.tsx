@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   CaretLeft,
@@ -79,9 +79,12 @@ interface ChatMessage {
 export default function BuddyChatPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const buddyId = params?.buddyId as string
+  const joinLiveParam = searchParams?.get('joinLive') === 'true'
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const autoJoinedLiveRef = useRef(false)
 
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -859,6 +862,36 @@ export default function BuddyChatPage() {
       }
     } catch {}
   }
+
+  // Auto-join Live Devotion Room when arriving via ?joinLive=true
+  useEffect(() => {
+    if (!joinLiveParam || autoJoinedLiveRef.current || loading || !currentUser) return
+
+    const now = Date.now()
+    const activeInvite = [...messages]
+      .reverse()
+      .find((m) => {
+        if (m.message_type !== 'clockin_invite' || !m.meta) return false
+        const startMs = m.meta.startedAt
+          ? new Date(m.meta.startedAt).getTime()
+          : new Date(m.created_at).getTime()
+        const durationMins = Number(m.meta.durationMins) || 15
+        return now < startMs + durationMins * 60 * 1000
+      })
+
+    if (activeInvite) {
+      autoJoinedLiveRef.current = true
+      handleJoinSession(activeInvite)
+    } else if (joinLiveParam) {
+      autoJoinedLiveRef.current = true
+      setLiveDiscipline('prayer')
+      setLiveTargetMins(15)
+      setLiveFocusText('Live Devotion Altar')
+      setLiveDurationSecs(0)
+      setIsLiveOverlayOpen(true)
+      playChime()
+    }
+  }, [joinLiveParam, loading, messages, currentUser])
 
   // Send Nudge (Throttled for Square Connections)
   const handleSendNudge = async () => {

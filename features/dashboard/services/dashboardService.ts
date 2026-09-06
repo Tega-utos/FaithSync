@@ -19,6 +19,9 @@ export interface DashboardData {
     name: string
     initial: string
     isActiveNow: boolean
+    isLiveNow?: boolean
+    liveDiscipline?: 'prayer' | 'study'
+    liveFocusText?: string
     prayerDone: boolean
     studyDone: boolean
     bothDone: boolean
@@ -308,9 +311,10 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     const partnerIds = activePairs.map((c) => (c.user_id === user.id ? c.buddy_id : c.user_id))
     const senderIds = incomingPending.map((c) => c.user_id)
     const allProfileIds = Array.from(new Set([...partnerIds, ...senderIds]))
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
-    // Parallel Batch 2: Fetch buddy profiles and buddy today sessions simultaneously
-    const [profilesRes, buddySessionsRes] = await Promise.all([
+    // Parallel Batch 2: Fetch buddy profiles, today sessions, and recent clockin invites simultaneously
+    const [profilesRes, buddySessionsRes, liveMessagesRes] = await Promise.all([
       allProfileIds.length > 0
         ? supabase
             .from('profiles')
@@ -320,9 +324,17 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
       partnerIds.length > 0
         ? supabase
             .from('sessions')
-            .select('user_id, type, duration_seconds')
+            .select('user_id, type, duration_seconds, is_complete, started_at')
             .in('user_id', partnerIds)
             .gte('started_at', startOfToday.toISOString())
+        : Promise.resolve({ data: [] }),
+      partnerIds.length > 0
+        ? supabase
+            .from('messages')
+            .select('sender_id, message_type, meta, created_at')
+            .in('sender_id', partnerIds)
+            .eq('message_type', 'clockin_invite')
+            .gte('created_at', twoHoursAgo)
         : Promise.resolve({ data: [] }),
     ])
 
@@ -339,6 +351,31 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
         senderName: sName,
         senderInitial: sName.charAt(0).toUpperCase(),
       })
+    })
+
+    const liveBuddiesMap = new Map<string, { discipline: 'prayer' | 'study'; focusText?: string }>()
+
+    ;(buddySessionsRes.data || []).forEach((s: any) => {
+      if (s.is_complete === false && s.started_at && new Date(s.started_at).getTime() > Date.now() - 2 * 60 * 60 * 1000) {
+        liveBuddiesMap.set(s.user_id, {
+          discipline: s.type === 'study' ? 'study' : 'prayer',
+        })
+      }
+    })
+
+    ;(liveMessagesRes.data || []).forEach((m: any) => {
+      if (m.meta) {
+        const startMs = m.meta.startedAt
+          ? new Date(m.meta.startedAt).getTime()
+          : new Date(m.created_at).getTime()
+        const durationMins = Number(m.meta.durationMins) || 15
+        if (Date.now() < startMs + durationMins * 60 * 1000) {
+          liveBuddiesMap.set(m.sender_id, {
+            discipline: m.meta.discipline === 'study' ? 'study' : 'prayer',
+            focusText: m.meta.focusText,
+          })
+        }
+      }
     })
 
     const buddyMinutesMap: Record<string, { prayer: number; study: number }> = {}
@@ -358,13 +395,18 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
       const bsMins = buddyMinutesMap[partnerId]?.study || 0
       const pDone = bpMins >= 15
       const sDone = bsMins >= 15
+      const liveInfo = liveBuddiesMap.get(partnerId)
+      const isLive = Boolean(liveInfo)
 
       activeBuddies.push({
         id: partnerId,
         connectionId: conn.id,
         name: pName,
         initial: pName.charAt(0).toUpperCase(),
-        isActiveNow: bpMins > 0 || bsMins > 0,
+        isActiveNow: isLive || bpMins > 0 || bsMins > 0,
+        isLiveNow: isLive,
+        liveDiscipline: liveInfo?.discipline || 'prayer',
+        liveFocusText: liveInfo?.focusText,
         prayerDone: pDone,
         studyDone: sDone,
         bothDone: pDone && sDone,
