@@ -1087,8 +1087,8 @@ function SquarePageContent() {
                 {/* Footer: Discord-Style Reactions (Comments disabled on Record posts) */}
                 <div className="pt-2 border-t border-border-light space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    {/* Discord Reaction Pills */}
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Discord Reaction Pills + Add Button Container */}
+                    <div className="flex flex-wrap items-center gap-1.5 relative">
                       {FAITH_REACTIONS.map((r) => {
                         const reactionData = post.reactions?.[r.key]
                         if (!reactionData || reactionData.count <= 0) return null
@@ -1115,56 +1115,54 @@ function SquarePageContent() {
                       })}
 
                       {/* Add Reaction Button (+ 😀) */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenReactionPickerPostId((prev) =>
-                              prev === post.id ? null : post.id
-                            )
-                          }
-                          className="px-2 py-1 rounded-xl bg-card-hover border border-border hover:border-[#FBBF24] hover:bg-card text-text-secondary text-xs font-bold flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
-                          title="Add faith reaction"
-                        >
-                          <Plus size={11} weight="bold" />
-                          <Smiley size={14} />
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenReactionPickerPostId((prev) =>
+                            prev === post.id ? null : post.id
+                          )
+                        }
+                        className="px-2 py-1 rounded-xl bg-card-hover border border-border hover:border-[#FBBF24] hover:bg-card text-text-secondary text-xs font-bold flex items-center gap-1 transition-all active:scale-95 shadow-2xs"
+                        title="Add faith reaction"
+                      >
+                        <Plus size={11} weight="bold" />
+                        <Smiley size={14} />
+                      </button>
 
-                        {openReactionPickerPostId === post.id && (
-                          <>
-                            {/* Backdrop overlay for tap-outside to close */}
-                            <div
-                              className="fixed inset-0 z-20"
-                              onClick={() => setOpenReactionPickerPostId(null)}
-                            />
+                      {openReactionPickerPostId === post.id && (
+                        <>
+                          {/* Backdrop overlay for tap-outside to close */}
+                          <div
+                            className="fixed inset-0 z-20"
+                            onClick={() => setOpenReactionPickerPostId(null)}
+                          />
 
-                            <div className="absolute -left-12 sm:left-0 bottom-full mb-2 z-30 bg-surface/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-3.5rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
-                              {FAITH_REACTIONS.map((r) => {
-                                const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
-                                const IconComponent = r.Icon
-                                return (
-                                  <button
-                                    key={r.key}
-                                    type="button"
-                                    onClick={() => handleToggleReaction(post.id, r.key)}
-                                    className={`w-10 sm:w-11 py-1.5 rounded-xl hover:scale-110 active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shrink-0 cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-[#EBF3EE] dark:bg-emerald-950/50 border border-[#234537]/30 dark:border-emerald-600/40 text-[#234537] dark:text-emerald-400 font-bold'
-                                        : 'hover:bg-card-hover text-text-secondary'
-                                    }`}
-                                    title={r.label}
-                                  >
-                                    <IconComponent size={16} weight="fill" className={r.color} />
-                                    <span className="text-[9px] font-bold select-none leading-none pt-0.5">
-                                      {r.label}
-                                    </span>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          <div className="absolute left-0 bottom-full mb-2 z-30 bg-surface/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-3rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
+                            {FAITH_REACTIONS.map((r) => {
+                              const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
+                              const IconComponent = r.Icon
+                              return (
+                                <button
+                                  key={r.key}
+                                  type="button"
+                                  onClick={() => handleToggleReaction(post.id, r.key)}
+                                  className={`w-10 sm:w-11 py-1.5 rounded-xl hover:scale-110 active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shrink-0 cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-[#EBF3EE] dark:bg-emerald-950/50 border border-[#234537]/30 dark:border-emerald-600/40 text-[#234537] dark:text-emerald-400 font-bold'
+                                      : 'hover:bg-card-hover text-text-secondary'
+                                  }`}
+                                  title={r.label}
+                                >
+                                  <IconComponent size={16} weight="fill" className={r.color} />
+                                  <span className="text-[9px] font-bold select-none leading-none pt-0.5">
+                                    {r.label}
+                                  </span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
