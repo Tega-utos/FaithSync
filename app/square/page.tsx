@@ -221,47 +221,63 @@ function SquarePageContent() {
 
     setOpenReactionPickerPostId(null)
 
-    let wasReacted = false
+    // Optimistic Single-Reaction-Per-User Logic
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p
-        const currentData = p.reactions?.[reactionKey] || { count: 0, userReacted: false }
-        wasReacted = currentData.userReacted
-        const nextReacted = !wasReacted
-        const nextCount = nextReacted ? currentData.count + 1 : Math.max(0, currentData.count - 1)
+
+        const currentReactions = { ...(p.reactions || {}) }
+        const currentActiveKey = Object.entries(currentReactions).find(
+          ([_, v]) => v?.userReacted
+        )?.[0]
+
+        if (currentActiveKey === reactionKey) {
+          // Toggle off the same reaction
+          const currentCount = currentReactions[reactionKey]?.count || 1
+          currentReactions[reactionKey] = {
+            count: Math.max(0, currentCount - 1),
+            userReacted: false,
+          }
+        } else {
+          // Remove previous reaction if any
+          if (currentActiveKey) {
+            const prevCount = currentReactions[currentActiveKey]?.count || 1
+            currentReactions[currentActiveKey] = {
+              count: Math.max(0, prevCount - 1),
+              userReacted: false,
+            }
+          }
+          // Add new reaction
+          const newCount = currentReactions[reactionKey]?.count || 0
+          currentReactions[reactionKey] = {
+            count: newCount + 1,
+            userReacted: true,
+          }
+        }
 
         return {
           ...p,
-          reactions: {
-            ...p.reactions,
-            [reactionKey]: {
-              count: nextCount,
-              userReacted: nextReacted,
-            },
-          },
+          reactions: currentReactions,
         }
       })
     )
 
     try {
       const supabase = createClient()
-      if (wasReacted) {
-        await supabase
-          .from('square_reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', currentUser.id)
-          .eq('reaction_type', reactionKey)
-      } else {
-        await (supabase.from('square_reactions') as any).upsert(
-          {
-            post_id: postId,
-            user_id: currentUser.id,
-            reaction_type: reactionKey,
-          },
-          { onConflict: 'post_id,user_id,reaction_type' }
-        )
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
       }
+
+      await fetch('/api/square/reaction', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ postId, reactionType: reactionKey }),
+      })
     } catch (err) {
       console.error('Reaction toggle error:', err)
     }
@@ -1073,7 +1089,7 @@ function SquarePageContent() {
                               onClick={() => setOpenReactionPickerPostId(null)}
                             />
 
-                            <div className="absolute left-0 bottom-full mb-2 z-30 bg-surface/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-3rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
+                            <div className="absolute -left-12 sm:left-0 bottom-full mb-2 z-30 bg-surface/98 dark:bg-neutral-900/98 backdrop-blur-md border border-border dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1 max-w-[calc(100vw-3.5rem)] overflow-x-auto no-scrollbar whitespace-nowrap animate-in fade-in zoom-in-95">
                               {FAITH_REACTIONS.map((r) => {
                                 const isSelected = Boolean(post.reactions?.[r.key]?.userReacted)
                                 const IconComponent = r.Icon
