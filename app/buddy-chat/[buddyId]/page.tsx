@@ -92,9 +92,80 @@ export default function BuddyChatPage() {
   const [buddyStatus, setBuddyStatus] = useState<'online' | 'offline'>('offline')
   const [buddyLastSeen, setBuddyLastSeen] = useState('')
   const [isSquareConnection, setIsSquareConnection] = useState(false)
+  const [squareConnectionExpiresAt, setSquareConnectionExpiresAt] = useState<string | null>(null)
+  const [upgradingToPermanent, setUpgradingToPermanent] = useState(false)
+  const [isSlotFullModalOpen, setIsSlotFullModalOpen] = useState(false)
+  const [liveRemainingCountdown, setLiveRemainingCountdown] = useState<string>('')
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputContent, setInputContent] = useState('')
+
+  // Live 72-Hour Intercession Countdown Ticker
+  useEffect(() => {
+    if (!isSquareConnection || !squareConnectionExpiresAt) return
+    const updateCountdown = () => {
+      const now = Date.now()
+      const end = new Date(squareConnectionExpiresAt).getTime()
+      const diff = Math.max(0, end - now)
+      if (diff <= 0) {
+        setLiveRemainingCountdown('0d 00h 00m 00s (Window Closed)')
+        return
+      }
+      const totalSecs = Math.floor(diff / 1000)
+      const days = Math.floor(totalSecs / (24 * 3600))
+      const hours = Math.floor((totalSecs % (24 * 3600)) / 3600)
+      const mins = Math.floor((totalSecs % 3600) / 60)
+      const secs = totalSecs % 60
+
+      setLiveRemainingCountdown(
+        `${days}d ${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`
+      )
+    }
+
+    updateCountdown()
+    const timer = setInterval(updateCountdown, 1000)
+    return () => clearInterval(timer)
+  }, [isSquareConnection, squareConnectionExpiresAt])
+
+  const handleUpgradeToPermanent = async () => {
+    if (!currentUser || !buddyId) return
+    setUpgradingToPermanent(true)
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const res = await fetch('/api/square/connect', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'upgrade', partnerId: buddyId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.slotsFull) {
+          setIsSlotFullModalOpen(true)
+        } else {
+          setToastMessage(data.error || 'Failed to upgrade connection')
+          setTimeout(() => setToastMessage(null), 3500)
+        }
+        return
+      }
+
+      setIsSquareConnection(false)
+      setToastMessage('Permanent Accountability Partnership Sealed! 🎉')
+      setTimeout(() => setToastMessage(null), 4000)
+    } catch (err: any) {
+      console.error('Upgrade error:', err)
+      setToastMessage(err?.message || 'Upgrade failed')
+      setTimeout(() => setToastMessage(null), 3000)
+    } finally {
+      setUpgradingToPermanent(false)
+    }
+  }
 
   // Real-time Clock Ticker for Hostless Scheduled Sessions
   const [currentTimeTick, setCurrentTimeTick] = useState<number>(Date.now())
@@ -284,12 +355,17 @@ export default function BuddyChatPage() {
           // Check connection type (Square Connection vs True Buddy)
           const { data: conn } = await (supabase
             .from('buddies') as any)
-            .select('id, status, connection_type')
+            .select('id, status, connection_type, created_at, updated_at')
             .or(`and(user_id.eq.${user.id},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${user.id})`)
             .maybeSingle()
 
           if (conn?.connection_type === 'square') {
             setIsSquareConnection(true)
+            const startTimeMs = new Date(conn.updated_at || conn.created_at || Date.now()).getTime()
+            setSquareConnectionExpiresAt(new Date(startTimeMs + 3 * 24 * 60 * 60 * 1000).toISOString())
+          } else {
+            setIsSquareConnection(false)
+            setSquareConnectionExpiresAt(null)
           }
 
           const realMessages = await fetchBuddyMessages(buddyId, user.id)
@@ -1052,16 +1128,36 @@ export default function BuddyChatPage() {
         </div>
       </div>
 
-      {/* Anchored Banner for Square Connections */}
+      {/* Anchored Banner for 3-Day Intercession Window */}
       {isSquareConnection && (
-        <div className="bg-[#EBF3EE] dark:bg-emerald-950/30 border-b border-[#234537]/20 dark:border-emerald-700/25 px-4 py-2 flex items-center justify-between text-xs text-[#234537] dark:text-emerald-400 font-semibold shrink-0">
-          <div className="flex items-center gap-1.5">
-            <Globe size={14} className="text-[#234537] dark:text-emerald-400 shrink-0" />
-            <span>
-              Square Connection • {remainingSquareMessages} message{remainingSquareMessages === 1 ? '' : 's'} remaining today
-            </span>
+        <div className="bg-[#EBF3EE] dark:bg-emerald-950/40 border-b border-[#234537]/20 dark:border-emerald-700/30 px-4 py-3 shrink-0 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <Globe size={14} className="text-[#234537] dark:text-emerald-400 shrink-0" />
+                <h4 className="text-xs font-black text-[#234537] dark:text-emerald-400 uppercase tracking-wider">
+                  3-Day Intercession Window
+                </h4>
+              </div>
+              <p className="text-[11px] text-text-secondary leading-snug">
+                A 72-hour sanctuary window for focused intercession and encouragement. Room closes automatically in{' '}
+                <span className="font-mono font-bold text-[#234537] dark:text-emerald-400 bg-white/70 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded border border-[#234537]/20 dark:border-emerald-700/30">
+                  {liveRemainingCountdown || '72h remaining'}
+                </span>
+                .
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleUpgradeToPermanent}
+              disabled={upgradingToPermanent}
+              className="self-start sm:self-auto bg-[#234537] hover:bg-[#1a3429] dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white py-1.5 px-3 rounded-xl font-bold text-[11px] shadow-xs shrink-0 flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              <Sparkle size={13} weight="fill" className="text-[#FBBF24]" />
+              <span>{upgradingToPermanent ? 'Upgrading...' : 'Upgrade to Permanent Buddy'}</span>
+            </button>
           </div>
-          <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">3 msgs/day</span>
         </div>
       )}
 
@@ -2129,6 +2225,40 @@ export default function BuddyChatPage() {
               >
                 End & Save
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buddy Slot Full Governance Modal */}
+      {isSlotFullModalOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-3.5 shadow-2xl text-center animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/40 border border-[#FBBF24]/30 text-[#FBBF24] flex items-center justify-center mx-auto">
+              <ShieldWarning size={24} weight="fill" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-black text-text-primary">
+                Accountability Slots Full (3/3)
+              </h3>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                FaithSync maintains a limit of 3 active accountability partners to ensure deep, undistracted spiritual focus. To seal a permanent partnership with <strong>{buddyName}</strong>, please manage your active buddy slots in Sync.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsSlotFullModalOpen(false)}
+                className="py-2.5 px-3 rounded-xl bg-card border border-border text-xs font-bold text-text-secondary hover:bg-surface cursor-pointer"
+              >
+                Continue as 3-Day
+              </button>
+              <Link
+                href="/sync"
+                className="py-2.5 px-3 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold shadow-xs hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center"
+              >
+                Manage Buddies
+              </Link>
             </div>
           </div>
         </div>

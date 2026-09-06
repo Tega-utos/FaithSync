@@ -52,14 +52,43 @@ interface IncomingRequestItem {
   senderChurch: string
 }
 
-interface SquareActivityItem {
+interface IncomingSquareRequest {
+  id: string
+  senderId: string
+  senderName: string
+  senderAvatar: string | null
+  senderChurch: string
+  createdAt: string
+}
+
+interface ActiveSquareConnection {
   id: string
   partnerId: string
-  type: 'outgoing' | 'incoming'
-  targetName: string
-  targetInitial: string
-  timeAgo: string
-  introMessage: string | null
+  partnerName: string
+  partnerAvatar: string | null
+  partnerChurch: string
+  createdAt: string
+  acceptedAt: string
+  expiresAt: string
+  remainingMs: number
+  lastMessage: string
+  lastMessageTime: string
+}
+
+function formatRemainingCountdown(remainingMs: number): string {
+  if (remainingMs <= 0) return 'Expiring now'
+  const totalMins = Math.floor(remainingMs / 60000)
+  const days = Math.floor(totalMins / (24 * 60))
+  const hours = Math.floor((totalMins % (24 * 60)) / 60)
+  const mins = totalMins % 60
+
+  if (days > 0) {
+    return `${days}d ${hours}h left`
+  }
+  if (hours > 0) {
+    return `${hours}h ${mins}m left`
+  }
+  return `${Math.max(1, mins)}m left`
 }
 
 import { fetchGroups, createGroup, joinGroupByCode, GroupItem } from '@/features/groups/services/groupService'
@@ -86,8 +115,81 @@ export default function SyncPage() {
   const { activeBuddies, incomingRequests: swrIncoming, isInitialLoading: isBuddiesInitialLoading, mutate: mutateBuddies } = useBuddiesData()
   const { groups: swrGroups, isInitialLoading: isGroupsInitialLoading, mutate: mutateGroups } = useGroupsData()
 
-  // Personal Tab States
-  const [squareActivities, setSquareActivities] = useState<SquareActivityItem[]>([])
+  // Square Activity States
+  const [incomingSquareRequests, setIncomingSquareRequests] = useState<IncomingSquareRequest[]>([])
+  const [activeSquareConnections, setActiveSquareConnections] = useState<ActiveSquareConnection[]>([])
+  const [loadingSquareActivity, setLoadingSquareActivity] = useState(true)
+
+  const fetchSquareConnections = async () => {
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const res = await fetch('/api/square/connect', { headers, cache: 'no-store' })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.success) {
+          setIncomingSquareRequests(json.incomingRequests || [])
+          setActiveSquareConnections(json.activeConnections || [])
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch square activity:', err)
+    } finally {
+      setLoadingSquareActivity(false)
+    }
+  }
+
+  const handleAcceptSquareRequest = async (connectionId: string, partnerId: string) => {
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const res = await fetch('/api/square/connect', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'accept', connectionId }),
+      })
+
+      if (res.ok) {
+        setIncomingSquareRequests((prev) => prev.filter((r) => r.id !== connectionId))
+        fetchSquareConnections()
+        mutateBuddies()
+        router.push(`/buddy-chat/${partnerId}?type=square`)
+      }
+    } catch (err) {
+      console.error('Failed to accept square request:', err)
+    }
+  }
+
+  const handleDeclineSquareRequest = async (connectionId: string) => {
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      await fetch('/api/square/connect', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'decline', connectionId }),
+      })
+
+      setIncomingSquareRequests((prev) => prev.filter((r) => r.id !== connectionId))
+    } catch (err) {
+      console.error('Failed to decline square request:', err)
+    }
+  }
 
   const buddies: BuddyItem[] = activeBuddies.map((c) => ({
     id: c.partnerId,
@@ -146,46 +248,13 @@ export default function SyncPage() {
         setCurrentUser(user)
 
         if (user) {
-          try {
-            const { data: squareConns } = await (supabase.from('buddies') as any)
-              .select(`
-                id,
-                user_id,
-                buddy_id,
-                status,
-                created_at,
-                user_profile:profiles!buddies_user_id_fkey(display_name),
-                buddy_profile:profiles!buddies_buddy_id_fkey(display_name)
-              `)
-              .eq('connection_type', 'square')
-              .eq('status', 'pending')
-              .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
-
-            if (squareConns && Array.isArray(squareConns)) {
-              setSquareActivities(
-                squareConns.map((sq: any) => {
-                  const isOut = sq.user_id === user.id
-                  const target = isOut ? sq.buddy_profile : sq.user_profile
-                  const name = target?.display_name || 'A Believer'
-                  const partnerId = isOut ? sq.buddy_id : sq.user_id
-                  return {
-                    id: sq.id,
-                    partnerId,
-                    type: isOut ? 'outgoing' : 'incoming',
-                    targetName: name,
-                    targetInitial: name.charAt(0).toUpperCase(),
-                    timeAgo: new Date(sq.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-                    introMessage: 'Connected from Community Square',
-                  }
-                })
-              )
-            }
-          } catch {}
+          fetchSquareConnections()
 
           if (!unsubscribe) {
             const buddyUnsub = subscribeToBuddyUpdates(user.id, () => {
               mutateBuddies()
               mutateGroups()
+              fetchSquareConnections()
             })
 
             const liveChannel = supabase
@@ -200,10 +269,19 @@ export default function SyncPage() {
               )
               .on(
                 'postgres_changes',
+                { event: '*', schema: 'public', table: 'buddies' },
+                () => {
+                  mutateBuddies()
+                  fetchSquareConnections()
+                }
+              )
+              .on(
+                'postgres_changes',
                 { event: '*', schema: 'public', table: 'messages' },
                 () => {
                   mutateBuddies()
                   mutateGroups()
+                  fetchSquareConnections()
                 }
               )
               .on(
@@ -529,74 +607,131 @@ export default function SyncPage() {
           </div>
 
           {/* Square Activity Section */}
-          {squareActivities.length > 0 && (
-            <div className="space-y-2 pt-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary block">
-                Square Connection Activity ({squareActivities.length})
+          <div className="space-y-2.5 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+                Square Activity
               </span>
+              {(incomingSquareRequests.length > 0 || activeSquareConnections.length > 0) && (
+                <span className="text-[10px] font-mono font-bold text-[#234537] dark:text-emerald-400 bg-[#EBF3EE] dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-[#234537]/20 dark:border-emerald-700/30">
+                  {incomingSquareRequests.length} Request{incomingSquareRequests.length === 1 ? '' : 's'} • {activeSquareConnections.length} Active 3-Day Chat{activeSquareConnections.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
 
-              <div className="space-y-2.5">
-                {squareActivities.map((sq) => (
-                  <div key={sq.id} className="faith-card p-3.5 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#FBBF24] text-[#1A1610] font-black text-[10px] flex items-center justify-center">
-                          {sq.targetInitial}
+            {/* 1. Incoming Square Requests */}
+            {incomingSquareRequests.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+                  Incoming Intercession Requests
+                </span>
+                <div className="space-y-2">
+                  {incomingSquareRequests.map((req) => (
+                    <div key={req.id} className="faith-card p-3.5 space-y-2.5 border-amber-500/30 bg-card">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-full bg-[#FBBF24] text-[#1A1610] font-bold text-xs flex items-center justify-center shrink-0">
+                            {req.senderAvatar ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={req.senderAvatar} alt={req.senderName} className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                              (req.senderName || 'B').charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-text-primary truncate">
+                              {req.senderName}
+                            </p>
+                            <p className="text-[10px] text-text-secondary truncate">
+                              {req.senderChurch} • {new Date(req.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-text-primary">{sq.targetName}</p>
-                          <p className="text-[9px] text-text-secondary font-mono">{sq.timeAgo}</p>
-                        </div>
-                      </div>
 
-                      {sq.type === 'outgoing' ? (
-                        <span className="px-2.5 py-0.5 rounded-full bg-surface text-text-secondary border border-border text-[10px] font-bold">
-                          Awaiting Response
-                        </span>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
-                            onClick={async () => {
-                              try {
-                                const supabase = createClient()
-                                await supabase.from('buddies').update({ status: 'accepted' }).eq('id', sq.id)
-                              } catch {}
-                              setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
-                              router.push(`/buddy-chat/${sq.partnerId}`)
-                            }}
-                            className="px-2.5 py-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] rounded-lg text-xs font-bold hover:bg-[#262626] dark:hover:bg-white/80 cursor-pointer"
+                            onClick={() => handleAcceptSquareRequest(req.id, req.senderId)}
+                            className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-1.5 px-3 rounded-xl font-bold text-xs shadow-xs hover:bg-[#262626] dark:hover:bg-white/80 transition-all cursor-pointer"
                           >
                             Accept & Chat
                           </button>
                           <button
                             type="button"
-                            onClick={async () => {
-                              try {
-                                const supabase = createClient()
-                                await supabase.from('buddies').delete().eq('id', sq.id)
-                              } catch {}
-                              setSquareActivities((prev) => prev.filter((item) => item.id !== sq.id))
-                            }}
-                            className="px-2 py-1 bg-card border border-border text-text-secondary rounded-lg text-xs font-bold hover:text-[#EA2C26] dark:text-red-400 cursor-pointer"
+                            onClick={() => handleDeclineSquareRequest(req.id)}
+                            className="bg-card border border-border text-text-secondary py-1.5 px-2 rounded-xl font-bold text-xs hover:text-rose-600 hover:border-rose-300 dark:hover:text-red-400 transition-all cursor-pointer"
                           >
                             Decline
                           </button>
                         </div>
-                      )}
-                    </div>
-
-                    {sq.introMessage && (
-                      <div className="p-2.5 bg-surface border border-border rounded-xl text-xs text-text-primary italic flex items-start gap-2">
-                        <Quotes size={14} className="text-[#FBBF24] shrink-0 mt-0.5" />
-                        <span>&ldquo;{sq.introMessage}&rdquo;</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* 2. Active 3-Day Intercession Fellowships */}
+            {activeSquareConnections.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#234537] dark:text-emerald-400 block">
+                  Active 3-Day Intercession Windows
+                </span>
+                <div className="faith-card divide-y divide-border-light overflow-hidden">
+                  {activeSquareConnections.map((conn) => (
+                    <Link
+                      key={conn.id}
+                      href={`/buddy-chat/${conn.partnerId}?type=square`}
+                      className="p-3.5 flex items-center justify-between hover:bg-surface transition-colors block group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-[#234537] dark:bg-emerald-900/60 text-white font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/30">
+                          {conn.partnerAvatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={conn.partnerAvatar} alt={conn.partnerName} className="w-full h-full object-cover rounded-full" />
+                          ) : (
+                            (conn.partnerName || 'B').charAt(0).toUpperCase()
+                          )}
+                        </div>
+
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-text-primary group-hover:text-[#234537] dark:group-hover:text-emerald-400 transition-colors truncate">
+                              {conn.partnerName}
+                            </p>
+                            <span className="px-2 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/40 text-[#234537] dark:text-emerald-400 border border-[#234537]/20 dark:border-emerald-700/30 text-[9px] font-extrabold flex items-center gap-1 shrink-0">
+                              ⏳ {formatRemainingCountdown(conn.remainingMs)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-text-secondary truncate max-w-[200px] sm:max-w-xs">
+                            {conn.lastMessage || 'Intercession window open'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0 ml-2" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty Square Activity Guidance */}
+            {incomingSquareRequests.length === 0 && activeSquareConnections.length === 0 && (
+              <div className="p-4 rounded-2xl bg-surface/60 border border-border text-center space-y-2">
+                <p className="text-xs text-text-secondary">
+                  No active Square connections.
+                </p>
+                <Link
+                  href="/square"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#234537] dark:text-emerald-400 hover:underline"
+                >
+                  <Globe size={14} />
+                  <span>Visit Community Square to Connect</span>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

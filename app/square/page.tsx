@@ -606,58 +606,53 @@ function SquarePageContent() {
     }
   }
 
-  // Peer-to-Peer Connect Flow
+  // Requested Connect Map
+  const [requestedPostIds, setRequestedPostIds] = useState<Record<string, boolean>>({})
+
+  // Peer-to-Peer Connect Flow (3-Day Intercession Request)
   const handleSendConnectRequest = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!connectModalPost || !currentUser || !connectMessage.trim()) return
 
     setSendingConnectRequest(true)
     try {
-      const supabase = createClient()
       const targetUserId = connectModalPost.author_id || connectModalPost.user_id
-
       if (!targetUserId) throw new Error('Target believer ID missing.')
 
-      // 1. Create pending connection with Square Connection type
-      const { data: conn, error: connErr } = await (supabase
-        .from('buddies') as any)
-        .insert({
-          user_id: currentUser.id,
-          buddy_id: targetUserId,
-          status: 'pending',
-          connection_type: 'square',
-        })
-        .select()
-        .single()
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (connErr) console.warn('Connection record note:', connErr.message)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
 
-      // 2. Dispatch direct intro message
-      await (supabase.from('messages') as any).insert({
-        sender_id: currentUser.id,
-        recipient_id: targetUserId,
-        content: connectMessage.trim(),
-        message_type: 'text',
+      const res = await fetch('/api/square/connect', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'request',
+          targetUserId,
+          message: connectMessage.trim(),
+          postContext: connectModalPost.content?.slice(0, 100),
+        }),
       })
 
-      // 3. Dispatch alert notification to recipient
-      await (supabase.from('notifications') as any).insert({
-        user_id: targetUserId,
-        sender_id: currentUser.id,
-        type: 'buddy_request',
-        title: currentUser.user_metadata?.full_name || 'A Believer',
-        text: `Sent you a connection request from the Square: "${connectMessage.trim().slice(0, 60)}..."`,
-        route_url: '/sync',
-      })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to send connect request')
+      }
 
+      setRequestedPostIds((prev) => ({ ...prev, [connectModalPost.id]: true }))
       setConnectSent(true)
       setTimeout(() => {
         setConnectModalPost(null)
         setConnectSent(false)
         setConnectMessage('')
-      }, 1800)
-    } catch (err) {
+      }, 1600)
+    } catch (err: any) {
       console.error('Connect request error:', err)
+      alert(err?.message || 'Failed to send request. Please try again.')
     } finally {
       setSendingConnectRequest(false)
     }
@@ -1181,16 +1176,37 @@ function SquarePageContent() {
                         post.user_id !== currentUser.id && (
                           <button
                             type="button"
+                            disabled={requestedPostIds[post.id]}
                             onClick={() => {
+                              if (requestedPostIds[post.id]) return
                               setConnectModalPost(post)
-                              setConnectMessage('')
+                              setConnectMessage(
+                                post.post_type === 'prayer' || post.post_type === 'prayer_request'
+                                  ? 'Standing with you in prayer regarding this request.'
+                                  : post.post_type === 'struggle'
+                                  ? 'I saw your struggle and wanted to stand with you in faith.'
+                                  : 'I was encouraged by your post on the Square!'
+                              )
                               setConnectSent(false)
                             }}
-                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-surface text-text-primary hover:bg-surface/80 border border-border hover:border-[#FBBF24] transition-all flex items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
-                            title="Connect with author via Square Chat"
+                            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 active:scale-95 shadow-2xs ${
+                              requestedPostIds[post.id]
+                                ? 'bg-[#EBF3EE] text-[#234537] dark:bg-emerald-950/40 dark:text-emerald-400 border-[#234537]/30 cursor-default'
+                                : 'bg-surface text-text-primary hover:bg-surface/80 border-border hover:border-[#FBBF24] cursor-pointer'
+                            }`}
+                            title={requestedPostIds[post.id] ? 'Request sent' : 'Connect for 3-Day Intercession Window'}
                           >
-                            <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
-                            <span>Connect</span>
+                            {requestedPostIds[post.id] ? (
+                              <>
+                                <Check size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
+                                <span>Requested</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
+                                <span>Connect</span>
+                              </>
+                            )}
                           </button>
                         )}
 
@@ -1669,60 +1685,104 @@ function SquarePageContent() {
         onSelect={(sel) => setAttachedScripture(sel)}
       />
 
-      {/* Peer-to-Peer Connect Modal */}
+      {/* Peer-to-Peer Connect Modal (3-Day Intercession Window) */}
       {connectModalPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm bg-surface border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-md bg-surface border border-border rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <UserPlus size={16} className="text-[#FBBF24]" />
-                <h3 className="text-sm font-bold text-text-primary">
-                  Connect with {connectModalPost.authorName}
-                </h3>
+                <div className="w-8 h-8 rounded-full bg-[#FDF9F1] dark:bg-amber-950/40 text-[#FBBF24] border border-[#FBBF24]/30 flex items-center justify-center">
+                  <HandsPraying size={18} weight="fill" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">
+                    3-Day Intercession Window
+                  </h3>
+                  <p className="text-[10px] text-text-secondary">
+                    Stand with {connectModalPost.authorName} in prayer
+                  </p>
+                </div>
               </div>
-              <button onClick={() => setConnectModalPost(null)} className="text-text-secondary">
+              <button onClick={() => setConnectModalPost(null)} className="text-text-secondary hover:text-text-primary p-1">
                 <X size={18} />
               </button>
             </div>
 
             {connectSent ? (
-              <div className="py-6 text-center space-y-2 text-emerald-700">
-                <Check size={28} className="mx-auto" weight="bold" />
-                <p className="text-xs font-bold">Request & Intro Message Sent!</p>
+              <div className="py-8 text-center space-y-2 text-[#234537] dark:text-emerald-400 animate-in fade-in">
+                <div className="w-12 h-12 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/40 border border-[#234537]/20 dark:border-emerald-700/30 flex items-center justify-center mx-auto">
+                  <Check size={24} className="text-[#234537] dark:text-emerald-400" weight="bold" />
+                </div>
+                <p className="text-sm font-bold">Intercession Request Sent!</p>
+                <p className="text-xs text-text-secondary">
+                  When accepted, your 72-hour fellowship room will open in Sync.
+                </p>
               </div>
             ) : (
-              <form onSubmit={handleSendConnectRequest} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-text-secondary">Write an Initial Message (140 chars):</span>
-                  <span className="text-[10px] font-mono text-text-secondary">
-                    {140 - connectMessage.length} left
-                  </span>
+              <form onSubmit={handleSendConnectRequest} className="space-y-3.5">
+                {/* Spiritual guidance callout */}
+                <div className="p-3 rounded-2xl bg-[#FDF9F1] dark:bg-amber-950/25 border border-[#FBBF24]/30 text-xs text-text-secondary leading-relaxed">
+                  <p className="font-semibold text-text-primary text-[11px] mb-0.5">Sanctuary Fellowship</p>
+                  A 72-hour window dedicated to timely prayer and mutual encouragement.
                 </div>
 
-                <textarea
-                  rows={3}
-                  required
-                  maxLength={140}
-                  value={connectMessage}
-                  onChange={(e) => setConnectMessage(e.target.value)}
-                  placeholder="I saw your prayer request about your family and wanted to reach out. Can we connect?"
-                  className="w-full p-3 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 resize-none shadow-xs"
-                />
+                {/* Quick Prompts */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block">
+                    Quick Encouragement Starters
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      'Standing with you in prayer in faith 🙏',
+                      'Believing God with you for a breakthrough!',
+                      'Encouraged by your testimony and heart.',
+                      'Standing in agreement with your request.',
+                    ].map((promptText, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setConnectMessage(promptText)}
+                        className="px-2.5 py-1 rounded-xl bg-card border border-border hover:border-[#FBBF24] hover:bg-surface text-[11px] text-text-primary font-medium transition-all text-left"
+                      >
+                        {promptText}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-secondary">Custom Note (140 chars):</span>
+                    <span className="text-[10px] font-mono text-text-secondary">
+                      {140 - connectMessage.length} left
+                    </span>
+                  </div>
+
+                  <textarea
+                    rows={3}
+                    required
+                    maxLength={140}
+                    value={connectMessage}
+                    onChange={(e) => setConnectMessage(e.target.value)}
+                    placeholder="Write a sincere word of prayer or encouragement..."
+                    className="w-full p-3 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13px] font-normal text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 resize-none shadow-xs"
+                  />
+                </div>
 
                 <button
                   type="submit"
                   disabled={!connectMessage.trim() || sendingConnectRequest}
-                  className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer"
                 >
                   {sendingConnectRequest ? (
                     <>
                       <CircleNotch size={16} className="animate-spin" />
-                      <span>Sending Request...</span>
+                      <span>Opening Intercession Window...</span>
                     </>
                   ) : (
                     <>
-                      <PaperPlaneTilt size={16} />
-                      <span>Send Request</span>
+                      <PaperPlaneTilt size={16} weight="bold" />
+                      <span>Send 3-Day Intercession Request</span>
                     </>
                   )}
                 </button>
