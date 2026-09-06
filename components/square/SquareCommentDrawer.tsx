@@ -12,6 +12,10 @@ import {
   ChatCircle,
   Clock,
   ArrowUp,
+  HandsPraying,
+  ShieldWarning,
+  Sparkle,
+  BookOpen,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { isSuperAdmin } from '@/lib/admin/adminAuth'
@@ -361,7 +365,22 @@ export function SquareCommentDrawer({
 
   if (!isOpen || !post) return null
 
-  const postSnippet = post.content.replace(/\*\*/g, '').slice(0, 100) + (post.content.length > 100 ? '...' : '')
+  const isPrayer = post.post_type === 'prayer' || post.post_type === 'prayer_request'
+  const isStruggle = post.post_type === 'struggle'
+  const isTestimony = post.post_type === 'testimony'
+  const isRecord =
+    post.post_type === 'record' ||
+    post.content.startsWith('Completed') ||
+    post.content.includes('Daily Devotion')
+  const isReflection = !isRecord && (post.post_type === 'reflection' || (!isPrayer && !isStruggle && !isTestimony))
+
+  const postTimeFormatted = new Date(post.created_at).toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+  }) + ' • ' + new Date(post.created_at).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -372,7 +391,7 @@ export function SquareCommentDrawer({
       />
 
       {/* Drawer Card */}
-      <div className="relative w-full max-w-lg h-[82vh] sm:h-[650px] bg-card border border-border sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
+      <div className="relative w-full max-w-lg h-[85vh] sm:h-[680px] bg-card border border-border sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
         {/* Drawer Header */}
         <div className="p-3.5 sm:p-4 border-b border-border/80 bg-surface/80 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -393,14 +412,14 @@ export function SquareCommentDrawer({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black text-text-primary truncate">
-                  {post.authorName || 'Believer'}
+                  Responding to {post.is_anonymous ? 'Anonymous Member' : post.authorName || 'Believer'}
                 </span>
                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-card border border-border text-text-secondary shrink-0">
                   {totalCount} {totalCount === 1 ? 'Comment' : 'Comments'}
                 </span>
               </div>
-              <p className="text-[11px] text-text-secondary truncate leading-tight">
-                {postSnippet}
+              <p className="text-[11px] text-text-secondary truncate">
+                Community Square Fellowship
               </p>
             </div>
           </div>
@@ -418,8 +437,81 @@ export function SquareCommentDrawer({
         {/* Scrollable Conversation List */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-3 overscroll-contain"
+          className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 overscroll-contain"
         >
+          {/* Full Original Post Preview Card */}
+          <div className="p-4 rounded-2xl bg-surface/90 dark:bg-neutral-900/90 border border-border/90 shadow-xs space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-8 h-8 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] font-bold text-xs flex items-center justify-center border border-white/20 shadow-xs shrink-0 overflow-hidden">
+                  {post.is_anonymous ? (
+                    <User size={15} weight="bold" />
+                  ) : post.authorAvatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={post.authorAvatar}
+                      alt={post.authorName || 'Believer'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{(post.authorName || 'B').charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-text-primary truncate">
+                    {post.is_anonymous ? 'Anonymous Member' : post.authorName || 'Believer'}
+                  </p>
+                  <p className="text-[10px] text-text-secondary truncate">
+                    {post.is_anonymous ? 'Community Square' : post.authorChurch || 'Local Assembly'} • {postTimeFormatted}
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Badge */}
+              <div className="shrink-0">
+                {isPrayer ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
+                    <HandsPraying size={11} weight="fill" />
+                    <span>Prayer</span>
+                  </span>
+                ) : isStruggle ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-subtle text-[#262626] dark:text-neutral-300 text-[10px] font-bold inline-flex items-center gap-1">
+                    <ShieldWarning size={11} />
+                    <span>Struggle</span>
+                  </span>
+                ) : isTestimony ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/35 text-[#FBBF24] text-[10px] font-bold inline-flex items-center gap-1">
+                    <Sparkle size={11} weight="fill" />
+                    <span>Testimony</span>
+                  </span>
+                ) : isReflection ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1">
+                    <BookOpen size={11} weight="bold" />
+                    <span>Reflection</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-surface border border-border text-text-secondary text-[10px] font-bold inline-flex items-center gap-1">
+                    <Clock size={11} />
+                    <span>Record</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Full Post Text Content */}
+            <div className="text-xs sm:text-[13px] text-text-primary leading-relaxed whitespace-pre-wrap pl-0.5 font-normal">
+              {post.content}
+            </div>
+          </div>
+
+          {/* Section Transition Divider */}
+          <div className="flex items-center gap-2 pt-1 pb-0.5">
+            <div className="h-px bg-border/80 flex-1" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+              Encouragements ({totalCount})
+            </span>
+            <div className="h-px bg-border/80 flex-1" />
+          </div>
           {/* Pagination: Load Earlier Encouragements */}
           {hasEarlierComments && (
             <div className="flex justify-center pb-1">
