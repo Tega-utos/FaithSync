@@ -133,6 +133,7 @@ function SquarePageContent() {
   const loading = squareLoading && posts.length === 0
 
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
 
   // Compose Modal State
   const [isComposeOpen, setIsComposeOpen] = useState(false)
@@ -183,6 +184,18 @@ function SquarePageContent() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUser(user)
+
+      if (user) {
+        const { data: prof } = await (supabase
+          .from('profiles') as any)
+          .select('id, display_name, full_name, username, avatar_url, church')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (prof) {
+          setUserProfile(prof)
+        }
+      }
     }
     initUser()
 
@@ -307,8 +320,11 @@ function SquarePageContent() {
           .from('square_comments') as any)
           .select(`
             *,
-            profiles (
+            profiles:user_id (
+              id,
               display_name,
+              full_name,
+              username,
               avatar_url,
               church
             )
@@ -320,13 +336,14 @@ function SquarePageContent() {
           const formatted: SquareCommentItem[] = comments.map((c: any) => {
             const isAnon = Boolean(c.is_anonymous)
             const p = c.profiles || {}
+            const rawName = p.display_name || p.full_name || p.username
             return {
               id: c.id,
               post_id: c.post_id,
               user_id: isAnon ? '' : c.user_id,
               content: c.content,
               is_anonymous: isAnon,
-              authorName: isAnon ? 'Anonymous Member' : p.display_name || 'Believer',
+              authorName: isAnon ? 'Anonymous Member' : (rawName || 'Believer'),
               authorAvatar: isAnon ? null : p.avatar_url || null,
               authorChurch: isAnon ? 'Community Square' : p.church || 'Local Assembly',
               created_at: c.created_at,
@@ -334,7 +351,43 @@ function SquarePageContent() {
           })
           setCommentsByPostId((prev) => ({ ...prev, [postId]: formatted }))
         } else {
-          setCommentsByPostId((prev) => ({ ...prev, [postId]: [] }))
+          // Direct fallback if foreign join fails
+          const { data: rawComments } = await (supabase
+            .from('square_comments') as any)
+            .select('*')
+            .eq('post_id', postId)
+            .order('created_at', { ascending: true })
+
+          if (rawComments && rawComments.length > 0) {
+            const uids = Array.from(new Set(rawComments.map((rc: any) => rc.user_id).filter(Boolean)))
+            const pMap: Record<string, any> = {}
+            if (uids.length > 0) {
+              const { data: profs } = await (supabase.from('profiles') as any)
+                .select('id, display_name, full_name, username, avatar_url, church')
+                .in('id', uids)
+              ;(profs || []).forEach((pr: any) => { pMap[pr.id] = pr })
+            }
+
+            const formatted: SquareCommentItem[] = rawComments.map((c: any) => {
+              const isAnon = Boolean(c.is_anonymous)
+              const p = pMap[c.user_id] || {}
+              const rawName = p.display_name || p.full_name || p.username
+              return {
+                id: c.id,
+                post_id: c.post_id,
+                user_id: isAnon ? '' : c.user_id,
+                content: c.content,
+                is_anonymous: isAnon,
+                authorName: isAnon ? 'Anonymous Member' : (rawName || 'Believer'),
+                authorAvatar: isAnon ? null : p.avatar_url || null,
+                authorChurch: isAnon ? 'Community Square' : p.church || 'Local Assembly',
+                created_at: c.created_at,
+              }
+            })
+            setCommentsByPostId((prev) => ({ ...prev, [postId]: formatted }))
+          } else {
+            setCommentsByPostId((prev) => ({ ...prev, [postId]: [] }))
+          }
         }
       } catch (err) {
         console.error('Failed to load comments:', err)
@@ -356,6 +409,7 @@ function SquarePageContent() {
 
     const isAnon = Boolean(newCommentAnonymous[postId])
     const tempId = `cmt-${Date.now()}`
+    const myName = userProfile?.display_name || userProfile?.full_name || userProfile?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.display_name || 'Believer'
 
     const optimisticComment: SquareCommentItem = {
       id: tempId,
@@ -363,11 +417,9 @@ function SquarePageContent() {
       user_id: isAnon ? '' : currentUser.id,
       content: text,
       is_anonymous: isAnon,
-      authorName: isAnon
-        ? 'Anonymous Member'
-        : currentUser.user_metadata?.full_name || currentUser.user_metadata?.display_name || 'Believer',
-      authorAvatar: isAnon ? null : currentUser.user_metadata?.avatar_url || null,
-      authorChurch: isAnon ? 'Community Square' : currentUser.user_metadata?.church || 'Local Assembly',
+      authorName: isAnon ? 'Anonymous Member' : myName,
+      authorAvatar: isAnon ? null : userProfile?.avatar_url || currentUser.user_metadata?.avatar_url || null,
+      authorChurch: isAnon ? 'Community Square' : userProfile?.church || currentUser.user_metadata?.church || 'Local Assembly',
       created_at: new Date().toISOString(),
     }
 
@@ -414,6 +466,8 @@ function SquarePageContent() {
     const nextIsAnon = !currentIsAnon
     setActiveMenuPostId(null)
 
+    const myName = userProfile?.display_name || userProfile?.full_name || userProfile?.username || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.display_name || 'Believer'
+
     // 1. Sync to local storage for immediate unbreakable persistence
     try {
       if (typeof window !== 'undefined') {
@@ -434,9 +488,9 @@ function SquarePageContent() {
           is_anonymous: nextIsAnon,
           authorName: nextIsAnon
             ? 'Anonymous Member'
-            : currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.display_name || 'Believer',
-          authorAvatar: nextIsAnon ? null : currentUser?.user_metadata?.avatar_url || null,
-          authorChurch: nextIsAnon ? 'Community Square' : (currentUser?.user_metadata?.church || 'Local Assembly'),
+            : myName,
+          authorAvatar: nextIsAnon ? null : userProfile?.avatar_url || currentUser?.user_metadata?.avatar_url || null,
+          authorChurch: nextIsAnon ? 'Community Square' : (userProfile?.church || currentUser?.user_metadata?.church || 'Local Assembly'),
         }
       })
     )
@@ -817,19 +871,19 @@ function SquarePageContent() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={post.authorAvatar}
-                            alt={post.authorName}
+                            alt={post.authorName || 'Believer'}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span>{post.authorName?.charAt(0).toUpperCase()}</span>
+                          <span>{(post.authorName || 'B').charAt(0).toUpperCase()}</span>
                         )}
                       </div>
                       <div>
                         <p className="text-xs font-bold text-text-primary">
-                          {post.authorName}
+                          {post.authorName || 'A Believer'}
                         </p>
                         <p className="text-[10px] text-text-secondary">
-                          {post.authorChurch} • {timeStr}
+                          {post.authorChurch || 'Local Assembly'} • {timeStr}
                         </p>
                       </div>
                     </div>

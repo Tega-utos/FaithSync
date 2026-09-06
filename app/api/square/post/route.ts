@@ -135,13 +135,14 @@ export async function POST(req: NextRequest) {
     // 4. Fetch author profile details
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url, church')
+      .select('display_name, full_name, username, avatar_url, church')
       .eq('id', user.id)
       .maybeSingle()
 
+    const rawName = profile?.display_name || profile?.full_name || profile?.username || user.user_metadata?.full_name || user.user_metadata?.display_name
     const authorName = isAnonymous
       ? 'Anonymous Member'
-      : profile?.display_name || user.user_metadata?.full_name || 'A Believer'
+      : (rawName || 'A Believer')
     const authorAvatar = isAnonymous ? null : profile?.avatar_url || user.user_metadata?.avatar_url || null
     const authorChurch = isAnonymous ? 'Community Square' : profile?.church || user.user_metadata?.church || 'Local Assembly'
 

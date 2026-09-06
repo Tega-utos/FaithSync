@@ -44,18 +44,45 @@ function extractMinsFromContent(content: string): { prayerMins: number; studyMin
 export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
   const supabase = createClient()
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user || null
 
+  // 1. First priority: Server Feed API Route (bypasses RLS restrictions and aggregates names, avatars, reactions, comments)
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+
+    const res = await fetch('/api/square/feed', {
+      headers,
+      cache: 'no-store',
+    })
+
+    if (res.ok) {
+      const json = await res.json()
+      if (json.success && Array.isArray(json.posts)) {
+        return json.posts
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Square feed API error, falling back to direct client query:', apiErr)
+  }
+
+  // 2. Resilient Client-Side Fallback
   let dbPosts: any[] | null = null
 
-  // 1. Try fetching with foreign profile join
+  // Try fetching with explicit foreign profile join
   const { data: primaryData, error: primaryErr } = await (supabase
     .from('square_posts') as any)
     .select(`
       *,
-      profiles (
+      profiles:user_id (
+        id,
         display_name,
+        full_name,
+        username,
         avatar_url,
         church
       )
@@ -66,7 +93,7 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
   if (!primaryErr && primaryData && primaryData.length > 0) {
     dbPosts = primaryData
   } else {
-    // 2. Fallback: Direct select from square_posts without join
+    // Fallback: Direct select from square_posts without join
     const { data: fallbackData } = await (supabase
       .from('square_posts') as any)
       .select('*')
@@ -81,11 +108,11 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
   const postIds = dbPosts.map((p: any) => p.id)
 
   // Fetch author profiles for rows where join wasn't present
-  const authorMap: Record<string, { display_name?: string; avatar_url?: string; church?: string }> = {}
+  const authorMap: Record<string, any> = {}
   const userIdsToFetch = Array.from(
     new Set(
       dbPosts
-        .filter((p: any) => !p.profiles && p.user_id)
+        .filter((p: any) => (!p.profiles && p.user_id))
         .map((p: any) => p.user_id)
     )
   )
@@ -93,7 +120,7 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
   if (userIdsToFetch.length > 0) {
     const { data: profileRows } = await (supabase
       .from('profiles') as any)
-      .select('id, display_name, avatar_url, church')
+      .select('id, display_name, full_name, username, avatar_url, church')
       .in('id', userIdsToFetch)
 
     ;(profileRows || []).forEach((pr: any) => {
@@ -137,13 +164,6 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
     postCommentCountMap[c.post_id] = (postCommentCountMap[c.post_id] || 0) + 1
   })
 
-  let localAnonPosts: string[] = []
-  try {
-    if (typeof window !== 'undefined') {
-      localAnonPosts = JSON.parse(localStorage.getItem('faithsync_anon_posts') || '[]')
-    }
-  } catch (_) {}
-
   // Calculate authentic streaks for distinct non-anonymous authors
   const streakMap: Record<string, number> = {}
   const distinctUserIds = Array.from(
@@ -172,13 +192,14 @@ export async function fetchSquarePosts(): Promise<SquarePostItem[]> {
       p.is_anonymous === true ||
       p.is_anonymous === 'true' ||
       p.is_anonymous === 1 ||
-      p.is_anonymous === 't' ||
-      localAnonPosts.includes(p.id)
+      p.is_anonymous === 't'
     )
+    const rawName = author.display_name || author.full_name || author.username
+    const fallbackSelf = user && p.user_id === user.id ? user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me' : 'A Believer'
     const authorDisplayName = isAnon
       ? 'Anonymous Member'
-      : author.display_name || (user && p.user_id === user.id ? user.user_metadata?.full_name || 'Me' : 'A Believer')
-    const authorChurchName = isAnon ? 'Community Square' : (author.church || '')
+      : (rawName || fallbackSelf)
+    const authorChurchName = isAnon ? 'Community Square' : (author.church || 'Local Assembly')
 
     const { prayerMins: pMins, studyMins: sMins } = extractMinsFromContent(p.content || '')
 
