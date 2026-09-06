@@ -121,16 +121,15 @@ function SquarePageContent() {
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const { posts: swrPosts, isLoading: squareLoading, mutate: mutatePosts } = useSquarePosts()
-  const [localPosts, setLocalPosts] = useState<SquarePostItem[]>([])
+  const [posts, setPosts] = useState<SquarePostItem[]>([])
 
-  // Keep localPosts in sync with swrPosts
+  // Keep posts in sync with swrPosts
   useEffect(() => {
-    if (swrPosts) {
-      setLocalPosts(swrPosts)
+    if (swrPosts && Array.isArray(swrPosts)) {
+      setPosts(swrPosts)
     }
   }, [swrPosts])
 
-  const posts = localPosts.length > 0 ? localPosts : swrPosts
   const loading = squareLoading && posts.length === 0
 
   const [currentUser, setCurrentUser] = useState<any>(null)
