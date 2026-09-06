@@ -336,7 +336,7 @@ export default function HomePage() {
                       cy="50"
                       r="42"
                       stroke="currentColor"
-                      className="text-gray-200 dark:text-neutral-800"
+                      className="text-neutral-200 dark:text-neutral-800"
                       strokeWidth="8"
                       fill="none"
                     />
@@ -344,7 +344,8 @@ export default function HomePage() {
                       cx="50"
                       cy="50"
                       r="42"
-                      stroke="#FBBF24"
+                      stroke="#234537"
+                      className="dark:stroke-emerald-400"
                       strokeWidth="8"
                       strokeDasharray={RING_CIRCUMFERENCE}
                       strokeDashoffset={prayerOffset}
@@ -356,12 +357,12 @@ export default function HomePage() {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <HandsPraying size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
+                    <HandsPraying size={18} weight="fill" className="text-[#234537] dark:text-emerald-400 mb-0.5" />
                     <span className="text-xs font-bold text-text-primary">Prayer</span>
                   </div>
                 </div>
                 <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
-                  <Clock size={13} className="text-[#FBBF24]" />
+                  <Clock size={13} className="text-[#234537] dark:text-emerald-400" />
                   <span>{dashboard.prayerMinutes} / {dashboard.prayerTarget} min</span>
                 </span>
               </div>
@@ -375,7 +376,7 @@ export default function HomePage() {
                       cy="50"
                       r="42"
                       stroke="currentColor"
-                      className="text-gray-200 dark:text-neutral-800"
+                      className="text-neutral-200 dark:text-neutral-800"
                       strokeWidth="8"
                       fill="none"
                     />
@@ -384,6 +385,7 @@ export default function HomePage() {
                       cy="50"
                       r="42"
                       stroke="#FBBF24"
+                      className="dark:stroke-amber-400"
                       strokeWidth="8"
                       strokeDasharray={RING_CIRCUMFERENCE}
                       strokeDashoffset={studyOffset}
@@ -395,12 +397,12 @@ export default function HomePage() {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                    <BookOpen size={18} className="text-[#FBBF24] mb-0.5" />
+                    <BookOpen size={18} weight="fill" className="text-[#FBBF24] mb-0.5" />
                     <span className="text-xs font-bold text-text-primary">Study</span>
                   </div>
                 </div>
                 <span className="text-xs font-mono font-bold text-text-primary bg-surface px-2.5 py-1 rounded-lg border border-border flex items-center gap-1.5 justify-center">
-                  <BookOpen size={13} className="text-[#FBBF24]" />
+                  <BookOpen size={13} weight="bold" className="text-[#FBBF24]" />
                   <span>{dashboard.studyMinutes} / {dashboard.studyTarget} min</span>
                 </span>
               </div>

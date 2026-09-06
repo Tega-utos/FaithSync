@@ -68,7 +68,7 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
       .maybeSingle(),
     supabase
       .from('sessions')
-      .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
+      .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
       .eq('user_id', user.id)
       .order('started_at', { ascending: false }),
     supabase
@@ -103,7 +103,10 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
   )
 
   const rawAllUserSessions = sessionsRes.data
-  const allUserSessions = (rawAllUserSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
+  if (sessionsRes.error) {
+    console.error('Error fetching user sessions in dashboardService:', sessionsRes.error)
+  }
+  const allUserSessions = (rawAllUserSessions || []).filter((s: any) => s.type !== 'group')
 
   interface DayMinutesAgg {
     prayerSecs: number
@@ -466,8 +469,8 @@ export async function fetchDashboardData(forceFresh = false): Promise<DashboardD
     streakDays,
     prayerMinutes,
     studyMinutes,
-    prayerTarget,
-    studyTarget,
+    prayerTarget: todayTarget.prayerTarget,
+    studyTarget: todayTarget.studyTarget,
     isDevotionComplete: isTodayComplete,
     weekDots,
     completedDaysCount,
