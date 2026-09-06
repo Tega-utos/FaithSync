@@ -40,6 +40,7 @@ import { isSuperAdmin } from '@/lib/admin/adminAuth'
 import { calculateUserStreak } from '@/lib/utils/streak'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
+import { SquareCommentDrawer } from '@/components/square/SquareCommentDrawer'
 
 function extractMinsFromContent(content: string): { prayerMins: number; studyMins: number } {
   let prayerMins = 0
@@ -329,168 +330,9 @@ function SquarePageContent() {
     }
   }
 
-  // Comments State & Handlers
-  const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null)
-  const [commentsByPostId, setCommentsByPostId] = useState<Record<string, SquareCommentItem[]>>({})
-  const [loadingComments, setLoadingComments] = useState<Record<string, boolean>>({})
-  const [newCommentText, setNewCommentText] = useState<Record<string, string>>({})
-  const [newCommentAnonymous, setNewCommentAnonymous] = useState<Record<string, boolean>>({})
-  const [submittingComment, setSubmittingComment] = useState<Record<string, boolean>>({})
-
-  const handleToggleComments = async (postId: string) => {
-    if (openCommentsPostId === postId) {
-      setOpenCommentsPostId(null)
-      return
-    }
-
-    setOpenCommentsPostId(postId)
-
-    if (!commentsByPostId[postId]) {
-      setLoadingComments((prev) => ({ ...prev, [postId]: true }))
-      try {
-        const supabase = createClient()
-        const { data: comments, error } = await (supabase
-          .from('square_comments') as any)
-          .select(`
-            *,
-            profiles:user_id (
-              id,
-              display_name,
-              full_name,
-              username,
-              avatar_url,
-              church
-            )
-          `)
-          .eq('post_id', postId)
-          .order('created_at', { ascending: true })
-
-        if (!error && comments) {
-          const formatted: SquareCommentItem[] = comments.map((c: any) => {
-            const isAnon = Boolean(c.is_anonymous)
-            const p = c.profiles || {}
-            const rawName = p.display_name || p.full_name || p.username
-            return {
-              id: c.id,
-              post_id: c.post_id,
-              user_id: isAnon ? '' : c.user_id,
-              content: c.content,
-              is_anonymous: isAnon,
-              authorName: isAnon ? 'Anonymous Member' : (rawName || 'Believer'),
-              authorAvatar: isAnon ? null : p.avatar_url || null,
-              authorChurch: isAnon ? 'Community Square' : p.church || 'Local Assembly',
-              created_at: c.created_at,
-            }
-          })
-          setCommentsByPostId((prev) => ({ ...prev, [postId]: formatted }))
-        } else {
-          // Direct fallback if foreign join fails
-          const { data: rawComments } = await (supabase
-            .from('square_comments') as any)
-            .select('*')
-            .eq('post_id', postId)
-            .order('created_at', { ascending: true })
-
-          if (rawComments && rawComments.length > 0) {
-            const uids = Array.from(new Set(rawComments.map((rc: any) => rc.user_id).filter(Boolean)))
-            const pMap: Record<string, any> = {}
-            if (uids.length > 0) {
-              const { data: profs } = await (supabase.from('profiles') as any)
-                .select('id, display_name, full_name, username, avatar_url, church')
-                .in('id', uids)
-              ;(profs || []).forEach((pr: any) => { pMap[pr.id] = pr })
-            }
-
-            const formatted: SquareCommentItem[] = rawComments.map((c: any) => {
-              const isAnon = Boolean(c.is_anonymous)
-              const p = pMap[c.user_id] || {}
-              const rawName = p.display_name || p.full_name || p.username
-              return {
-                id: c.id,
-                post_id: c.post_id,
-                user_id: isAnon ? '' : c.user_id,
-                content: c.content,
-                is_anonymous: isAnon,
-                authorName: isAnon ? 'Anonymous Member' : (rawName || 'Believer'),
-                authorAvatar: isAnon ? null : p.avatar_url || null,
-                authorChurch: isAnon ? 'Community Square' : p.church || 'Local Assembly',
-                created_at: c.created_at,
-              }
-            })
-            setCommentsByPostId((prev) => ({ ...prev, [postId]: formatted }))
-          } else {
-            setCommentsByPostId((prev) => ({ ...prev, [postId]: [] }))
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load comments:', err)
-        setCommentsByPostId((prev) => ({ ...prev, [postId]: [] }))
-      } finally {
-        setLoadingComments((prev) => ({ ...prev, [postId]: false }))
-      }
-    }
-  }
-
-  const handleSendComment = async (postId: string) => {
-    const text = (newCommentText[postId] || '').trim()
-    if (!text) return
-
-    if (!currentUser) {
-      router.push('/login')
-      return
-    }
-
-    const isAnon = Boolean(newCommentAnonymous[postId])
-    const tempId = `cmt-${Date.now()}`
-    const myName = userProfile?.display_name || userProfile?.full_name || userProfile?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.display_name || 'Believer'
-
-    const optimisticComment: SquareCommentItem = {
-      id: tempId,
-      post_id: postId,
-      user_id: isAnon ? '' : currentUser.id,
-      content: text,
-      is_anonymous: isAnon,
-      authorName: isAnon ? 'Anonymous Member' : myName,
-      authorAvatar: isAnon ? null : userProfile?.avatar_url || currentUser.user_metadata?.avatar_url || null,
-      authorChurch: isAnon ? 'Community Square' : userProfile?.church || currentUser.user_metadata?.church || 'Local Assembly',
-      created_at: new Date().toISOString(),
-    }
-
-    setCommentsByPostId((prev) => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), optimisticComment],
-    }))
-    setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p))
-    )
-    setNewCommentText((prev) => ({ ...prev, [postId]: '' }))
-    setSubmittingComment((prev) => ({ ...prev, [postId]: true }))
-
-    try {
-      const supabase = createClient()
-      const { data: inserted } = await (supabase
-        .from('square_comments') as any)
-        .insert({
-          post_id: postId,
-          user_id: currentUser.id,
-          content: text,
-          is_anonymous: isAnon,
-        })
-        .select('id')
-        .maybeSingle()
-
-      if (inserted) {
-        setCommentsByPostId((prev) => ({
-          ...prev,
-          [postId]: (prev[postId] || []).map((c) => (c.id === tempId ? { ...c, id: inserted.id } : c)),
-        }))
-      }
-    } catch (err) {
-      console.error('Failed to submit comment:', err)
-    } finally {
-      setSubmittingComment((prev) => ({ ...prev, [postId]: false }))
-    }
-  }
+  // Slide-Up Comment Drawer State
+  const [activeDrawerPost, setActiveDrawerPost] = useState<SquarePostItem | null>(null)
+  const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false)
 
   // Author Post Management (Toggle Anonymity & Delete)
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null)
@@ -1309,18 +1151,22 @@ function SquarePageContent() {
                           </button>
                         )}
 
-                      {/* Comments Toggle Button (Hidden for Record Posts) */}
+                      {/* Comments Drawer Button (Hidden for Record Posts) */}
                       {!isRecord && (
                         <button
                           type="button"
-                          onClick={() => handleToggleComments(post.id)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer ${
-                            openCommentsPostId === post.id
-                              ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E]'
-                              : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-subtle'
-                          }`}
+                          onClick={() => {
+                            if (!currentUser) {
+                              router.push('/login')
+                              return
+                            }
+                            setActiveDrawerPost(post)
+                            setIsCommentDrawerOpen(true)
+                          }}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer bg-surface text-text-secondary hover:text-text-primary hover:bg-subtle hover:border-[#FBBF24]/50 border border-border/60"
+                          title="Open fellowship discussions"
                         >
-                          <ChatCircle size={15} weight="bold" />
+                          <ChatCircle size={15} weight="bold" className="text-[#FBBF24]" />
                           <span>
                             {post.commentCount > 0
                               ? `${post.commentCount} ${
@@ -1332,133 +1178,6 @@ function SquarePageContent() {
                       )}
                     </div>
                   </div>
-
-                  {/* Expandable Comments Section (Only for Non-Record Posts) */}
-                  {!isRecord && openCommentsPostId === post.id && (
-                    <div className="pt-3 border-t border-border/70 space-y-3 animate-in fade-in">
-                      {/* Comments List */}
-                      {loadingComments[post.id] ? (
-                        <div className="py-4 flex items-center justify-center gap-2 text-xs text-text-secondary">
-                          <CircleNotch size={16} className="animate-spin text-[#FBBF24]" />
-                          <span>Loading encouragements...</span>
-                        </div>
-                      ) : (commentsByPostId[post.id] || []).length === 0 ? (
-                        <div className="py-3 text-center text-xs text-text-secondary bg-surface/60 rounded-xl">
-                          No comments yet. Share an encouraging word or prayer!
-                        </div>
-                      ) : (
-                        <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                          {(commentsByPostId[post.id] || []).map((comment) => (
-                            <div
-                              key={comment.id}
-                              className="p-2.5 rounded-xl bg-card-hover border border-border/80 space-y-1"
-                            >
-                              <div className="flex items-center justify-between text-[11px]">
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-5 h-5 rounded-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-[10px] font-bold flex items-center justify-center overflow-hidden shrink-0">
-                                    {comment.is_anonymous ? (
-                                      <User size={12} weight="bold" />
-                                    ) : comment.authorAvatar ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={comment.authorAvatar}
-                                        alt={comment.authorName}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <span>{comment.authorName?.charAt(0).toUpperCase()}</span>
-                                    )}
-                                  </div>
-                                  <span className="font-bold text-text-primary">
-                                    {comment.authorName}
-                                  </span>
-                                  {!comment.is_anonymous && (
-                                    <span className="text-[9px] text-text-secondary">
-                                      • {comment.authorChurch}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-text-secondary">
-                                  {new Date(comment.created_at).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </span>
-                              </div>
-                              <p className="text-xs text-[#262626] pl-6 leading-relaxed">
-                                {comment.content}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Comment Input Form */}
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault()
-                          handleSendComment(post.id)
-                        }}
-                        className="space-y-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={newCommentText[post.id] || ''}
-                            onChange={(e) =>
-                              setNewCommentText((prev) => ({
-                                ...prev,
-                                [post.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="Write an encouraging comment or prayer..."
-                            className="flex-1 px-3.5 py-2 rounded-xl bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
-                          />
-                          <button
-                            type="submit"
-                            disabled={
-                              !(newCommentText[post.id] || '').trim() ||
-                              submittingComment[post.id]
-                            }
-                            className="px-3.5 py-2 rounded-xl bg-[#234537] hover:bg-[#183329] text-white text-xs font-bold transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
-                          >
-                            {submittingComment[post.id] ? (
-                              <CircleNotch size={14} className="animate-spin" />
-                            ) : (
-                              <>
-                                <PaperPlaneTilt size={14} />
-                                <span className="hidden sm:inline">Send</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-[11px] font-medium text-text-secondary">Comment anonymously</span>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={Boolean(newCommentAnonymous[post.id])}
-                            onClick={() =>
-                              setNewCommentAnonymous((prev) => ({
-                                ...prev,
-                                [post.id]: !prev[post.id],
-                              }))
-                            }
-                            className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
-                              newCommentAnonymous[post.id] ? 'bg-[#FBBF24]' : 'bg-[#E5E7EB]'
-                            }`}
-                          >
-                            <div
-                              className={`bg-card w-4 h-4 rounded-full shadow-xs transform transition-transform duration-200 ease-in-out ${
-                                newCommentAnonymous[post.id] ? 'translate-x-4' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
                 </div>
               </div>
             )
@@ -1890,6 +1609,23 @@ function SquarePageContent() {
           </div>
         </div>
       )}
+
+      {/* Dedicated Slide-Up Comment Drawer */}
+      <SquareCommentDrawer
+        post={activeDrawerPost}
+        isOpen={isCommentDrawerOpen}
+        onClose={() => {
+          setIsCommentDrawerOpen(false)
+          setActiveDrawerPost(null)
+        }}
+        currentUser={currentUser}
+        userProfile={userProfile}
+        onCommentCountChange={(postId, newCount) => {
+          setPosts((prev) =>
+            prev.map((p) => (p.id === postId ? { ...p, commentCount: newCount } : p))
+          )
+        }}
+      />
     </div>
   )
 }
