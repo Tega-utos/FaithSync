@@ -16,8 +16,6 @@ import {
   Sparkle,
   Sliders,
   Clock,
-  SpeakerHigh,
-  SpeakerSlash,
 } from '@phosphor-icons/react'
 import { useTimer, TimerSessionData } from '@/context/TimerContext'
 import { createClient } from '@/lib/supabase/client'
@@ -27,7 +25,6 @@ import { invalidateHistoryData } from '@/features/history/hooks/useHistoryData'
 import { invalidateMilestonesData } from '@/features/milestones/hooks/useMilestonesData'
 import { invalidateSquarePosts } from '@/features/square/hooks/useSquarePosts'
 import { SessionSummaryModal } from '@/components/session/SessionSummaryModal'
-import { playChime } from '@/components/audio/Chime'
 import {
   PrayerFocusTimelineBuilder,
   TimelineSegment,
@@ -59,7 +56,6 @@ export default function ClockInPage() {
   )
   const [focusMode, setFocusMode] = useState<'quick' | 'timeline'>('quick')
   const [focusInput, setFocusInput] = useState(session.focusText || '')
-  const [soundMuted, setSoundMuted] = useState(false)
   const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([
     {
       id: 'seg-1',
@@ -196,7 +192,6 @@ export default function ClockInPage() {
     const data = stopTimer()
     setSummaryData(data)
     stopLockScreenSession()
-    playChime(soundMuted)
 
     // Immediate database persist to guarantee zero data loss
     if (data && data.secondsElapsed > 0) {
@@ -341,18 +336,7 @@ export default function ClockInPage() {
             <span className="hidden sm:inline">History</span>
           </Link>
         ) : (
-          <button
-            type="button"
-            onClick={() => setSoundMuted((prev) => !prev)}
-            className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-subtle/50 transition-colors flex items-center gap-1 text-xs font-bold"
-            title={soundMuted ? 'Unmute Chimes' : 'Mute Chimes'}
-          >
-            {soundMuted ? (
-              <SpeakerSlash size={18} className="text-rose-500" />
-            ) : (
-              <SpeakerHigh size={18} className="text-[#FBBF24]" />
-            )}
-          </button>
+          <div className="w-8" />
         )}
       </div>
 
@@ -461,7 +445,7 @@ export default function ClockInPage() {
         </div>
       ) : (
         /* Active Runtime Focus Display */
-        <ActiveTimelineFocus session={session} soundMuted={soundMuted} />
+        <ActiveTimelineFocus session={session} />
       )}
 
       {/* Central High-Precision Isolated Circular Timer Dial */}

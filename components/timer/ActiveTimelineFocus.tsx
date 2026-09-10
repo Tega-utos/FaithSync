@@ -8,10 +8,10 @@ import { onTimelineSegmentChanged } from '@/lib/sessionLockScreen'
 
 interface ActiveTimelineFocusProps {
   session: ActiveSession
-  soundMuted: boolean
+  soundMuted?: boolean
 }
 
-export function ActiveTimelineFocus({ session, soundMuted }: ActiveTimelineFocusProps) {
+export function ActiveTimelineFocus({ session, soundMuted = true }: ActiveTimelineFocusProps) {
   const activeTimeline = session.focusTimeline || []
   const isTimelineSession = session.focusType === 'timeline' && activeTimeline.length > 0
 
