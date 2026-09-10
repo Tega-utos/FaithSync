@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const query = (searchParams.get('q') || '').trim()
+    const churchFilter = (searchParams.get('church') || '').trim()
 
     // 1. Fetch user's existing connections
     const { data: myBuddies } = await supabase
@@ -27,65 +29,100 @@ export async function GET(req: NextRequest) {
       statusMap[otherId] = { status: b.status, connectionId: b.id }
     })
 
-    // 2. Query profiles
+    // 2. Query profiles with comprehensive search fields
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, display_name, avatar_url, buddy_code, church, preferences')
+      .select('id, display_name, full_name, username, avatar_url, buddy_code, church, preferences, email')
       .neq('id', user.id)
 
-    if (query) {
-      const cleanCode = query.toUpperCase().replace(/^(FS|SYNC)[-_]?/, '')
-      profilesQuery = profilesQuery.or(
-        `display_name.ilike.%${query}%,buddy_code.ilike.%${query}%,buddy_code.ilike.%${cleanCode}%`
-      )
+    if (churchFilter) {
+      profilesQuery = profilesQuery.ilike('church', `%${churchFilter}%`)
     }
 
-    const { data: profiles, error } = await profilesQuery.limit(50)
+    if (query) {
+      const sanitized = query.replace(/[(),.*%"']/g, ' ').replace(/\s+/g, ' ').trim()
+      if (sanitized) {
+        const cleanCode = query.toUpperCase().replace(/^(FS|SYNC)[-_]?/, '').replace(/[^A-Z0-9]/g, '')
+        const orClauses = [
+          `display_name.ilike.%${sanitized}%`,
+          `full_name.ilike.%${sanitized}%`,
+          `username.ilike.%${sanitized}%`,
+          `church.ilike.%${sanitized}%`,
+          `buddy_code.ilike.%${sanitized}%`,
+        ]
+        if (cleanCode && cleanCode !== sanitized) {
+          orClauses.push(`buddy_code.ilike.%${cleanCode}%`)
+        }
+        profilesQuery = profilesQuery.or(orClauses.join(','))
+      }
+    }
+
+    const { data: profiles, error } = await profilesQuery.limit(60)
 
     if (error) {
       console.error('Search query error:', error)
-      return NextResponse.json({ results: [] })
+      // Fallback: simple query without complex OR clause
+      const { data: fallbackProfiles } = await supabase
+        .from('profiles')
+        .select('id, display_name, full_name, username, avatar_url, buddy_code, church, preferences, email')
+        .neq('id', user.id)
+        .limit(60)
+
+      if (!fallbackProfiles) return NextResponse.json({ results: [] })
+      return NextResponse.json({ results: await formatResults(fallbackProfiles, statusMap, supabase) })
     }
 
-    // 3. Query real user stats for streaks & activity
-    const profileIds = (profiles || []).map((p: any) => p.id)
-    let statsMap: Record<string, any> = {}
-    if (profileIds.length > 0) {
-      const { data: stats } = await (supabase.from('user_stats') as any)
-        .select('*')
-        .in('user_id', profileIds)
-
-      if (stats && Array.isArray(stats)) {
-        for (const s of stats) {
-          statsMap[s.user_id] = s
-        }
-      }
-    }
-
-    const results = (profiles || []).map((p: any) => {
-      const conn = statusMap[p.id]
-      const uStats = statsMap[p.id] || {}
-      const streak = uStats.current_streak ?? (p.preferences?.admin_adjusted_streak ?? 0)
-      const isDailyActive = streak > 0 || (uStats.total_sessions || 0) > 0
-
-      return {
-        id: p.id,
-        name: p.display_name || 'A Believer',
-        initial: (p.display_name || 'B').charAt(0).toUpperCase(),
-        avatarUrl: p.avatar_url,
-        church: p.church || '',
-        buddyCode: p.buddy_code || '',
-        streakDays: streak,
-        activityLevel: streak > 0 ? `${streak}d Streak` : isDailyActive ? 'Active' : 'Believer',
-        goalLength: 'Daily Devotion',
-        connectionStatus: conn ? conn.status : 'none',
-        connectionId: conn ? conn.connectionId : null,
-      }
-    })
-
-    return NextResponse.json({ results })
+    const formatted = await formatResults(profiles || [], statusMap, supabase)
+    return NextResponse.json({ results: formatted })
   } catch (error: any) {
     console.error('API /api/buddy/search error:', error)
     return NextResponse.json({ error: error?.message || 'Search failed' }, { status: 500 })
   }
+}
+
+async function formatResults(
+  profiles: any[],
+  statusMap: Record<string, { status: string; connectionId: string }>,
+  supabase: any
+) {
+  const profileIds = profiles.map((p: any) => p.id)
+  const streakMap: Record<string, number> = {}
+
+  if (profileIds.length > 0) {
+    await Promise.all(
+      profileIds.map(async (pid: string) => {
+        try {
+          streakMap[pid] = await calculateUserStreak(pid, supabase)
+        } catch {
+          streakMap[pid] = 0
+        }
+      })
+    )
+  }
+
+  return profiles.map((p: any) => {
+    const conn = statusMap[p.id]
+    const rawName =
+      p.display_name?.trim() ||
+      p.full_name?.trim() ||
+      p.username?.trim() ||
+      (p.email ? p.email.split('@')[0] : 'A Believer')
+
+    const streak = streakMap[p.id] ?? (p.preferences?.admin_adjusted_streak ?? 0)
+    const isDailyActive = streak > 0
+
+    return {
+      id: p.id,
+      name: rawName,
+      initial: rawName.charAt(0).toUpperCase(),
+      avatarUrl: p.avatar_url || null,
+      church: p.church || '',
+      buddyCode: p.buddy_code || '',
+      streakDays: streak,
+      activityLevel: streak > 0 ? `${streak}d Streak` : isDailyActive ? 'Active' : 'Believer',
+      goalLength: 'Daily Devotion',
+      connectionStatus: conn ? conn.status : 'none',
+      connectionId: conn ? conn.connectionId : null,
+    }
+  })
 }

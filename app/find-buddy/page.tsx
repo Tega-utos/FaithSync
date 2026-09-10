@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -20,6 +20,7 @@ import {
   ShieldWarning,
   CircleNotch,
   CheckCircle,
+  ArrowCounterClockwise,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeCode, shareOrCopyCode } from '@/lib/utils/syncCodes'
@@ -69,8 +70,8 @@ export default function FindBuddyPage() {
   // Filter Modal (Bottom Sheet) States
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [filterScope, setFilterScope] = useState<'global' | 'my_church'>('global')
-  const [filterActivity, setFilterActivity] = useState<'all' | 'daily' | 'active'>('all')
-  const [filterDuration, setFilterDuration] = useState<'all' | '15m' | '30m' | '60m'>('all')
+  const [customChurchFilter, setCustomChurchFilter] = useState('')
+  const [filterActivity, setFilterActivity] = useState<'all' | 'daily'>('all')
 
   // Invite Bottom Sheet Modal State
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -84,6 +85,9 @@ export default function FindBuddyPage() {
   const [codeLookupSuccess, setCodeLookupSuccess] = useState<string | null>(null)
   const [searchingDirectory, setSearchingDirectory] = useState(false)
 
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Initial load
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
 
@@ -115,20 +119,24 @@ export default function FindBuddyPage() {
             .select(`
               id,
               user_id,
-              user_profile:profiles!buddies_user_id_fkey(display_name)
+              user_profile:profiles!buddies_user_id_fkey(display_name, full_name, username, church)
             `)
             .eq('buddy_id', user.id)
             .eq('status', 'pending')
 
           if (incoming) {
             setPendingRequests(
-              incoming.map((r: any) => ({
-                id: r.id,
-                senderId: r.user_id,
-                name: r.user_profile?.display_name || 'A Believer',
-                initial: (r.user_profile?.display_name || 'B').charAt(0).toUpperCase(),
-                church: 'Local Assembly',
-              }))
+              incoming.map((r: any) => {
+                const p = r.user_profile || {}
+                const name = p.display_name || p.full_name || p.username || 'A Believer'
+                return {
+                  id: r.id,
+                  senderId: r.user_id,
+                  name,
+                  initial: name.charAt(0).toUpperCase(),
+                  church: p.church || 'Local Assembly',
+                }
+              })
             )
           }
 
@@ -138,16 +146,13 @@ export default function FindBuddyPage() {
             .select('user_id, buddy_id, status')
             .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
 
-          const statusMap: Record<string, 'pending' | 'accepted'> = {}
           let acceptedCount = 0
           ;(myBuddies || []).forEach((b: any) => {
-            const otherId = b.user_id === user.id ? b.buddy_id : b.user_id
-            statusMap[otherId] = b.status
             if (b.status === 'accepted') acceptedCount++
           })
           setActiveBuddyCount(acceptedCount)
 
-          // Fetch directory users via search API
+          // Fetch initial directory users via search API
           const res = await fetch('/api/buddy/search')
           if (res.ok) {
             const data = await res.json()
@@ -167,10 +172,53 @@ export default function FindBuddyPage() {
 
     return () => {
       if (unsubscribe) unsubscribe()
+      if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current)
     }
   }, [])
 
-  // Join by exact code (Stage 2 & 3)
+  // Live Server Search with Debounce
+  const executeServerSearch = useCallback(
+    async (queryText: string, churchFilterText?: string) => {
+      setSearchingDirectory(true)
+      try {
+        const params = new URLSearchParams()
+        if (queryText.trim()) params.set('q', queryText.trim())
+        if (churchFilterText && churchFilterText.trim()) {
+          params.set('church', churchFilterText.trim())
+        }
+
+        const res = await fetch(`/api/buddy/search?${params.toString()}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.results) {
+            setUsers(data.results)
+          }
+        }
+      } catch (err) {
+        console.error('Directory search error:', err)
+      } finally {
+        setSearchingDirectory(false)
+      }
+    },
+    []
+  )
+
+  // Trigger debounced live search on query change
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setSearchQuery(val)
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      const activeChurch = filterScope === 'my_church' ? myChurch || customChurchFilter : ''
+      executeServerSearch(val, activeChurch)
+    }, 300)
+  }
+
+  // Join by exact code (Section A)
   const handleSearchByCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!codeQuery.trim()) return
@@ -207,11 +255,7 @@ export default function FindBuddyPage() {
       setCodeQuery('')
 
       // Reload directory data
-      const searchRes = await fetch(`/api/buddy/search?q=${encodeURIComponent(searchQuery)}`)
-      if (searchRes.ok) {
-        const data = await searchRes.json()
-        if (data.results) setUsers(data.results)
-      }
+      executeServerSearch(searchQuery)
     } catch (err: any) {
       console.error('Code lookup error:', err)
       setCodeLookupError(err?.message || 'Unable to complete lookup. Please try again.')
@@ -220,26 +264,15 @@ export default function FindBuddyPage() {
     }
   }
 
-  // Active Directory Search form handler (triggered on Enter or Search button)
+  // Active Directory Search form submission (instant enter / button click)
   const handleDirectorySearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSearchingDirectory(true)
-    try {
-      const res = await fetch(`/api/buddy/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data.results) {
-          setUsers(data.results)
-        }
-      }
-    } catch (err) {
-      console.error('Search error:', err)
-    } finally {
-      setSearchingDirectory(false)
-    }
+    if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current)
+    const activeChurch = filterScope === 'my_church' ? myChurch || customChurchFilter : ''
+    await executeServerSearch(searchQuery, activeChurch)
   }
 
-  // Connect Button Handler (Stage 3)
+  // Connect Button Handler
   const handleSendConnect = async (targetUser: DirectoryUserItem) => {
     if (!currentUser) {
       router.push('/login')
@@ -271,7 +304,7 @@ export default function FindBuddyPage() {
     }
   }
 
-  // Approve / Ignore Handlers (Stage 5)
+  // Approve / Ignore Handlers
   const handleApprove = async (reqId: string) => {
     if (activeBuddyCount >= 3) {
       setCodeLookupError(
@@ -287,6 +320,7 @@ export default function FindBuddyPage() {
       if (res.success) {
         setPendingRequests((prev) => prev.filter((r) => r.id !== reqId))
         setActiveBuddyCount((prev) => prev + 1)
+        executeServerSearch(searchQuery)
       }
     } catch (err) {
       console.error('Approve error:', err)
@@ -313,30 +347,62 @@ export default function FindBuddyPage() {
     setTimeout(() => setCopiedCode(false), 2000)
   }
 
-  // Filtered Users (Global 3-Field Search + My Church Smart Filter)
+  // Apply filters from modal
+  const handleApplyFilters = () => {
+    setIsFilterModalOpen(false)
+    const activeChurch = filterScope === 'my_church' ? myChurch || customChurchFilter : ''
+    executeServerSearch(searchQuery, activeChurch)
+  }
+
+  // Reset all filters
+  const handleResetFilters = () => {
+    setFilterScope('global')
+    setCustomChurchFilter('')
+    setFilterActivity('all')
+    setIsFilterModalOpen(false)
+    executeServerSearch(searchQuery)
+  }
+
+  // Count active filters for badge
+  const activeFiltersCount =
+    (filterScope === 'my_church' ? 1 : 0) + (filterActivity !== 'all' ? 1 : 0)
+
+  // Filtered Users (Client-side instant refinement + smart multi-field matching)
   const filteredUsers = users.filter((u) => {
-    // 1. My Church Smart Filter
+    // 1. My Church Scope Filter
     if (filterScope === 'my_church') {
-      if (myChurch) {
-        const userChurch = u.church.toLowerCase().trim()
-        const targetChurch = myChurch.toLowerCase().trim()
-        if (userChurch !== targetChurch) return false
+      const targetChurch = (myChurch || customChurchFilter).toLowerCase().trim()
+      if (targetChurch) {
+        const userChurch = (u.church || '').toLowerCase().trim()
+        if (!userChurch.includes(targetChurch) && !targetChurch.includes(userChurch)) {
+          return false
+        }
       }
     }
 
-    // 2. Global Text Search across Name, Sync Code, and Church (Local Assembly)
+    // 2. Client-side instant query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
-      const matchesName = u.name.toLowerCase().includes(q)
-      const matchesChurch = u.church.toLowerCase().includes(q)
-      const matchesCode = u.buddyCode.toLowerCase().includes(q)
+      const cleanCode = q.replace(/^(fs|sync)[-_]?/i, '').replace(/[^a-z0-9]/i, '')
 
-      if (!matchesName && !matchesChurch && !matchesCode) return false
+      const matchesName = (u.name || '').toLowerCase().includes(q)
+      const matchesChurch = (u.church || '').toLowerCase().includes(q)
+      const matchesCode =
+        (u.buddyCode || '').toLowerCase().includes(q) ||
+        (cleanCode && (u.buddyCode || '').toLowerCase().includes(cleanCode))
+
+      if (!matchesName && !matchesChurch && !matchesCode) {
+        return false
+      }
     }
 
     // 3. Activity Level Filter
-    if (filterActivity === 'daily' && (u.streakDays || 0) === 0 && !u.activityLevel.toLowerCase().includes('active')) {
-      return false
+    if (filterActivity === 'daily') {
+      const hasStreak = (u.streakDays || 0) > 0
+      const isMarkedActive = (u.activityLevel || '').toLowerCase().includes('streak') || (u.activityLevel || '').toLowerCase().includes('active')
+      if (!hasStreak && !isMarkedActive) {
+        return false
+      }
     }
 
     return true
@@ -344,11 +410,13 @@ export default function FindBuddyPage() {
 
   const handleShareInvite = () => {
     if (navigator.share) {
-      navigator.share({
-        title: 'Join me on FaithSync',
-        text: `Let’s hold each other accountable in prayer and study on FaithSync! Add me with my code: ${myBuddyCode}`,
-        url: window.location.origin,
-      }).catch(() => {})
+      navigator
+        .share({
+          title: 'Join me on FaithSync',
+          text: `Let’s hold each other accountable in prayer and study on FaithSync! Add me with my code: ${myBuddyCode}`,
+          url: window.location.origin,
+        })
+        .catch(() => {})
     } else {
       handleCopyMyCode()
     }
@@ -374,7 +442,7 @@ export default function FindBuddyPage() {
       <div className="space-y-1">
         <h2 className="text-xl font-black text-text-primary tracking-tight">Buddy Finder</h2>
         <p className="text-xs text-text-secondary leading-relaxed">
-          Connect securely using a unique Sync Code, or browse the directory to find new buddies.
+          Connect securely using a unique Sync Code, or browse the directory to find new accountability partners.
         </p>
       </div>
 
@@ -399,7 +467,10 @@ export default function FindBuddyPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
-                      {req.name} <span className="text-[10px] font-normal text-text-secondary underline ml-1">Preview Profile</span>
+                      {req.name}{' '}
+                      <span className="text-[10px] font-normal text-text-secondary underline ml-1">
+                        Preview Profile
+                      </span>
                     </p>
                     <p className="text-[10px] text-text-secondary truncate">{req.church}</p>
                   </div>
@@ -503,30 +574,52 @@ export default function FindBuddyPage() {
             <button
               type="button"
               onClick={() => setIsFilterModalOpen(true)}
-              className="text-xs font-bold text-[#FBBF24] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#FBBF24] hover:underline flex items-center gap-1.5 transition-all"
             >
               <SlidersHorizontal size={14} />
-              <span>Refine Filters</span>
+              <span>
+                Refine Filters
+                {activeFiltersCount > 0 && ` (${activeFiltersCount})`}
+              </span>
             </button>
           </div>
 
           <form onSubmit={handleDirectorySearch} className="flex items-center gap-2">
             <div className="relative flex-1">
-              <MagnifyingGlass size={16} className="text-text-muted absolute left-3.5 top-3" />
+              {searchingDirectory ? (
+                <CircleNotch
+                  size={16}
+                  className="text-[#FBBF24] animate-spin absolute left-3.5 top-3"
+                />
+              ) : (
+                <MagnifyingGlass size={16} className="text-text-muted absolute left-3.5 top-3" />
+              )}
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchInputChange}
                 placeholder="Search by Name, Sync Code, or Church..."
-                className="w-full pl-9 pr-4 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
+                className="w-full pl-9 pr-8 py-2.5 bg-surface/70 dark:bg-neutral-900/70 border border-border/80 dark:border-white/15 rounded-2xl text-[13.5px] font-normal text-text-primary placeholder:text-text-muted/60 placeholder:font-normal focus:outline-none focus:border-border focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 shadow-xs"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    executeServerSearch('')
+                  }}
+                  className="absolute right-3 top-3 text-text-muted hover:text-text-primary"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
             <button
               type="submit"
               disabled={searchingDirectory}
               className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1 shrink-0"
             >
-              {searchingDirectory ? <CircleNotch size={14} className="animate-spin" /> : 'Search'}
+              Search
             </button>
           </form>
         </div>
@@ -539,10 +632,10 @@ export default function FindBuddyPage() {
             Directory Matches ({filteredUsers.length})
           </span>
 
-          {filterScope === 'my_church' && myChurch && (
+          {filterScope === 'my_church' && (myChurch || customChurchFilter) && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 border border-[#FBBF24]/40 dark:border-amber-500/30 text-text-primary flex items-center gap-1">
               <Church size={11} className="text-[#FBBF24]" />
-              <span>{myChurch}</span>
+              <span>{myChurch || customChurchFilter}</span>
             </span>
           )}
         </div>
@@ -553,19 +646,32 @@ export default function FindBuddyPage() {
               <Users size={24} />
             </div>
             <div className="space-y-1 max-w-xs">
-              <h3 className="text-xs font-bold text-text-primary">No users found</h3>
+              <h3 className="text-xs font-bold text-text-primary">No matching believers found</h3>
               <p className="text-[11px] text-text-secondary leading-relaxed">
-                We couldn&apos;t find anyone matching your search criteria. Invite your friends to join you on FaithSync!
+                {searchQuery || activeFiltersCount > 0
+                  ? 'Try adjusting your search terms or clearing your refine filters.'
+                  : 'Invite your friends to connect and track spiritual habits on FaithSync!'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsInviteModalOpen(true)}
-              className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1.5"
-            >
-              <ShareNetwork size={14} className="text-[#FBBF24]" />
-              <span>Share Invite Link</span>
-            </button>
+            {activeFiltersCount > 0 ? (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="bg-card border border-border text-text-primary py-2 px-4 rounded-xl font-bold text-xs hover:bg-subtle transition-all flex items-center gap-1.5"
+              >
+                <ArrowCounterClockwise size={14} />
+                <span>Reset Filters</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsInviteModalOpen(true)}
+                className="bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-2.5 px-5 rounded-xl font-bold text-xs shadow-md hover:bg-[#262626] dark:hover:bg-white/80 transition-all flex items-center gap-1.5"
+              >
+                <ShareNetwork size={14} className="text-[#FBBF24]" />
+                <span>Share Invite Link</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -597,7 +703,7 @@ export default function FindBuddyPage() {
                         <p className="text-xs font-bold text-text-primary group-hover:text-[#FBBF24] transition-colors truncate">
                           {userItem.name}
                         </p>
-                        <span className="px-2 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-[9px] font-bold shrink-0">
+                        <span className="px-2 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[9px] font-bold shrink-0">
                           {userItem.activityLevel}
                         </span>
                       </div>
@@ -613,7 +719,11 @@ export default function FindBuddyPage() {
                           </>
                         ) : null}
                         <span className="flex items-center gap-0.5 text-[#234537] dark:text-emerald-400 font-bold shrink-0">
-                          <Fire size={12} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+                          <Fire
+                            size={12}
+                            weight="fill"
+                            className="text-[#234537] dark:text-emerald-400"
+                          />
                           {userItem.streakDays || 0}d Streak
                         </span>
                       </div>
@@ -626,7 +736,7 @@ export default function FindBuddyPage() {
                         This is you
                       </span>
                     ) : userItem.connectionStatus === 'accepted' ? (
-                      <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/300/15 text-emerald-700 text-xs font-bold flex items-center gap-1">
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1">
                         <Check size={14} weight="bold" />
                         <span>Buddies</span>
                       </span>
@@ -654,18 +764,31 @@ export default function FindBuddyPage() {
 
       {/* Refine Search Filter Modal */}
       {isFilterModalOpen && (
-        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-modal="true"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+        >
           <div className="fixed inset-0" onClick={() => setIsFilterModalOpen(false)} />
 
           <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center justify-between pb-2 border-b border-border">
-              <h3 className="text-sm font-bold text-text-primary">Refine Directory Search</h3>
-              <button onClick={() => setIsFilterModalOpen(false)} className="text-text-secondary">
+              <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                <SlidersHorizontal size={16} className="text-[#FBBF24]" />
+                <span>Refine Directory Search</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(false)}
+                className="text-text-secondary hover:text-text-primary"
+              >
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-4 pt-1">
+              {/* Community Scope */}
               <div>
                 <label className="text-[11px] font-bold text-text-secondary block mb-1.5">
                   Community Scope
@@ -674,10 +797,10 @@ export default function FindBuddyPage() {
                   <button
                     type="button"
                     onClick={() => setFilterScope('global')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all ${
                       filterScope === 'global'
                         ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
-                        : 'bg-card text-text-secondary border-border'
+                        : 'bg-card text-text-secondary border-border hover:border-[#FBBF24]/40'
                     }`}
                   >
                     Global
@@ -685,40 +808,56 @@ export default function FindBuddyPage() {
                   <button
                     type="button"
                     onClick={() => setFilterScope('my_church')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all ${
                       filterScope === 'my_church'
                         ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
-                        : 'bg-card text-text-secondary border-border'
+                        : 'bg-card text-text-secondary border-border hover:border-[#FBBF24]/40'
                     }`}
                   >
-                    My Church
+                    My Assembly
                   </button>
                 </div>
 
                 {filterScope === 'my_church' && (
-                  <p className="text-[10px] text-text-secondary mt-1.5 flex items-center gap-1">
-                    <Church size={12} className="text-[#FBBF24]" />
-                    <span>
-                      {myChurch
-                        ? `Filtered to members from "${myChurch}"`
-                        : 'Set your church in profile to filter automatically.'}
-                    </span>
-                  </p>
+                  <div className="mt-2.5 space-y-2">
+                    {myChurch ? (
+                      <p className="text-[11px] text-text-primary font-medium flex items-center gap-1.5 bg-[#FDF9F1] dark:bg-amber-950/30 p-2.5 rounded-xl border border-[#FBBF24]/30">
+                        <Church size={14} className="text-[#FBBF24] shrink-0" />
+                        <span>
+                          Filtering members of <strong className="font-bold">{myChurch}</strong>
+                        </span>
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] text-text-muted">
+                          Your profile church is unset. Enter assembly name to match:
+                        </p>
+                        <input
+                          type="text"
+                          value={customChurchFilter}
+                          onChange={(e) => setCustomChurchFilter(e.target.value)}
+                          placeholder="e.g. Grace Baptist, Elevation Church..."
+                          className="w-full px-3 py-2 text-xs bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-[#FBBF24]"
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
+              {/* Activity Level */}
               <div>
                 <label className="text-[11px] font-bold text-text-secondary block mb-1.5">
-                  Activity Level
+                  Spiritual Habit Activity
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setFilterActivity('all')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all ${
                       filterActivity === 'all'
                         ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
-                        : 'bg-card text-text-secondary border-border'
+                        : 'bg-card text-text-secondary border-border hover:border-[#FBBF24]/40'
                     }`}
                   >
                     Any Activity
@@ -726,10 +865,10 @@ export default function FindBuddyPage() {
                   <button
                     type="button"
                     onClick={() => setFilterActivity('daily')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border ${
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all ${
                       filterActivity === 'daily'
                         ? 'bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] border-[#0E0E0E] dark:border-white/20'
-                        : 'bg-card text-text-secondary border-border'
+                        : 'bg-card text-text-secondary border-border hover:border-[#FBBF24]/40'
                     }`}
                   >
                     Daily Active Only
@@ -737,13 +876,24 @@ export default function FindBuddyPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsFilterModalOpen(false)}
-                className="w-full bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3.5 rounded-xl font-bold text-xs shadow-md mt-2"
-              >
-                Apply Filters
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="flex-1 bg-card border border-border text-text-secondary hover:text-text-primary py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <ArrowCounterClockwise size={14} />
+                  <span>Reset All</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyFilters}
+                  className="flex-1 bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] py-3 rounded-xl font-bold text-xs shadow-md transition-all"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -751,13 +901,22 @@ export default function FindBuddyPage() {
 
       {/* Invite Modal */}
       {isInviteModalOpen && (
-        <div role="dialog" aria-modal="true" data-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-modal="true"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+        >
           <div className="fixed inset-0" onClick={() => setIsInviteModalOpen(false)} />
 
           <div className="relative z-10 w-full max-w-md bg-surface border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">Invite Your Buddies</h3>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-text-secondary">
+              <button
+                type="button"
+                onClick={() => setIsInviteModalOpen(false)}
+                className="text-text-secondary hover:text-text-primary"
+              >
                 <X size={20} />
               </button>
             </div>
