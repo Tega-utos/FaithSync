@@ -27,6 +27,7 @@ import { WeeklyProgress } from '@/features/dashboard/components/WeeklyProgress'
 import { getVerseOfTheDay } from '@/lib/scripture'
 import { Modal } from '@/components/ui/Modal'
 import { checkAndTriggerDevotionAlerts } from '@/lib/notifications/devotionScheduler'
+import { ClockInIcon } from '@/components/icons/ClockInIcon'
 
 const DASH_ARRAY = 282.74 // 2 * PI * 45
 
@@ -417,7 +418,7 @@ export default function HomePage() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#FBBF24] text-[#1A1610] flex items-center justify-center shadow-md shadow-[#FBBF24]/20 shrink-0">
-                  <Timer size={22} weight="fill" className="text-[#1A1610]" />
+                  <ClockInIcon size={22} color="#1A1610" needleColor="#1A1610" accentTickColor="#EA2C26" strokeWidth="1.8" />
                 </div>
                 <span className="tracking-tight text-white dark:text-[#F5F1E8] text-base font-extrabold">Clock In Now</span>
               </div>

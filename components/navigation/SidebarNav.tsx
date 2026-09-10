@@ -31,6 +31,12 @@ interface SidebarUserData {
   unreadCount: number
 }
 
+import { ClockInIcon } from '@/components/icons/ClockInIcon'
+
+const ClockInSidebarIcon = ({ size = 18, className }: any) => (
+  <ClockInIcon size={size} className={className} />
+)
+
 async function fetchSidebarUserData(): Promise<SidebarUserData> {
   const supabase = createClient()
   const {
@@ -58,22 +64,47 @@ async function fetchSidebarUserData(): Promise<SidebarUserData> {
 export function SidebarNav() {
   const pathname = usePathname()
   const { session, formattedTime } = useTimer()
+
+  const [user, setUser] = useState<any>(null)
+  const [streak, setStreak] = useState<number>(0)
+  const [unreadCount, setUnreadCount] = useState<number>(0)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [loading, setLoading] = useState<boolean>(true)
 
   const isVisible = shouldShowAppShell(pathname)
 
-  const { data } = useSWR<SidebarUserData>(
-    isVisible ? 'sidebar_user_state' : null,
-    fetchSidebarUserData,
-    {
-      revalidateOnFocus: true,
-      dedupingInterval: 10_000,
-    }
-  )
+  useEffect(() => {
+    async function loadUser() {
+      const supabase = createClient()
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
 
-  const user = data?.user || null
-  const streak = data?.streak || 0
-  const unreadCount = data?.unreadCount || 0
+      if (currentUser) {
+        setUser(currentUser)
+        const realStreak = await calculateUserStreak(currentUser.id, supabase)
+        setStreak(realStreak || 0)
+
+        const { count } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', currentUser.id)
+          .eq('read', false)
+        setUnreadCount(count || 0)
+      }
+      setLoading(false)
+    }
+
+    loadUser()
+
+    const handleStreakUpdate = () => {
+      loadUser()
+    }
+    window.addEventListener('faithsync_session_updated', handleStreakUpdate)
+    return () => {
+      window.removeEventListener('faithsync_session_updated', handleStreakUpdate)
+    }
+  }, [])
 
   if (!isVisible) {
     return null
@@ -100,7 +131,7 @@ export function SidebarNav() {
     {
       href: '/clock-in',
       label: 'Clock-In Altar',
-      icon: Timer,
+      icon: ClockInSidebarIcon,
       isActive: pathname === '/clock-in',
       badge: session?.isActive ? formattedTime : null,
       isPulsing: session?.isActive,

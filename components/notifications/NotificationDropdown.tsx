@@ -18,6 +18,7 @@ import {
   Sparkle,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
+import { ClockInIcon } from '@/components/icons/ClockInIcon'
 
 export interface NotificationItem {
   id: string
@@ -240,10 +241,10 @@ export function NotificationDropdown({
       return <Fire size={16} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
     }
     if (icon_type === 'clock' || type === 'timer_invite' || type === 'buddy_scheduled_clockin') {
-      return <Clock size={16} weight="bold" className="text-[#FBBF24]" />
+      return <ClockInIcon size={16} />
     }
     if (icon_type === 'timer' || type === 'buddy_clockin_started' || type === 'clockin_invite' || type === 'daily_reminder') {
-      return <Clock size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
+      return <ClockInIcon size={16} active={true} />
     }
     if (icon_type === 'chat_circle' || type === 'square_comment') {
       return <ChatCircle size={16} weight="bold" className="text-sky-600 dark:text-sky-400" />

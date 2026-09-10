@@ -18,6 +18,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { getLocalDateKey, getStartOfLocalDay, getEndOfLocalDay } from '@/lib/utils/date'
 import { getTargetsForDate } from '@/lib/utils/targetHistory'
+import { ClockInIcon } from '@/components/icons/ClockInIcon'
 
 interface SessionRecord {
   id: string
@@ -260,7 +261,7 @@ export default function DateSessionsPage() {
       ) : sessions.length === 0 ? (
         <div className="faith-card p-8 text-center space-y-3">
           <div className="w-12 h-12 rounded-full bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] flex items-center justify-center mx-auto">
-            <Clock size={24} />
+            <ClockInIcon size={24} active={true} />
           </div>
           <h3 className="text-sm font-bold text-text-primary">No timer activity logged on this day</h3>
           <p className="text-xs text-text-secondary">
@@ -271,14 +272,7 @@ export default function DateSessionsPage() {
               type="button"
               className="px-4 py-2.5 rounded-xl bg-[#0E0E0E] dark:bg-white/90 text-white dark:text-[#0E0E0E] text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-[#262626] dark:hover:bg-white/80 transition-all"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-timer-active.svg"
-                alt="Clock In"
-                width={16}
-                height={16}
-                className="w-4 h-4 object-contain"
-              />
+              <ClockInIcon size={16} active={true} />
               <span>Clock In Today</span>
             </button>
           </Link>
