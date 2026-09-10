@@ -740,8 +740,8 @@ function SquarePageContent() {
             const isTestimony = post.post_type === 'testimony'
             const isRecord =
               post.post_type === 'record' ||
-              post.content.startsWith('Completed') ||
-              post.content.includes('Daily Devotion')
+              post.content.startsWith('Completed daily devotion goals:') ||
+              post.content.startsWith('Completed daily devotion')
             const isReflection = !isRecord && (post.post_type === 'reflection' || (!isPrayer && !isStruggle && !isTestimony))
 
             const timeStr = new Date(post.created_at).toLocaleDateString([], {
@@ -749,11 +749,12 @@ function SquarePageContent() {
               day: 'numeric',
             })
 
-            const canConnect =
-              (isPrayer || isStruggle) &&
+            const isAuthorSelf = Boolean(
               currentUser &&
-              currentUser.id !== post.user_id &&
-              !post.is_anonymous
+              ((post.author_id && post.author_id === currentUser.id) ||
+               (post.user_id && post.user_id === currentUser.id))
+            )
+            const canConnect = !post.is_anonymous && !isRecord && Boolean(currentUser) && !isAuthorSelf
 
             return (
               <div key={post.id} className="faith-card p-4 sm:p-5 space-y-3.5">
@@ -1109,47 +1110,45 @@ function SquarePageContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Connect Button: Present on non-record, non-anonymous posts */}
-                      {!post.is_anonymous &&
-                        !isRecord &&
-                        currentUser &&
-                        post.author_id !== currentUser.id &&
-                        post.user_id !== currentUser.id && (
-                          <button
-                            type="button"
-                            disabled={requestedPostIds[post.id]}
-                            onClick={() => {
-                              if (requestedPostIds[post.id]) return
-                              setConnectModalPost(post)
-                              setConnectMessage(
-                                post.post_type === 'prayer' || post.post_type === 'prayer_request'
-                                  ? 'Standing with you in prayer regarding this request.'
-                                  : post.post_type === 'struggle'
-                                  ? 'I saw your struggle and wanted to stand with you in faith.'
-                                  : 'I was encouraged by your post on the Square!'
-                              )
-                              setConnectSent(false)
-                            }}
-                            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 active:scale-95 shadow-2xs ${
-                              requestedPostIds[post.id]
-                                ? 'bg-[#EBF3EE] text-[#234537] dark:bg-emerald-950/40 dark:text-emerald-400 border-[#234537]/30 cursor-default'
-                                : 'bg-surface text-text-primary hover:bg-surface/80 border-border hover:border-[#FBBF24] cursor-pointer'
-                            }`}
-                            title={requestedPostIds[post.id] ? 'Request sent' : 'Connect for 3-Day Intercession Window'}
-                          >
-                            {requestedPostIds[post.id] ? (
-                              <>
-                                <Check size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
-                                <span>Requested</span>
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
-                                <span>Connect</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+                      {/* Connect Button: Present on all non-record, non-anonymous posts */}
+                      {canConnect && (
+                        <button
+                          type="button"
+                          disabled={requestedPostIds[post.id]}
+                          onClick={() => {
+                            if (requestedPostIds[post.id]) return
+                            setConnectModalPost(post)
+                            setConnectMessage(
+                              post.post_type === 'prayer' || post.post_type === 'prayer_request'
+                                ? 'Standing with you in prayer regarding this request.'
+                                : post.post_type === 'struggle'
+                                ? 'I saw your struggle and wanted to stand with you in faith.'
+                                : post.post_type === 'testimony'
+                                ? 'Your testimony truly encouraged me! Standing with you in faith.'
+                                : 'I was encouraged by your reflection on the Square!'
+                            )
+                            setConnectSent(false)
+                          }}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 active:scale-95 shadow-2xs ${
+                            requestedPostIds[post.id]
+                              ? 'bg-[#EBF3EE] text-[#234537] dark:bg-emerald-950/40 dark:text-emerald-400 border-[#234537]/30 cursor-default'
+                              : 'bg-surface text-text-primary hover:bg-surface/80 border-border hover:border-[#FBBF24] cursor-pointer'
+                          }`}
+                          title={requestedPostIds[post.id] ? 'Request sent' : 'Connect for 3-Day Intercession Window'}
+                        >
+                          {requestedPostIds[post.id] ? (
+                            <>
+                              <Check size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
+                              <span>Requested</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
+                              <span>Connect</span>
+                            </>
+                          )}
+                        </button>
+                      )}
 
                       {/* Comments Drawer Button (Hidden for Record Posts) */}
                       {!isRecord && (
