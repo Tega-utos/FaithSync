@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,19 +77,17 @@ export async function POST(req: NextRequest) {
 
         // 4. Update Consecutive Streak ("All or Nothing" Rule)
         try {
-          const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
-            p_user_id: user.id,
-          }))
-          if (typeof streakResult === 'number') {
-            updatedStreak = streakResult
-          }
-        } catch {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('streak_count')
-            .eq('id', user.id)
-            .maybeSingle()
-          updatedStreak = (profile as any)?.streak_count || 0
+          updatedStreak = await calculateUserStreak(user.id, supabase)
+          await Promise.allSettled([
+            (supabase.from('user_stats') as any)
+              .update({ current_streak: updatedStreak, updated_at: new Date().toISOString() })
+              .eq('user_id', user.id),
+            (supabase.from('profiles') as any)
+              .update({ streak_count: updatedStreak })
+              .eq('id', user.id),
+          ])
+        } catch (streakErr) {
+          console.warn('Failed to update streak in live session:', streakErr)
         }
       }
 

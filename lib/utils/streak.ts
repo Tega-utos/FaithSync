@@ -22,16 +22,19 @@ export async function calculateUserStreak(
   const prayerTarget = prefs.prayerTarget || prefs.targets?.prayer || 15
   const studyTarget = prefs.studyTarget || prefs.wordTarget || prefs.targets?.study || 15
 
-  // 2. Fetch all completed personal & buddy sessions (Group sessions are excluded from personal streaks)
+  // 2. Fetch all completed sessions
   const { data: rawSessions } = await supabase
     .from('sessions')
-    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at, is_group, group_id')
+    .select('type, duration_seconds, target_duration_seconds, is_complete, started_at, created_at')
     .eq('user_id', userId)
     .order('started_at', { ascending: false })
 
-  const sessions = (rawSessions || []).filter((s: any) => !s.is_group && s.type !== 'group' && !s.group_id)
+  const sessions = (rawSessions || []).filter((s: any) => s.type !== 'group')
+  const completedDates = prefs.completed_dates || {}
 
-  if (!sessions || sessions.length === 0) return 0
+  if ((!sessions || sessions.length === 0) && Object.keys(completedDates).length === 0) {
+    return typeof prefs.admin_adjusted_streak === 'number' ? prefs.admin_adjusted_streak : 0
+  }
 
   interface DayAgg {
     prayerSecs: number
@@ -83,16 +86,22 @@ export async function calculateUserStreak(
   const todayData = dailyMinutesMap[todayKey]
   const todayPrayerMins = Math.floor((todayData?.prayerSecs || 0) / 60)
   const todayStudyMins = Math.floor((todayData?.studySecs || 0) / 60)
+  const isTodayLocked = Boolean(completedDates[todayKey])
+
   const todayMetrics = {
     prayerMins: todayPrayerMins,
     studyMins: todayStudyMins,
     recordedPrayerTarget: todayData?.prayerTargetSecs ? Math.round(todayData.prayerTargetSecs / 60) : undefined,
     recordedStudyTarget: todayData?.studyTargetSecs ? Math.round(todayData.studyTargetSecs / 60) : undefined,
-    hasCompletedPrayerSession: todayData?.hasPrayerComplete,
-    hasCompletedStudySession: todayData?.hasStudyComplete,
+    hasCompletedPrayerSession: todayData?.hasPrayerComplete || isTodayLocked,
+    hasCompletedStudySession: todayData?.hasStudyComplete || isTodayLocked,
   }
   const todayTarget = getTargetsForDate(todayKey, prefs, prayerTarget, studyTarget, todayMetrics)
-  const isTodayComplete = todayPrayerMins >= todayTarget.prayerTarget && todayStudyMins >= todayTarget.studyTarget
+  const isTodayComplete =
+    isTodayLocked ||
+    (todayData?.hasPrayerComplete && todayData?.hasStudyComplete) ||
+    (todayPrayerMins >= todayTarget.prayerTarget && todayStudyMins >= todayTarget.studyTarget) ||
+    (todayPrayerMins > 0 && todayStudyMins > 0 && (todayData?.prayerSecs || 0) >= (todayTarget.prayerTarget * 60 - 45) && (todayData?.studySecs || 0) >= (todayTarget.studyTarget * 60 - 45))
 
   let streak = isTodayComplete ? 1 : 0
 
@@ -104,29 +113,38 @@ export async function calculateUserStreak(
     prevDate.setDate(prevDate.getDate() - dayOffset)
     const prevKey = getLocalDateKey(prevDate)
     const dayData = dailyMinutesMap[prevKey]
+    const isDayLocked = Boolean(completedDates[prevKey])
 
-    if (!dayData) {
+    if (!dayData && !isDayLocked) {
       break
     }
 
-    const prevPrayerMins = Math.floor(dayData.prayerSecs / 60)
-    const prevStudyMins = Math.floor(dayData.studySecs / 60)
+    const prevPrayerMins = Math.floor((dayData?.prayerSecs || 0) / 60)
+    const prevStudyMins = Math.floor((dayData?.studySecs || 0) / 60)
     const dayMetrics = {
       prayerMins: prevPrayerMins,
       studyMins: prevStudyMins,
-      recordedPrayerTarget: dayData.prayerTargetSecs ? Math.round(dayData.prayerTargetSecs / 60) : undefined,
-      recordedStudyTarget: dayData.studyTargetSecs ? Math.round(dayData.studyTargetSecs / 60) : undefined,
-      hasCompletedPrayerSession: dayData.hasPrayerComplete,
-      hasCompletedStudySession: dayData.hasStudyComplete,
+      recordedPrayerTarget: dayData?.prayerTargetSecs ? Math.round(dayData.prayerTargetSecs / 60) : undefined,
+      recordedStudyTarget: dayData?.studyTargetSecs ? Math.round(dayData.studyTargetSecs / 60) : undefined,
+      hasCompletedPrayerSession: dayData?.hasPrayerComplete || isDayLocked,
+      hasCompletedStudySession: dayData?.hasStudyComplete || isDayLocked,
     }
     const dayHistoricalTarget = getTargetsForDate(prevKey, prefs, prayerTarget, studyTarget, dayMetrics)
 
-    if (prevPrayerMins >= dayHistoricalTarget.prayerTarget && prevStudyMins >= dayHistoricalTarget.studyTarget) {
+    if (
+      isDayLocked ||
+      (prevPrayerMins >= dayHistoricalTarget.prayerTarget && prevStudyMins >= dayHistoricalTarget.studyTarget) ||
+      (prevPrayerMins > 0 && prevStudyMins > 0 && (dayData?.prayerSecs || 0) >= (dayHistoricalTarget.prayerTarget * 60 - 45) && (dayData?.studySecs || 0) >= (dayHistoricalTarget.studyTarget * 60 - 45))
+    ) {
       streak += 1
       dayOffset += 1
     } else {
       break
     }
+  }
+
+  if (typeof prefs.admin_adjusted_streak === 'number') {
+    streak = Math.max(streak, prefs.admin_adjusted_streak)
   }
 
   return streak

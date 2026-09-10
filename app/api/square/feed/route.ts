@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 async function getAuthenticatedUser(req: NextRequest | Request, supabase: any) {
   const authHeader = req.headers.get('Authorization') || req.headers.get('authorization')
@@ -65,19 +66,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 3. Fetch user streaks from user_stats
+    // 3. Fetch authentic user streaks
     const streakMap: Record<string, number> = {}
     if (userIds.length > 0) {
-      const { data: statsRows } = await (supabase
-        .from('user_stats') as any)
-        .select('user_id, current_streak')
-        .in('user_id', userIds)
-
-      if (statsRows && Array.isArray(statsRows)) {
-        statsRows.forEach((s: any) => {
-          streakMap[s.user_id] = s.current_streak || 0
+      await Promise.all(
+        userIds.map(async (uid) => {
+          try {
+            streakMap[uid] = await calculateUserStreak(uid, supabase)
+          } catch (streakErr) {
+            streakMap[uid] = 0
+          }
         })
-      }
+      )
     }
 
     // 4. Fetch Reactions

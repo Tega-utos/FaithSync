@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 export interface SquarePostItem {
   id: string
@@ -40,6 +41,20 @@ export async function fetchSquarePosts(currentUserId?: string): Promise<SquarePo
 
   if (error || !posts) return []
 
+  const distinctUserIds = Array.from(new Set(posts.map((p: any) => p.user_id).filter(Boolean)))
+  const streakMap: Record<string, number> = {}
+  if (distinctUserIds.length > 0) {
+    await Promise.all(
+      distinctUserIds.map(async (uid: any) => {
+        try {
+          streakMap[uid] = await calculateUserStreak(uid, supabase)
+        } catch {
+          streakMap[uid] = 0
+        }
+      })
+    )
+  }
+
   return posts.map((p: any) => {
     const isAnon = Boolean(p.is_anonymous)
     const prof = p.profiles || {}
@@ -62,7 +77,7 @@ export async function fetchSquarePosts(currentUserId?: string): Promise<SquarePo
       authorName: isAnon ? 'Anonymous Member' : rawName,
       authorAvatar: isAnon ? null : prof.avatar_url,
       authorChurch: isAnon ? 'Community Square' : (prof.church || 'Local Assembly'),
-      authorStreak: isAnon ? 0 : 7,
+      authorStreak: isAnon ? 0 : (streakMap[p.user_id] ?? 0),
       amenCount: amenReactions.length,
       hasAmened,
       reactCount: applaudReactions.length,

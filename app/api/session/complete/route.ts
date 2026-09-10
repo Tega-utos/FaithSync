@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { calculateUserStreak } from '@/lib/utils/streak'
 
 export async function POST(req: Request) {
   try {
@@ -102,20 +103,18 @@ export async function POST(req: Request) {
     let updatedStreak = 0
     if (!isGroupSession) {
       try {
-        const { data: streakResult } = await ((supabase as any).rpc('calculate_user_streak', {
-          p_user_id: user.id,
-        }))
-        if (typeof streakResult === 'number') {
-          updatedStreak = streakResult
-        }
-      } catch {
-        // Fallback streak query
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('streak_count')
-          .eq('id', user.id)
-          .maybeSingle()
-        updatedStreak = (profile as any)?.streak_count || 0
+        updatedStreak = await calculateUserStreak(user.id, supabase)
+        // Sync updated streak to user_stats and profiles
+        await Promise.allSettled([
+          (supabase.from('user_stats') as any)
+            .update({ current_streak: updatedStreak, updated_at: new Date().toISOString() })
+            .eq('user_id', user.id),
+          (supabase.from('profiles') as any)
+            .update({ streak_count: updatedStreak })
+            .eq('id', user.id),
+        ])
+      } catch (streakErr) {
+        console.warn('Failed to calculate/sync user streak:', streakErr)
       }
     }
 
