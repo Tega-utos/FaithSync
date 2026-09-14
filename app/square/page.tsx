@@ -1227,56 +1227,6 @@ function SquarePageContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Connect Button: Present on all non-record, non-anonymous posts */}
-                      {canConnect && (() => {
-                        if (isPermanentBuddy) {
-                          return (
-                            <Link
-                              href={`/buddy-chat/${targetAuthorId}`}
-                              className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-[#234537]/30 bg-[#EBF3EE] text-[#234537] dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-[#234537] hover:text-white transition-all flex items-center gap-1 active:scale-95 shadow-2xs"
-                              title="Open Accountability Buddy Chat"
-                            >
-                              <Sparkle size={14} weight="fill" className="text-[#FBBF24]" />
-                              <span>Buddy Chat</span>
-                            </Link>
-                          )
-                        }
-                        if (isSquareFellowship) {
-                          return (
-                            <Link
-                              href={`/buddy-chat/${targetAuthorId}?type=square`}
-                              className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-[#FBBF24]/40 bg-[#FDF9F1] dark:bg-amber-950/40 text-[#B45309] dark:text-amber-300 hover:bg-[#FBBF24] hover:text-[#1A1610] transition-all flex items-center gap-1 active:scale-95 shadow-2xs"
-                              title="Open 3-Day Intercession Window"
-                            >
-                              <HandsPraying size={14} weight="fill" className="text-[#FBBF24]" />
-                              <span>In Fellowship</span>
-                            </Link>
-                          )
-                        }
-                        if (isPending) {
-                          return (
-                            <div
-                              className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-[#234537]/30 bg-[#EBF3EE] text-[#234537] dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center gap-1 cursor-default shadow-2xs"
-                              title={existingConn && !existingConn.isRequester ? 'Pending fellowship request' : 'Intercession request sent'}
-                            >
-                              <Check size={14} className="text-[#234537] dark:text-emerald-400" weight="bold" />
-                              <span>{existingConn && !existingConn.isRequester ? 'Incoming Request' : 'Requested'}</span>
-                            </div>
-                          )
-                        }
-                        return (
-                          <button
-                            type="button"
-                            onClick={handleTriggerConnect}
-                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-border hover:border-[#FBBF24] bg-surface text-text-primary hover:bg-surface/80 transition-all flex items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
-                            title="Connect for 3-Day Intercession Window"
-                          >
-                            <UserPlus size={14} className="text-[#FBBF24]" weight="bold" />
-                            <span>Connect</span>
-                          </button>
-                        )
-                      })()}
-
                       {/* Comments Drawer Button (Hidden for Record Posts) */}
                       {!isRecord && (
                         <button

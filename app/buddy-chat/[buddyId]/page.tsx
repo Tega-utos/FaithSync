@@ -95,6 +95,7 @@ export default function BuddyChatPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [buddyName, setBuddyName] = useState('Accountability Buddy')
   const [buddyInitial, setBuddyInitial] = useState('A')
+  const [buddyAvatar, setBuddyAvatar] = useState<string | null>(null)
   const [buddyChurch, setBuddyChurch] = useState('')
   const [buddyStreak, setBuddyStreak] = useState(0)
   const [buddyStatus, setBuddyStatus] = useState<'online' | 'offline'>('offline')
@@ -314,46 +315,101 @@ export default function BuddyChatPage() {
         } = await supabase.auth.getUser()
         setCurrentUser(user)
 
-        // 1. Fetch Genuine Buddy Profile & Real Streak (with fallback to buddies relation)
+        // 1. Fetch Genuine Buddy Profile & Real Streak (with fallback to buddies relation, search API, and local cache)
         let resolvedName = ''
         let resolvedChurch = ''
-        let resolvedAvatar = null
+        let resolvedAvatar: string | null = null
+
+        const resolveBelieverName = (prof: any): string => {
+          if (!prof) return ''
+          const display = prof.display_name?.trim()
+          if (display && display.toLowerCase() !== 'believer') return display
+          const full = prof.full_name?.trim()
+          if (full && full.toLowerCase() !== 'believer') return full
+          const username = prof.username?.trim()
+          if (username && username.toLowerCase() !== 'believer') return username
+          if (display) return display
+          if (prof.email) {
+            const handle = prof.email.split('@')[0]
+            if (handle) return handle.charAt(0).toUpperCase() + handle.slice(1)
+          }
+          return ''
+        }
 
         const { data: partnerProfile } = await supabase
           .from('profiles')
-          .select('display_name, church, preferences, avatar_url')
+          .select('id, display_name, full_name, username, avatar_url, church, preferences, email')
           .eq('id', buddyId)
           .maybeSingle()
 
         if (partnerProfile) {
-          resolvedName = partnerProfile.display_name || ''
-          resolvedChurch = partnerProfile.church || ''
+          resolvedName = resolveBelieverName(partnerProfile)
+          resolvedChurch = partnerProfile.church?.trim() || ''
           resolvedAvatar = partnerProfile.avatar_url || null
         }
 
-        if (!resolvedName && user) {
-          const { data: conn } = await (supabase
-            .from('buddies') as any)
-            .select(`
-              id, status, connection_type,
-              user_profile:profiles!buddies_user_id_fkey(display_name, church, avatar_url),
-              buddy_profile:profiles!buddies_buddy_id_fkey(display_name, church, avatar_url)
-            `)
-            .or(`and(user_id.eq.${user.id},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${user.id})`)
-            .maybeSingle()
+        if ((!resolvedName || !resolvedAvatar) && user) {
+          try {
+            const { data: conn } = await (supabase
+              .from('buddies') as any)
+              .select(`
+                id, status, connection_type,
+                user_profile:profiles!buddies_user_id_fkey(id, display_name, full_name, username, avatar_url, church, email),
+                buddy_profile:profiles!buddies_buddy_id_fkey(id, display_name, full_name, username, avatar_url, church, email)
+              `)
+              .or(`and(user_id.eq.${user.id},buddy_id.eq.${buddyId}),and(user_id.eq.${buddyId},buddy_id.eq.${user.id})`)
+              .maybeSingle()
 
-          const p = conn?.user_id === user.id ? conn?.buddy_profile : conn?.user_profile
-          if (p) {
-            resolvedName = p.display_name || ''
-            resolvedChurch = p.church || ''
-            resolvedAvatar = p.avatar_url || null
+            const p = conn?.user_id === user.id ? conn?.buddy_profile : conn?.user_profile
+            if (p) {
+              if (!resolvedName) resolvedName = resolveBelieverName(p)
+              if (!resolvedChurch && p.church) resolvedChurch = p.church
+              if (!resolvedAvatar && p.avatar_url) resolvedAvatar = p.avatar_url
+            }
+          } catch (e) {
+            console.debug('Buddy relation join fallback:', e)
           }
+        }
+
+        // Secondary fallback: Direct API query to /api/buddy/search?id=buddyId
+        if (!resolvedName) {
+          try {
+            const res = await fetch(`/api/buddy/search?id=${encodeURIComponent(buddyId)}`)
+            if (res.ok) {
+              const data = await res.json()
+              const match = data.results?.find((r: any) => r.id === buddyId) || data.results?.[0]
+              if (match) {
+                if (match.name && match.name.toLowerCase() !== 'believer' && match.name.toLowerCase() !== 'a believer') {
+                  resolvedName = match.name
+                }
+                if (!resolvedChurch && match.church) resolvedChurch = match.church
+                if (!resolvedAvatar && match.avatarUrl) resolvedAvatar = match.avatarUrl
+              }
+            }
+          } catch (apiErr) {
+            console.debug('Fallback buddy search fetch error:', apiErr)
+          }
+        }
+
+        // Tertiary fallback: localStorage cached buddies
+        if (!resolvedName && typeof window !== 'undefined') {
+          try {
+            const cached = localStorage.getItem('faithsync_buddies_cache')
+            if (cached) {
+              const list = JSON.parse(cached)
+              const found = list.find((b: any) => b.id === buddyId || b.userId === buddyId)
+              if (found?.name && found.name.toLowerCase() !== 'believer') resolvedName = found.name
+              if (!resolvedAvatar && found?.avatarUrl) resolvedAvatar = found.avatarUrl
+              if (!resolvedChurch && found?.church) resolvedChurch = found.church
+            }
+          } catch {}
         }
 
         const finalName = resolvedName || 'Believer'
         setBuddyName(finalName)
         setBuddyInitial(finalName.charAt(0).toUpperCase())
         setBuddyChurch(resolvedChurch || 'Local Assembly')
+        if (resolvedAvatar) setBuddyAvatar(resolvedAvatar)
 
         // 2. Fetch Genuine Buddy Streak from Database
         const realBuddyStreak = await calculateUserStreak(buddyId, supabase)
@@ -1082,9 +1138,21 @@ export default function BuddyChatPage() {
           >
             {/* Circular Avatar */}
             <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-neutral-800 text-white dark:text-neutral-100 font-black text-sm flex items-center justify-center border border-border dark:border-neutral-700 ring-1 ring-black/5 dark:ring-white/20 shadow-xs">
-                {buddyInitial}
-              </div>
+              {buddyAvatar ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-border dark:border-neutral-700 ring-1 ring-black/5 dark:ring-white/20 shadow-xs bg-subtle">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={buddyAvatar}
+                    alt={buddyName}
+                    className="w-full h-full object-cover"
+                    onError={() => setBuddyAvatar(null)}
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-neutral-800 text-white dark:text-neutral-100 font-black text-sm flex items-center justify-center border border-border dark:border-neutral-700 ring-1 ring-black/5 dark:ring-white/20 shadow-xs">
+                  {buddyInitial}
+                </div>
+              )}
               {buddyStatus === 'online' && (
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-card" />
               )}

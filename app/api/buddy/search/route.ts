@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const query = (searchParams.get('q') || '').trim()
     const churchFilter = (searchParams.get('church') || '').trim()
+    const targetId = (searchParams.get('id') || searchParams.get('userId') || '').trim()
 
     // 1. Fetch user's existing connections
     const { data: myBuddies } = await supabase
@@ -33,27 +34,32 @@ export async function GET(req: NextRequest) {
     let profilesQuery = supabase
       .from('profiles')
       .select('id, display_name, full_name, username, avatar_url, buddy_code, church, preferences, email')
-      .neq('id', user.id)
 
-    if (churchFilter) {
-      profilesQuery = profilesQuery.ilike('church', `%${churchFilter}%`)
-    }
+    if (targetId) {
+      profilesQuery = profilesQuery.eq('id', targetId)
+    } else {
+      profilesQuery = profilesQuery.neq('id', user.id)
 
-    if (query) {
-      const sanitized = query.replace(/[(),.*%"']/g, ' ').replace(/\s+/g, ' ').trim()
-      if (sanitized) {
-        const cleanCode = query.toUpperCase().replace(/^(FS|SYNC)[-_]?/, '').replace(/[^A-Z0-9]/g, '')
-        const orClauses = [
-          `display_name.ilike.%${sanitized}%`,
-          `full_name.ilike.%${sanitized}%`,
-          `username.ilike.%${sanitized}%`,
-          `church.ilike.%${sanitized}%`,
-          `buddy_code.ilike.%${sanitized}%`,
-        ]
-        if (cleanCode && cleanCode !== sanitized) {
-          orClauses.push(`buddy_code.ilike.%${cleanCode}%`)
+      if (churchFilter) {
+        profilesQuery = profilesQuery.ilike('church', `%${churchFilter}%`)
+      }
+
+      if (query) {
+        const sanitized = query.replace(/[(),.*%"']/g, ' ').replace(/\s+/g, ' ').trim()
+        if (sanitized) {
+          const cleanCode = query.toUpperCase().replace(/^(FS|SYNC)[-_]?/, '').replace(/[^A-Z0-9]/g, '')
+          const orClauses = [
+            `display_name.ilike.%${sanitized}%`,
+            `full_name.ilike.%${sanitized}%`,
+            `username.ilike.%${sanitized}%`,
+            `church.ilike.%${sanitized}%`,
+            `buddy_code.ilike.%${sanitized}%`,
+          ]
+          if (cleanCode && cleanCode !== sanitized) {
+            orClauses.push(`buddy_code.ilike.%${cleanCode}%`)
+          }
+          profilesQuery = profilesQuery.or(orClauses.join(','))
         }
-        profilesQuery = profilesQuery.or(orClauses.join(','))
       }
     }
 
