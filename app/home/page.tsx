@@ -312,12 +312,12 @@ export default function HomePage() {
             weekDots={dashboard.weekDots}
           />
 
-          {/* Today's Progress Rings */}
+          {/* Today's Progress Rings & Consolidated Clock-In Action */}
           <div className="faith-card p-5 space-y-4 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-bold text-text-primary tracking-tight">Today&apos;s Momentum</h2>
-                <p className="text-[11px] text-text-secondary">Prayer & Scripture Study</p>
+                <p className="text-[11px] text-text-secondary">Prayer &amp; Scripture Study</p>
               </div>
 
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF3EE] dark:bg-emerald-950/30 border border-[#234537]/25 dark:border-emerald-700/30 text-[#234537] dark:text-emerald-400 text-xs font-extrabold shadow-2xs">
@@ -327,7 +327,7 @@ export default function HomePage() {
             </div>
 
             {/* Dual Animated Circular Rings (Separate Side-by-Side) */}
-            <div className="grid grid-cols-2 gap-4 py-2">
+            <div className="grid grid-cols-2 gap-4 py-1">
               {/* 1. Prayer Ring */}
               <div className="flex flex-col items-center text-center space-y-2 p-2">
                 <div className="relative w-28 h-28 flex items-center justify-center">
@@ -408,23 +408,32 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* The Clock In Now CTA */}
-          <Link href="/clock-in" className="block group">
-            <button
-              type="button"
-              className="w-full bg-[#0E0E0E] dark:bg-[#1C1813] border border-black/10 dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] py-4 px-6 rounded-2xl flex items-center justify-between font-extrabold text-base shadow-xl shadow-black/20 dark:shadow-[0_4px_24px_rgba(251,191,36,0.15)] group-hover:bg-[#1f1f1f] dark:group-hover:bg-[#241E18] dark:group-hover:border-[#FBBF24]/80 group-active:scale-[0.99] transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FBBF24] text-[#1A1610] flex items-center justify-center shadow-md shadow-[#FBBF24]/20 shrink-0">
-                  <ClockInIcon size={22} color="#1A1610" needleColor="#1A1610" accentTickColor="#EA2C26" strokeWidth="1.8" />
-                </div>
-                <span className="tracking-tight text-white dark:text-[#F5F1E8] text-base font-extrabold">Clock In Now</span>
-              </div>
-              <CaretRight size={20} className="text-[#FBBF24] group-hover:translate-x-1 transition-transform" />
-            </button>
-          </Link>
+            {/* Embedded 1-Tap Clock-In Action Trigger */}
+            <div className="pt-2 border-t border-border/70 dark:border-white/10">
+              <Link href="/clock-in" className="block group">
+                <button
+                  type="button"
+                  className="w-full bg-[#0E0E0E] dark:bg-[#1C1813] border border-black/10 dark:border-[#FBBF24]/50 text-white dark:text-[#F5F1E8] py-3.5 px-5 rounded-2xl flex items-center justify-between font-extrabold text-sm sm:text-base shadow-md shadow-black/15 dark:shadow-[0_4px_24px_rgba(251,191,36,0.15)] group-hover:bg-[#1f1f1f] dark:group-hover:bg-[#241E18] dark:group-hover:border-[#FBBF24]/80 group-active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FBBF24] text-[#1A1610] flex items-center justify-center shadow-xs shrink-0">
+                      <ClockInIcon size={20} color="#1A1610" needleColor="#1A1610" accentTickColor="#EA2C26" strokeWidth="1.8" />
+                    </div>
+                    <div className="text-left">
+                      <span className="tracking-tight text-white dark:text-[#F5F1E8] font-extrabold block leading-tight">
+                        {isDevotionComplete ? 'Devotion Goals Complete ✓' : 'Clock In Now'}
+                      </span>
+                      <span className="text-[10px] font-normal text-white/70 dark:text-neutral-400 block">
+                        {isDevotionComplete ? 'Tap to log extra prayer or study time' : 'Start personal or buddy altar session'}
+                      </span>
+                    </div>
+                  </div>
+                  <CaretRight size={18} className="text-[#FBBF24] group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Verse of the Day, Accountability Buddies & Community Square */}
