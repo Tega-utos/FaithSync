@@ -81,7 +81,7 @@ export default function SignupPage() {
 
       if (data.session) {
         // Immediate session created: proceed directly to onboarding
-        router.replace('/onboarding')
+        window.location.replace('/onboarding')
         return
       }
 
@@ -92,7 +92,7 @@ export default function SignupPage() {
           password,
         })
         if (signInData?.session) {
-          router.replace('/onboarding')
+          window.location.replace('/onboarding')
           return
         }
       } catch {}
@@ -154,7 +154,7 @@ export default function SignupPage() {
           }, { onConflict: 'id' })
         }
 
-        router.replace('/onboarding')
+        window.location.replace('/onboarding')
         return
       }
     } catch (err: any) {

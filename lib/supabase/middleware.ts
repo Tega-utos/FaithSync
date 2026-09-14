@@ -64,18 +64,35 @@ export async function updateSession(request: NextRequest) {
     pathname === '/reset-password' ||
     pathname.startsWith('/auth')
 
-  // If user is already authenticated and visits login/signup, redirect to /home
+  // Helper to construct a redirect response while preserving all cookies
+  const createRedirectWithCookies = (targetUrl: URL | string) => {
+    const redirectResponse = NextResponse.redirect(targetUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        path: cookie.path,
+        domain: cookie.domain,
+        maxAge: cookie.maxAge,
+        expires: cookie.expires,
+        sameSite: cookie.sameSite,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly,
+      })
+    })
+    return redirectResponse
+  }
+
+  // If user is already authenticated and visits login/signup/register
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/register')) {
     const url = request.nextUrl.clone()
     url.pathname = '/home'
-    return NextResponse.redirect(url)
+    return createRedirectWithCookies(url)
   }
 
   // If user is NOT authenticated and attempts to access protected in-app routes
   if (!user && !isPublicAuthRoute && pathname !== '/onboarding') {
     const url = request.nextUrl.clone()
     url.pathname = '/welcome'
-    return NextResponse.redirect(url)
+    return createRedirectWithCookies(url)
   }
 
   return supabaseResponse

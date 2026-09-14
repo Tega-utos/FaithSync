@@ -129,8 +129,8 @@ export async function POST(req: Request) {
       })
     }
 
-    // 5. Notify Accountability Buddies on Clock-In (In-app notification + Push alert)
-    if (!isGroupSession && isComplete) {
+    // 5. Notify Accountability Buddies or Group Cohort on Clock-In (In-app notification + Push alert)
+    if (isComplete) {
       try {
         const { data: senderProfile } = await supabase
           .from('profiles')
@@ -138,50 +138,82 @@ export async function POST(req: Request) {
           .eq('id', user.id)
           .maybeSingle()
 
-        const senderName = senderProfile?.display_name || user.user_metadata?.full_name || 'Your Buddy'
+        const senderName = senderProfile?.display_name || user.user_metadata?.full_name || 'Your Partner'
         const disciplineLabel = type === 'prayer' ? 'Prayer' : 'Scripture Study'
+        const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
 
-        const { data: buddyRows } = await (supabase
-          .from('buddies') as any)
-          .select('user_id, buddy_id')
-          .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
-          .eq('status', 'accepted')
+        if (isGroupSession && body.groupId) {
+          const [{ data: grp }, { data: members }] = await Promise.all([
+            (supabase.from('groups') as any)
+              .select('name')
+              .eq('id', body.groupId)
+              .maybeSingle(),
+            (supabase.from('group_members') as any)
+              .select('user_id')
+              .eq('group_id', body.groupId)
+              .neq('user_id', user.id),
+          ])
 
-        if (buddyRows && buddyRows.length > 0) {
-          const partnerIds = buddyRows.map((b: any) =>
-            b.user_id === user.id ? b.buddy_id : b.user_id
-          )
+          const groupName = grp?.name || 'Fellowship Group'
+          const memberIds = (members || []).map((m: any) => m.user_id).filter(Boolean)
 
-          const { data: partnerProfiles } = await (supabase
-            .from('profiles') as any)
-            .select('id, preferences')
-            .in('id', partnerIds)
-
-          const allowedPartnerIds: string[] = []
-          ;(partnerProfiles || []).forEach((p: any) => {
-            const prefs = p?.preferences || {}
-            if (prefs.notifBuddyClockins !== false) {
-              allowedPartnerIds.push(p.id)
-            }
-          })
-
-          if (allowedPartnerIds.length > 0) {
-            const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+          if (memberIds.length > 0) {
             await dispatchServerNotification({
               supabase,
               senderId: user.id,
               senderName,
-              targetUserIds: allowedPartnerIds,
-              type: 'buddy_clockin_completed',
-              title: `${senderName} Clocked In!`,
-              message: `🎉 ${senderName} completed ${durationMins}m of ${disciplineLabel}!`,
-              url: `/history`,
+              targetUserIds: memberIds,
+              type: 'group_clockin_completed',
+              title: `${senderName} Completed Altar`,
+              message: `🕊️ ${senderName} completed ${durationMins}m of ${disciplineLabel} in ${groupName}!`,
+              url: `/group-chat/${body.groupId}`,
               icon: 'fire',
             })
           }
+        } else if (!isGroupSession) {
+          const { data: buddyRows } = await (supabase
+            .from('buddies') as any)
+            .select('user_id, buddy_id')
+            .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+            .eq('status', 'accepted')
+
+          if (buddyRows && buddyRows.length > 0) {
+            const partnerIds = buddyRows.map((b: any) =>
+              b.user_id === user.id ? b.buddy_id : b.user_id
+            )
+
+            const { data: partnerProfiles } = await (supabase
+              .from('profiles') as any)
+              .select('id, preferences')
+              .in('id', partnerIds)
+
+            const allowedPartnerIds: string[] = []
+            ;(partnerProfiles || []).forEach((p: any) => {
+              const prefs = p?.preferences || {}
+              if (prefs.notifBuddyClockins !== false) {
+                allowedPartnerIds.push(p.id)
+              }
+            })
+
+            if (allowedPartnerIds.length > 0) {
+              await dispatchServerNotification({
+                supabase,
+                senderId: user.id,
+                senderName,
+                targetUserIds: allowedPartnerIds,
+                type: 'buddy_clockin_completed',
+                title: `${senderName} Clocked In!`,
+                message: `🎉 ${senderName} completed ${durationMins}m of ${disciplineLabel}!${
+                  updatedStreak > 0 ? ` Streak: ${updatedStreak} days 🔥` : ''
+                }`,
+                url: `/history`,
+                icon: 'fire',
+              })
+            }
+          }
         }
       } catch (notifErr) {
-        console.error('Buddy clock-in notification error:', notifErr)
+        console.error('Clock-in complete notification error:', notifErr)
       }
     }
 

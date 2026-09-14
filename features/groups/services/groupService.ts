@@ -405,6 +405,8 @@ export async function sendGroupMessage(
     headers['Authorization'] = `Bearer ${session.access_token}`
   }
 
+  let finalMsg: GroupChatMessage | null = null
+
   // 1. Try server API route first
   try {
     const res = await fetch('/api/group/message', {
@@ -421,73 +423,82 @@ export async function sendGroupMessage(
     if (res.ok) {
       const data = await res.json()
       if (data.message) {
-        if (typeof window !== 'undefined') {
-          try {
-            const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
-            const updated = [...cached.filter((m: any) => m.id !== data.message.id), data.message]
-            localStorage.setItem(cacheKey, JSON.stringify(updated))
-          } catch (_) {}
-        }
-        return data.message
+        finalMsg = data.message
       }
     }
   } catch (apiErr) {
     console.warn('Group message API route note:', apiErr)
   }
 
-  // 2. Direct client fallback insert
-  try {
-    const user = session?.user
-    if (!user) return null
+  // 2. Direct client fallback insert if API wasn't available
+  if (!finalMsg) {
+    try {
+      const user = session?.user
+      if (!user) return null
 
-    const { data: newMsg, error } = await (supabase
-      .from('group_messages') as any)
-      .insert({
-        group_id: groupId,
-        sender_id: user.id,
-        content,
-        message_type: messageType,
-        meta: meta || null,
-        created_at: new Date().toISOString(),
-      })
-      .select('*')
-      .single()
+      const { data: newMsg, error } = await (supabase
+        .from('group_messages') as any)
+        .insert({
+          group_id: groupId,
+          sender_id: user.id,
+          content: content.trim(),
+          message_type: messageType,
+          meta: meta || null,
+          created_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single()
 
-    if (error || !newMsg) return null
-
-    const pName = user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me'
-    const formatted: GroupChatMessage = {
-      id: newMsg.id,
-      sender_id: newMsg.sender_id,
-      sender_name: pName,
-      sender_initial: pName.charAt(0).toUpperCase(),
-      content: newMsg.content,
-      created_at: newMsg.created_at,
-      message_type: newMsg.message_type,
-      meta: newMsg.meta,
+      if (!error && newMsg) {
+        const pName = user.user_metadata?.full_name || user.user_metadata?.display_name || 'Me'
+        finalMsg = {
+          id: newMsg.id,
+          sender_id: newMsg.sender_id,
+          sender_name: pName,
+          sender_initial: pName.charAt(0).toUpperCase(),
+          content: newMsg.content,
+          created_at: newMsg.created_at,
+          message_type: newMsg.message_type,
+          meta: newMsg.meta,
+        }
+      }
+    } catch (clientErr) {
+      console.error('Client group message insert error:', clientErr)
     }
+  }
 
+  if (finalMsg) {
+    // Update local cache
     if (typeof window !== 'undefined') {
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
-        const updated = [...cached.filter((m: any) => m.id !== formatted.id), formatted]
+        const updated = [...cached.filter((m: any) => m.id !== finalMsg!.id), finalMsg]
         localStorage.setItem(cacheKey, JSON.stringify(updated))
       } catch (_) {}
     }
 
-    return formatted
-  } catch (clientErr) {
-    console.error('Client group message insert error:', clientErr)
-    return null
+    // Broadcast instant real-time websocket event across group members
+    try {
+      const channel = supabase.channel(`group_chat_${groupId}`)
+      channel.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: { message: finalMsg },
+      })
+    } catch (_) {}
+
+    return finalMsg
   }
+
+  return null
 }
 
 /**
- * Full CRUD real-time subscription for group messages
+ * Full CRUD real-time subscription for group messages with dual-channel fallback
  */
 export function subscribeToGroupMessages(
   groupId: string,
-  onChange: () => void
+  onChange: (payload?: any) => void
 ): () => void {
   const supabase = createClient()
   const channel = supabase
@@ -500,15 +511,44 @@ export function subscribeToGroupMessages(
         table: 'group_messages',
         filter: `group_id=eq.${groupId}`,
       },
-      () => {
-        onChange()
+      (payload) => {
+        onChange(payload)
       }
     )
+    .on('broadcast', { event: 'new_message' }, (payload) => {
+      onChange(payload)
+    })
+    .on('broadcast', { event: 'group_live_start' }, (payload) => {
+      onChange(payload)
+    })
+    .on('broadcast', { event: 'group_live_end' }, (payload) => {
+      onChange(payload)
+    })
     .subscribe()
 
   return () => {
     supabase.removeChannel(channel)
   }
+}
+
+/**
+ * Broadcast group live clock-in session state across all members
+ */
+export function broadcastGroupLiveState(
+  groupId: string,
+  currentUserId: string,
+  action: 'start' | 'end',
+  sessionData?: any
+) {
+  try {
+    const supabase = createClient()
+    const channel = supabase.channel(`group_chat_${groupId}`)
+    channel.send({
+      type: 'broadcast',
+      event: action === 'start' ? 'group_live_start' : 'group_live_end',
+      payload: { ...sessionData, senderId: currentUserId, timestamp: Date.now() },
+    })
+  } catch (_) {}
 }
 
 /**

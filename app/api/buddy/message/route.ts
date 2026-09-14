@@ -115,37 +115,47 @@ export async function POST(req: NextRequest) {
 
     if (msgError) throw msgError
 
-    // 3. Dispatch In-App Notification to Recipient
-    let notifType = messageType === 'nudge' ? 'nudge' : 'general'
-    let notifTitle = user.user_metadata?.full_name || 'Accountability Buddy'
-    let notifIcon = 'quotes'
+    // 3. Dispatch Notification (In-App + Web Push) to Recipient
+    let notifType = messageType === 'nudge' ? 'nudge' : 'buddy_message'
+    const senderName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.display_name ||
+      user.user_metadata?.name ||
+      'Accountability Buddy'
+    let notifTitle = senderName
+    let notifIcon = 'chat_circle'
+    let notifBody = content.trim().slice(0, 120)
 
     if (messageType === 'nudge') {
       notifType = 'nudge'
-      notifTitle = `${user.user_metadata?.full_name || 'Buddy'} nudged you!`
+      notifTitle = `${senderName} nudged you!`
       notifIcon = 'hand_waving'
+      notifBody = content.trim() || 'Tap to respond in your Sanctuary fellowship room.'
     } else if (messageType === 'clockin_invite') {
       if (meta?.isScheduled) {
         notifType = 'buddy_scheduled_clockin'
-        notifTitle = `Clock-In Scheduled with ${user.user_metadata?.full_name || 'Buddy'}`
+        notifTitle = `Clock-In Scheduled with ${senderName}`
         notifIcon = 'clock'
+        notifBody = `Scheduled ${meta?.discipline === 'study' ? 'Scripture Study' : 'Prayer'} for ${meta?.durationMins || 15} mins.`
       } else {
         notifType = 'buddy_clockin_started'
-        notifTitle = `${user.user_metadata?.full_name || 'Buddy'} invited you to Clock-In!`
+        notifTitle = `${senderName} invited you to Clock-In!`
         notifIcon = 'timer'
+        notifBody = `🔥 ${senderName} tapped into the Altar for ${meta?.durationMins || 15}m — tap to join live!`
       }
     }
 
-    await (supabase.from('notifications') as any).insert({
-      user_id: recipientId,
-      sender_id: user.id,
+    const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+    await dispatchServerNotification({
+      supabase,
+      senderId: user.id,
+      senderName,
+      targetUserIds: [recipientId],
       type: notifType,
       title: notifTitle,
-      text: content.trim().slice(0, 100),
-      route_url: `/buddy-chat/${user.id}`,
-      icon_type: notifIcon,
-      is_read: false,
-      created_at: new Date().toISOString(),
+      message: notifBody,
+      url: `/buddy-chat/${user.id}`,
+      icon: notifIcon,
     })
 
     return NextResponse.json({

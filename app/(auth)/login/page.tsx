@@ -54,6 +54,9 @@ function LoginForm() {
       if (signInErr) throw signInErr
 
       if (data.session) {
+        const nextParam = searchParams.get('next')
+        const targetNext = nextParam && nextParam.startsWith('/') ? nextParam : '/home'
+
         // Check if user has completed onboarding preferences
         const { data: profile } = await supabase
           .from('profiles')
@@ -61,11 +64,17 @@ function LoginForm() {
           .eq('id', data.session.user.id)
           .maybeSingle()
 
-        if (!profile || !profile.preferences) {
-          router.replace('/onboarding')
-        } else {
-          router.replace('/home')
-        }
+        const hasCompletedOnboarding =
+          Boolean(profile?.preferences?.onboarding_completed) ||
+          Boolean(profile?.preferences?.targets?.prayer || profile?.preferences?.targets?.study)
+
+        const destination = hasCompletedOnboarding ? targetNext : '/onboarding'
+
+        // Perform hard redirect so server components and middleware reliably receive auth cookies
+        window.location.replace(destination)
+      } else {
+        setLoading(false)
+        setError('Unable to initialize session. Please check your credentials.')
       }
     } catch (err: any) {
       setError(getAuthErrorMessage(err))
@@ -81,10 +90,13 @@ function LoginForm() {
     try {
       const supabase = createClient()
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const nextParam = searchParams.get('next')
+      const targetNext = nextParam && nextParam.startsWith('/') ? nextParam : '/home'
+
       const { data, error: gError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}/auth/callback?next=/home`,
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(targetNext)}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

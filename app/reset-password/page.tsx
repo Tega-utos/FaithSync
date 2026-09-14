@@ -102,9 +102,12 @@ export default function ResetPasswordPage() {
 
       if (updateErr) throw updateErr
 
-      // Sign out from recovery session so user can log in with new password
-      await supabase.auth.signOut()
       setSuccess(true)
+
+      // Retain active session and redirect smoothly into the dashboard
+      setTimeout(() => {
+        window.location.replace('/home')
+      }, 1200)
     } catch (err: any) {
       setError(getAuthErrorMessage(err))
       setLoading(false)
@@ -127,24 +130,19 @@ export default function ResetPasswordPage() {
   if (success) {
     return (
       <AuthCard subtitle="Password Updated" closeHref="/login">
-        <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+        <div className="text-center py-6 space-y-4 animate-in fade-in">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle size={32} weight="fill" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-black text-text-primary">Password Reset Complete</h3>
+            <h3 className="text-base font-black text-text-primary">Password Reset Complete!</h3>
             <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
-              Your password has been successfully updated. You can now sign in with your new credentials.
+              Your password has been successfully updated. Redirecting to your dashboard...
             </p>
           </div>
 
-          <div className="pt-2">
-            <Link
-              href="/login"
-              className="inline-block w-full py-4 px-6 rounded-2xl bg-[#FBBF24] text-text-primary font-black text-sm shadow-[0_4px_20px_rgba(251,191,36,0.25)] hover:bg-[#f5b318] active:scale-[0.98] transition-all text-center"
-            >
-              Sign In Now
-            </Link>
+          <div className="pt-2 flex justify-center">
+            <CircleNotch size={24} className="animate-spin text-[#FBBF24]" />
           </div>
         </div>
       </AuthCard>

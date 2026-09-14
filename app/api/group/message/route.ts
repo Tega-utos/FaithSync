@@ -117,6 +117,40 @@ export async function POST(req: NextRequest) {
       meta: newMsg.meta,
     }
 
+    // Dispatch In-App & Web Push Notification to all other group members
+    try {
+      const [{ data: grp }, { data: members }] = await Promise.all([
+        (supabase.from('groups') as any)
+          .select('name')
+          .eq('id', groupId)
+          .maybeSingle(),
+        (supabase.from('group_members') as any)
+          .select('user_id')
+          .eq('group_id', groupId)
+          .neq('user_id', user.id),
+      ])
+
+      const groupName = grp?.name || 'Fellowship Group'
+      const recipientIds = (members || []).map((m: any) => m.user_id).filter(Boolean)
+
+      if (recipientIds.length > 0) {
+        const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+        await dispatchServerNotification({
+          supabase,
+          senderId: user.id,
+          senderName,
+          targetUserIds: recipientIds,
+          type: 'group_message',
+          title: `${senderName} in ${groupName}`,
+          message: content.trim().slice(0, 120),
+          url: `/group-chat/${groupId}`,
+          icon: 'chat_circle',
+        })
+      }
+    } catch (notifErr) {
+      console.error('Group message notification dispatch error:', notifErr)
+    }
+
     return NextResponse.json({
       success: true,
       message: formatted,

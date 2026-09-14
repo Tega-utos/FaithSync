@@ -16,6 +16,7 @@ import {
   ChatCircle,
   HandsPraying,
   Sparkle,
+  Users,
 } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
 import { ClockInIcon } from '@/components/icons/ClockInIcon'
@@ -29,8 +30,13 @@ export interface NotificationItem {
     | 'buddy_accepted'
     | 'timer_invite'
     | 'clockin_invite'
+    | 'buddy_message'
+    | 'group_message'
     | 'buddy_clockin_started'
     | 'buddy_clockin_completed'
+    | 'group_clockin_started'
+    | 'group_clockin_completed'
+    | 'buddy_scheduled_clockin'
     | 'square_comment'
     | 'square_reaction'
     | 'intercession_connected'
@@ -192,9 +198,16 @@ export function NotificationDropdown({
       notif.type === 'nudge' ||
       notif.type === 'buddy_request' ||
       notif.type === 'buddy_accepted' ||
-      notif.type === 'buddy_clockin_started'
+      notif.type === 'buddy_clockin_started' ||
+      notif.type === 'buddy_message'
     ) {
-      router.push('/sync')
+      router.push(notif.target_id ? `/buddy-chat/${notif.target_id}` : '/sync')
+    } else if (
+      notif.type === 'group_message' ||
+      notif.type === 'group_clockin_started' ||
+      notif.type === 'group_clockin_completed'
+    ) {
+      router.push(notif.target_id ? `/group-chat/${notif.target_id}` : '/sync')
     } else if (
       notif.type === 'square_reaction' ||
       notif.type === 'square_comment' ||
@@ -236,18 +249,38 @@ export function NotificationDropdown({
       icon_type === 'flame' ||
       type === 'streak_milestone' ||
       type === 'buddy_clockin_completed' ||
+      type === 'group_clockin_completed' ||
       type === 'streak_at_risk'
     ) {
       return <Fire size={16} weight="fill" className="text-[#EA2C26] dark:text-red-400" />
     }
-    if (icon_type === 'clock' || type === 'timer_invite' || type === 'buddy_scheduled_clockin') {
+    if (
+      icon_type === 'clock' ||
+      type === 'timer_invite' ||
+      type === 'buddy_scheduled_clockin'
+    ) {
       return <ClockInIcon size={16} />
     }
-    if (icon_type === 'timer' || type === 'buddy_clockin_started' || type === 'clockin_invite' || type === 'daily_reminder') {
+    if (
+      icon_type === 'timer' ||
+      type === 'buddy_clockin_started' ||
+      type === 'group_clockin_started' ||
+      type === 'clockin_invite' ||
+      type === 'daily_reminder'
+    ) {
       return <ClockInIcon size={16} active={true} />
     }
-    if (icon_type === 'chat_circle' || type === 'square_comment') {
-      return <ChatCircle size={16} weight="bold" className="text-sky-600 dark:text-sky-400" />
+    if (
+      icon_type === 'chat_circle' ||
+      icon_type === 'quotes' ||
+      type === 'buddy_message' ||
+      type === 'group_message' ||
+      type === 'square_comment'
+    ) {
+      return <ChatCircle size={16} weight="bold" className="text-[#234537] dark:text-emerald-400" />
+    }
+    if (icon_type === 'users' || type === 'group_message' || type === 'group_clockin_started') {
+      return <Users size={16} weight="bold" className="text-[#FBBF24]" />
     }
     if (icon_type === 'hands_praying' || type === 'intercession_connected') {
       return <HandsPraying size={16} weight="fill" className="text-[#234537] dark:text-emerald-400" />
@@ -258,7 +291,13 @@ export function NotificationDropdown({
     if (icon_type === 'reaction' || type === 'square_reaction') {
       return <Smiley size={16} weight="bold" className="text-amber-600" />
     }
-    if (type === 'buddy_request' || type === 'buddy_accepted' || type === 'nudge' || icon_type === 'hand_waving' || icon_type === 'user_plus') {
+    if (
+      type === 'buddy_request' ||
+      type === 'buddy_accepted' ||
+      type === 'nudge' ||
+      icon_type === 'hand_waving' ||
+      icon_type === 'user_plus'
+    ) {
       return <UserPlus size={16} weight="bold" className="text-[#234537] dark:text-emerald-400" />
     }
     return <Bell size={16} weight="fill" className="text-[#FBBF24]" />

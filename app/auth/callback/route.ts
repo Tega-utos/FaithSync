@@ -11,12 +11,10 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
   const error_description = searchParams.get('error_description')
 
-  // Calculate reliable origin behind reverse proxies (Vercel, Railway, Cloudflare, etc.)
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (forwardedHost ? `${forwardedProto}://${forwardedHost}` : origin)
+  // Calculate reliable origin from incoming request headers
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') || (origin?.startsWith('https') ? 'https' : 'http')
+  const siteUrl = host ? `${proto}://${host}` : (origin || process.env.NEXT_PUBLIC_SITE_URL || '')
 
   // Handle provider or OAuth errors cleanly
   if (error || error_description) {
@@ -70,41 +68,51 @@ export async function GET(request: NextRequest) {
     }
 
     if (authUser) {
-      let targetPath = defaultTarget
+      // Check if this callback was triggered specifically for password recovery
+      const isRecovery = type === 'recovery' || (next && next.startsWith('/reset-password'))
+      let targetPath = isRecovery ? '/reset-password' : defaultTarget
 
-      try {
-        // Auto-provision profile from Google OAuth or email metadata if needed
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, buddy_code, preferences')
-          .eq('id', authUser.id)
-          .maybeSingle()
+      if (!isRecovery) {
+        try {
+          // Auto-provision profile from Google OAuth or email metadata if needed
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, buddy_code, preferences')
+            .eq('id', authUser.id)
+            .maybeSingle()
 
-        if (!profile) {
-          const generatedCode = authUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
-          const fullName =
-            authUser.user_metadata?.full_name ||
-            authUser.user_metadata?.name ||
-            authUser.email?.split('@')[0] ||
-            'Believer'
-          const avatarUrl =
-            authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null
+          if (!profile) {
+            const generatedCode = authUser.id.replace(/-/g, '').slice(0, 6).toUpperCase()
+            const fullName =
+              authUser.user_metadata?.full_name ||
+              authUser.user_metadata?.name ||
+              authUser.email?.split('@')[0] ||
+              'Believer'
+            const avatarUrl =
+              authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null
 
-          await supabase.from('profiles').insert({
-            id: authUser.id,
-            display_name: fullName,
-            avatar_url: avatarUrl,
-            buddy_code: generatedCode,
-            church: 'Local Assembly',
-          })
-          targetPath = '/onboarding'
-        } else if (!profile.preferences) {
-          targetPath = '/onboarding'
-        } else {
-          targetPath = next && next !== '/' ? next : '/home'
+            await supabase.from('profiles').insert({
+              id: authUser.id,
+              display_name: fullName,
+              avatar_url: avatarUrl,
+              buddy_code: generatedCode,
+              church: 'Local Assembly',
+            })
+            targetPath = '/onboarding'
+          } else {
+            const hasPreferences =
+              Boolean(profile?.preferences?.onboarding_completed) ||
+              Boolean(profile?.preferences?.targets?.prayer || profile?.preferences?.targets?.study)
+
+            if (!hasPreferences) {
+              targetPath = '/onboarding'
+            } else {
+              targetPath = next && next.startsWith('/') ? next : '/home'
+            }
+          }
+        } catch (profileErr) {
+          console.error('Error handling profile in auth callback:', profileErr)
         }
-      } catch (profileErr) {
-        console.error('Error handling profile in auth callback:', profileErr)
       }
 
       // Update Location header while preserving all Set-Cookie headers

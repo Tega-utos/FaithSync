@@ -12,6 +12,54 @@ export interface DispatchNotificationParams {
   icon?: string
 }
 
+export function getPushIconUrl(type?: string, icon?: string): string {
+  if (
+    icon === 'fire' ||
+    icon === 'flame' ||
+    type === 'streak_milestone' ||
+    type === 'buddy_clockin_completed' ||
+    type === 'group_clockin_completed' ||
+    type === 'streak_at_risk'
+  ) {
+    return '/assets/fire.svg'
+  }
+  if (
+    icon === 'clock' ||
+    icon === 'timer' ||
+    type === 'timer_invite' ||
+    type === 'clockin_invite' ||
+    type === 'buddy_clockin_started' ||
+    type === 'group_clockin_started' ||
+    type === 'daily_reminder'
+  ) {
+    return '/assets/icon-timer-active.svg'
+  }
+  if (
+    icon === 'chat_circle' ||
+    icon === 'quotes' ||
+    type === 'buddy_message' ||
+    type === 'group_message' ||
+    type === 'square_comment'
+  ) {
+    return '/assets/icon-sync-active.svg'
+  }
+  if (
+    icon === 'hands_praying' ||
+    type === 'intercession_connected' ||
+    type === 'prayer_request'
+  ) {
+    return '/assets/hand-prayer.svg'
+  }
+  if (
+    icon === 'sparkle' ||
+    type === 'intercession_completed' ||
+    type === 'buddy_accepted'
+  ) {
+    return '/assets/icon-sparkles.svg'
+  }
+  return '/assets/logo.png'
+}
+
 export async function dispatchServerNotification({
   supabase,
   senderId,
@@ -27,6 +75,7 @@ export async function dispatchServerNotification({
 
   const routeUrl = url || '/sync'
   const notifIcon = icon || 'bell'
+  const pushIconUrl = getPushIconUrl(type, notifIcon)
 
   // 1. Insert In-App Notifications
   try {
@@ -69,7 +118,15 @@ export async function dispatchServerNotification({
         const payload = JSON.stringify({
           title,
           body: message,
+          icon: pushIconUrl,
+          badge: '/assets/logo.png',
           url: routeUrl,
+          tag: `${type}-${Date.now()}`,
+          data: {
+            url: routeUrl,
+            type,
+            icon: pushIconUrl,
+          },
         })
 
         const expiredSubIds: string[] = []

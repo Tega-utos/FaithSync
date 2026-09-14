@@ -116,6 +116,65 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // 6. Dispatch Completion Notifications to Buddy or Group Cohort
+      try {
+        const { data: senderProf } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        const senderName = senderProf?.display_name || user.user_metadata?.full_name || 'Your Partner'
+        const disciplineLabel = inviteDiscipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+        const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
+
+        if (targetGroupId) {
+          const [{ data: grp }, { data: members }] = await Promise.all([
+            (supabase.from('groups') as any)
+              .select('name')
+              .eq('id', targetGroupId)
+              .maybeSingle(),
+            (supabase.from('group_members') as any)
+              .select('user_id')
+              .eq('group_id', targetGroupId)
+              .neq('user_id', user.id),
+          ])
+
+          const groupName = grp?.name || 'Fellowship Group'
+          const memberIds = (members || []).map((m: any) => m.user_id).filter(Boolean)
+
+          if (memberIds.length > 0) {
+            await dispatchServerNotification({
+              supabase,
+              senderId: user.id,
+              senderName,
+              targetUserIds: memberIds,
+              type: 'group_clockin_completed',
+              title: `${senderName} Completed Altar`,
+              message: `🕊️ ${senderName} completed ${actualDurationMinutes}m of ${disciplineLabel} in ${groupName}!`,
+              url: `/group-chat/${targetGroupId}`,
+              icon: 'fire',
+            })
+          }
+        } else if (targetChatRecipient) {
+          await dispatchServerNotification({
+            supabase,
+            senderId: user.id,
+            senderName,
+            targetUserIds: [targetChatRecipient],
+            type: 'buddy_clockin_completed',
+            title: `${senderName} Clocked Out!`,
+            message: `🕊️ ${senderName} completed ${actualDurationMinutes}m of ${disciplineLabel}!${
+              updatedStreak > 0 ? ` Streak: ${updatedStreak} days 🔥` : ''
+            }`,
+            url: `/buddy-chat/${user.id}`,
+            icon: 'fire',
+          })
+        }
+      } catch (endNotifErr) {
+        console.error('Session end notification dispatch note:', endNotifErr)
+      }
+
       return NextResponse.json({
         success: true,
         sessionId: loggedSession?.id,
@@ -133,8 +192,10 @@ export async function POST(req: NextRequest) {
       const startDiscipline = discipline || 'prayer'
       const startTargetMins = targetMins || 15
       const disciplineLabel = startDiscipline === 'prayer' ? 'Prayer' : 'Scripture Study'
+      const isGroup = Boolean(body.groupId || body.isGroup)
+      const targetGroupId = body.groupId
 
-      // Optionally notify buddies of live altar session
+      // Notify buddies or group cohort of live altar session
       if (body.notifyPartners !== false) {
         try {
           const { data: senderProfile } = await supabase
@@ -144,44 +205,91 @@ export async function POST(req: NextRequest) {
             .maybeSingle()
 
           const senderName = senderProfile?.display_name || user.user_metadata?.full_name || 'Your Buddy'
+          const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
 
-          const { data: buddyRows } = await (supabase
-            .from('buddies') as any)
-            .select('user_id, buddy_id, permissions')
-            .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
-            .eq('status', 'accepted')
+          if (isGroup && targetGroupId) {
+            // Group Clock-In Start Notification
+            const [{ data: grp }, { data: members }] = await Promise.all([
+              (supabase.from('groups') as any)
+                .select('name')
+                .eq('id', targetGroupId)
+                .maybeSingle(),
+              (supabase.from('group_members') as any)
+                .select('user_id')
+                .eq('group_id', targetGroupId)
+                .neq('user_id', user.id),
+            ])
 
-          if (buddyRows && buddyRows.length > 0) {
-            const partnerIds = buddyRows
-              .filter((b: any) => {
-                const perms = b.permissions || {}
-                return perms.sendNotificationOnStart !== false
+            const groupName = grp?.name || 'Fellowship Group'
+            const memberIds = (members || []).map((m: any) => m.user_id).filter(Boolean)
+
+            if (memberIds.length > 0) {
+              await dispatchServerNotification({
+                supabase,
+                senderId: user.id,
+                senderName,
+                targetUserIds: memberIds,
+                type: 'group_clockin_started',
+                title: 'Group Altar Started',
+                message: `🔥 ${senderName} started a Group Altar in ${groupName}! Tapped in for ${startTargetMins}m of ${disciplineLabel} — tap to join.`,
+                url: `/group-chat/${targetGroupId}?joinLive=true`,
+                icon: 'timer',
               })
-              .map((b: any) => (b.user_id === user.id ? b.buddy_id : b.user_id))
+            }
+          } else {
+            // 1-on-1 Buddy Clock-In Start Notification
+            const targetRecipientId = body.recipientId
+            if (targetRecipientId) {
+              await dispatchServerNotification({
+                supabase,
+                senderId: user.id,
+                senderName,
+                targetUserIds: [targetRecipientId],
+                type: 'buddy_clockin_started',
+                title: 'Live Altar Started',
+                message: `🔥 ${senderName} is on the Altar! Tapped in for ${startTargetMins}m of ${disciplineLabel} — tap to join live.`,
+                url: `/buddy-chat/${user.id}?joinLive=true`,
+                icon: 'timer',
+              })
+            } else {
+              const { data: buddyRows } = await (supabase
+                .from('buddies') as any)
+                .select('user_id, buddy_id, permissions')
+                .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+                .eq('status', 'accepted')
 
-            if (partnerIds.length > 0) {
-              const { data: partnerProfiles } = await (supabase
-                .from('profiles') as any)
-                .select('id, preferences')
-                .in('id', partnerIds)
+              if (buddyRows && buddyRows.length > 0) {
+                const partnerIds = buddyRows
+                  .filter((b: any) => {
+                    const perms = b.permissions || {}
+                    return perms.sendNotificationOnStart !== false
+                  })
+                  .map((b: any) => (b.user_id === user.id ? b.buddy_id : b.user_id))
 
-              const allowedIds = (partnerProfiles || [])
-                .filter((p: any) => (p?.preferences?.notifBuddyLiveSessions ?? true))
-                .map((p: any) => p.id)
+                if (partnerIds.length > 0) {
+                  const { data: partnerProfiles } = await (supabase
+                    .from('profiles') as any)
+                    .select('id, preferences')
+                    .in('id', partnerIds)
 
-              if (allowedIds.length > 0) {
-                const { dispatchServerNotification } = await import('@/lib/notifications/pushDispatcher')
-                await dispatchServerNotification({
-                  supabase,
-                  senderId: user.id,
-                  senderName,
-                  targetUserIds: allowedIds,
-                  type: 'buddy_clockin_started',
-                  title: 'Live Altar Started',
-                  message: `🔥 ${senderName} is on the Altar! Tapped in for ${startTargetMins}m of ${disciplineLabel} — tap to join live.`,
-                  url: `/buddy-chat/${user.id}?joinLive=true`,
-                  icon: 'fire',
-                })
+                  const allowedIds = (partnerProfiles || [])
+                    .filter((p: any) => (p?.preferences?.notifBuddyLiveSessions ?? true))
+                    .map((p: any) => p.id)
+
+                  if (allowedIds.length > 0) {
+                    await dispatchServerNotification({
+                      supabase,
+                      senderId: user.id,
+                      senderName,
+                      targetUserIds: allowedIds,
+                      type: 'buddy_clockin_started',
+                      title: 'Live Altar Started',
+                      message: `🔥 ${senderName} is on the Altar! Tapped in for ${startTargetMins}m of ${disciplineLabel} — tap to join live.`,
+                      url: `/buddy-chat/${user.id}?joinLive=true`,
+                      icon: 'timer',
+                    })
+                  }
+                }
               }
             }
           }

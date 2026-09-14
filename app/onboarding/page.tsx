@@ -129,23 +129,29 @@ export default function OnboardingPage() {
       }
 
       // 3. Listen for auth state change in case of hydration delay
-      const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
         if (newSession?.user) {
           await processUser(newSession.user, supabase)
-        } else {
-          setTimeout(async () => {
-            if (!isMounted) return
-            const { data: checkData } = await supabase.auth.getUser()
-            if (!checkData?.user && isMounted) {
-              router.replace('/welcome')
-            } else if (checkData?.user) {
-              await processUser(checkData.user, supabase)
-            }
-          }, 600)
+        } else if (event === 'SIGNED_OUT') {
+          if (isMounted) {
+            router.replace('/welcome')
+          }
         }
       })
 
+      // Fallback check after delay if still no user found
+      const timer = setTimeout(async () => {
+        if (!isMounted) return
+        const { data: checkData } = await supabase.auth.getUser()
+        if (!checkData?.user && isMounted) {
+          router.replace('/welcome')
+        } else if (checkData?.user) {
+          await processUser(checkData.user, supabase)
+        }
+      }, 1500)
+
       return () => {
+        clearTimeout(timer)
         authListener.subscription.unsubscribe()
       }
     }

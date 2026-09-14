@@ -90,7 +90,12 @@ interface FloatingNudge {
   text: string
 }
 
-import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from '@/features/groups/services/groupService'
+import {
+  fetchGroupMessages,
+  sendGroupMessage,
+  subscribeToGroupMessages,
+  broadcastGroupLiveState,
+} from '@/features/groups/services/groupService'
 import { ScripturePicker, ScriptureSelection } from '@/components/scripture/ScripturePicker'
 import { getVerse } from '@/lib/scripture'
 import { ScriptureText } from '@/components/scripture/ScriptureText'
@@ -335,11 +340,21 @@ export default function GroupChatPage() {
     setTimeout(() => setToastMessage(null), 2500)
   }
 
-  // Realtime subscription for group messages (Full CRUD: INSERT, UPDATE, DELETE)
+  // Realtime subscription for group messages (Full CRUD: INSERT, UPDATE, DELETE & Broadcast Events)
   useEffect(() => {
     if (!groupId) return
 
-    const unsubscribe = subscribeToGroupMessages(groupId, async () => {
+    const unsubscribe = subscribeToGroupMessages(groupId, async (payload) => {
+      if (payload?.event === 'group_live_start') {
+        setIsGroupLive(true)
+        setToastMessage('A group clock-in session just started! ⏱️')
+        setTimeout(() => setToastMessage(null), 3500)
+      } else if (payload?.event === 'group_live_end') {
+        setIsGroupLive(false)
+        setToastMessage('The group live session ended.')
+        setTimeout(() => setToastMessage(null), 3000)
+      }
+
       const updated = await fetchGroupMessages(groupId)
       setMessages(updated as any)
     })
@@ -347,6 +362,27 @@ export default function GroupChatPage() {
     return () => {
       unsubscribe()
     }
+  }, [groupId])
+
+  // Smart 3-second active polling fallback for 100% group synchronization
+  useEffect(() => {
+    if (!groupId) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const fresh = await fetchGroupMessages(groupId)
+        if (fresh && Array.isArray(fresh)) {
+          setMessages((prev) => {
+            if (fresh.length !== prev.length || (fresh.length > 0 && fresh[fresh.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+              return fresh as any
+            }
+            return prev
+          })
+        }
+      } catch (_) {}
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
   }, [groupId])
 
   useEffect(() => {
@@ -688,6 +724,10 @@ export default function GroupChatPage() {
       if (sent) {
         setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
       }
+
+      if (currentUser && !isScheduleEnabled) {
+        broadcastGroupLiveState(groupId, currentUser.id, 'start', metaObj)
+      }
     } catch (err) {
       console.log('Send group invite note:', err)
     }
@@ -728,7 +768,7 @@ export default function GroupChatPage() {
     const nudgeId = `fn-${Date.now()}`
     const newNudge: FloatingNudge = {
       id: nudgeId,
-      senderName: 'Me',
+      senderName: currentUser?.user_metadata?.full_name || 'Member',
       emoji,
       text,
     }
@@ -745,6 +785,10 @@ export default function GroupChatPage() {
   const handleEndLiveSession = async () => {
     setIsLiveOverlayOpen(false)
     setIsGroupLive(false)
+
+    if (currentUser) {
+      broadcastGroupLiveState(groupId, currentUser.id, 'end')
+    }
 
     if (isHostUser) {
       setIsSessionCompleteScreen(true)

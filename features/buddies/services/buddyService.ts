@@ -599,6 +599,8 @@ export async function sendBuddyMessage(
     headers['Authorization'] = `Bearer ${session.access_token}`
   }
 
+  let finalMsg: BuddyChatMessage | null = null
+
   // 1. Try server API route first for authenticated server-side insertion & notification dispatch
   try {
     const res = await fetch('/api/buddy/message', {
@@ -613,7 +615,7 @@ export async function sendBuddyMessage(
     })
     const data = await res.json()
     if (res.ok && data.message) {
-      const msg: BuddyChatMessage = {
+      finalMsg = {
         id: data.message.id,
         sender_id: data.message.sender_id,
         content: data.message.content,
@@ -621,74 +623,76 @@ export async function sendBuddyMessage(
         meta: data.message.meta,
         created_at: data.message.created_at,
       }
-
-      // Update local cache
-      if (typeof window !== 'undefined') {
-        try {
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
-          const updated = [...cached.filter((m: any) => m.id !== msg.id), msg]
-          localStorage.setItem(cacheKey, JSON.stringify(updated))
-        } catch (_) {}
-      }
-
-      return msg
     }
   } catch (apiErr) {
     console.warn('Send buddy message API route note:', apiErr)
   }
 
-  // 2. Direct client fallback insert
-  try {
-    const { data: newMsg, error } = await (supabase
-      .from('messages') as any)
-      .insert({
-        sender_id: currentUserId,
-        recipient_id: buddyId,
-        content: content.trim(),
-        message_type: messageType,
-        meta: meta || null,
-        created_at: new Date().toISOString(),
-      })
-      .select('*')
-      .single()
+  // 2. Direct client fallback insert if API wasn't available
+  if (!finalMsg) {
+    try {
+      const { data: newMsg, error } = await (supabase
+        .from('messages') as any)
+        .insert({
+          sender_id: currentUserId,
+          recipient_id: buddyId,
+          content: content.trim(),
+          message_type: messageType,
+          meta: meta || null,
+          created_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single()
 
-    if (error || !newMsg) {
-      console.error('Failed to send buddy message client-side:', error)
-      return null
+      if (!error && newMsg) {
+        finalMsg = {
+          id: newMsg.id,
+          sender_id: newMsg.sender_id,
+          content: newMsg.content,
+          message_type: newMsg.message_type as any,
+          meta: (newMsg as any).meta,
+          created_at: newMsg.created_at,
+        }
+      }
+    } catch (clientErr) {
+      console.error('Client message insert exception:', clientErr)
     }
+  }
 
-    const msg: BuddyChatMessage = {
-      id: newMsg.id,
-      sender_id: newMsg.sender_id,
-      content: newMsg.content,
-      message_type: newMsg.message_type as any,
-      meta: (newMsg as any).meta,
-      created_at: newMsg.created_at,
-    }
-
+  if (finalMsg) {
     // Update local cache
     if (typeof window !== 'undefined') {
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]')
-        const updated = [...cached.filter((m: any) => m.id !== msg.id), msg]
+        const updated = [...cached.filter((m: any) => m.id !== finalMsg!.id), finalMsg]
         localStorage.setItem(cacheKey, JSON.stringify(updated))
       } catch (_) {}
     }
 
-    return msg
-  } catch (clientErr) {
-    console.error('Client message insert exception:', clientErr)
-    return null
+    // Broadcast instant real-time websocket event across clients
+    try {
+      const pairKey = [currentUserId, buddyId].sort().join('_')
+      const channel = supabase.channel(`buddy_chat_${pairKey}`)
+      channel.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: { message: finalMsg },
+      })
+    } catch (_) {}
+
+    return finalMsg
   }
+
+  return null
 }
 
 /**
- * Full CRUD real-time subscription scoped to buddy pair
+ * Full CRUD real-time subscription scoped to buddy pair with dual-channel fallback
  */
 export function subscribeToBuddyMessages(
   buddyId: string,
   currentUserId: string,
-  onChange: () => void
+  onChange: (payload?: any) => void
 ): () => void {
   const supabase = createClient()
   const pairKey = [currentUserId, buddyId].sort().join('_')
@@ -708,15 +712,45 @@ export function subscribeToBuddyMessages(
           ((rec.sender_id === currentUserId && rec.recipient_id === buddyId) ||
             (rec.sender_id === buddyId && rec.recipient_id === currentUserId))
         ) {
-          onChange()
+          onChange(payload)
         }
       }
     )
+    .on('broadcast', { event: 'new_message' }, (payload) => {
+      onChange(payload)
+    })
+    .on('broadcast', { event: 'live_clockin_start' }, (payload) => {
+      onChange(payload)
+    })
+    .on('broadcast', { event: 'live_clockin_end' }, (payload) => {
+      onChange(payload)
+    })
     .subscribe()
 
   return () => {
     supabase.removeChannel(channel)
   }
+}
+
+/**
+ * Broadcast live clock-in session state across pair
+ */
+export function broadcastBuddyLiveState(
+  buddyId: string,
+  currentUserId: string,
+  action: 'start' | 'end',
+  sessionData?: any
+) {
+  try {
+    const supabase = createClient()
+    const pairKey = [currentUserId, buddyId].sort().join('_')
+    const channel = supabase.channel(`buddy_chat_${pairKey}`)
+    channel.send({
+      type: 'broadcast',
+      event: action === 'start' ? 'live_clockin_start' : 'live_clockin_end',
+      payload: { ...sessionData, senderId: currentUserId, timestamp: Date.now() },
+    })
+  } catch (_) {}
 }
 
 /**

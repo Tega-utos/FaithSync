@@ -49,7 +49,12 @@ import {
   PrayerFocusTimelineBuilder,
   TimelineSegment,
 } from '@/components/timer/PrayerFocusTimelineBuilder'
-import { fetchBuddyMessages, sendBuddyMessage, subscribeToBuddyMessages } from '@/features/buddies/services/buddyService'
+import {
+  fetchBuddyMessages,
+  sendBuddyMessage,
+  subscribeToBuddyMessages,
+  broadcastBuddyLiveState,
+} from '@/features/buddies/services/buddyService'
 import { getLocalDateKey } from '@/lib/utils/date'
 import { getDevotionState, getElapsedSeconds, getRemainingSeconds } from '@/lib/devotionSync'
 import { calculateUserStreak } from '@/lib/utils/streak'
@@ -384,11 +389,19 @@ export default function BuddyChatPage() {
     loadChatContext()
   }, [buddyId])
 
-  // Realtime messages subscription (Full CRUD: INSERT, UPDATE, DELETE)
+  // Realtime messages subscription (Full CRUD: INSERT, UPDATE, DELETE & Broadcast Events)
   useEffect(() => {
     if (!buddyId || !currentUser) return
 
-    const unsubscribe = subscribeToBuddyMessages(buddyId, currentUser.id, async () => {
+    const unsubscribe = subscribeToBuddyMessages(buddyId, currentUser.id, async (payload) => {
+      if (payload?.event === 'live_clockin_start' && payload?.payload?.senderId === buddyId) {
+        setToastMessage(`${buddyName} started a Live Clock-In session! ⏱️`)
+        setTimeout(() => setToastMessage(null), 3500)
+      } else if (payload?.event === 'live_clockin_end' && payload?.payload?.senderId === buddyId) {
+        setToastMessage(`${buddyName} ended the live session.`)
+        setTimeout(() => setToastMessage(null), 3000)
+      }
+
       const updated = await fetchBuddyMessages(buddyId, currentUser.id)
       setMessages(updated as any)
     })
@@ -396,6 +409,27 @@ export default function BuddyChatPage() {
     return () => {
       unsubscribe()
     }
+  }, [buddyId, currentUser, buddyName])
+
+  // Smart 3-second active polling fallback for 100% message delivery and state sync
+  useEffect(() => {
+    if (!buddyId || !currentUser) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const fresh = await fetchBuddyMessages(buddyId, currentUser.id)
+        if (fresh && Array.isArray(fresh)) {
+          setMessages((prev) => {
+            if (fresh.length !== prev.length || (fresh.length > 0 && fresh[fresh.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+              return fresh as any
+            }
+            return prev
+          })
+        }
+      } catch (_) {}
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
   }, [buddyId, currentUser])
 
   useEffect(() => {
@@ -754,6 +788,10 @@ export default function BuddyChatPage() {
         setMessages((prev) => prev.map((m) => (m.id === tempId ? (sent as any) : m)))
       }
 
+      if (!isScheduleEnabled) {
+        broadcastBuddyLiveState(buddyId, currentUser.id, 'start', metaObj)
+      }
+
       // Dispatch Web Push Notification to Buddy
       fetch('/api/notifications/push', {
         method: 'POST',
@@ -792,6 +830,8 @@ export default function BuddyChatPage() {
     setLiveDurationSecs(0)
     setIsLiveOverlayOpen(true)
     playChime()
+
+    broadcastBuddyLiveState(buddyId, currentUser.id, 'start', metaObj)
 
     const sent = await sendBuddyMessage(buddyId, currentUser.id, contentText, 'clockin_invite', metaObj)
     if (sent) {
@@ -983,6 +1023,10 @@ export default function BuddyChatPage() {
       console.error('Failed to log live session via API:', err)
     }
 
+    if (currentUser) {
+      broadcastBuddyLiveState(buddyId, currentUser.id, 'end')
+    }
+
     const endMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender_id: 'system',
@@ -997,6 +1041,17 @@ export default function BuddyChatPage() {
   const m = Math.floor(liveDurationSecs / 60)
   const s = liveDurationSecs % 60
   const liveFormatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+
+  // Find the latest active live clock-in session in the chat
+  const latestLiveSession = [...messages].reverse().find((m) => {
+    if (m.message_type !== 'clockin_invite' || !m.meta) return false
+    const durationMins = Number(m.meta.durationMins) || 15
+    const targetStartTime = m.meta.startedAt
+      ? new Date(m.meta.startedAt).getTime()
+      : new Date(m.created_at).getTime()
+    const isLive = Date.now() < targetStartTime + durationMins * 60 * 1000
+    return isLive
+  })
 
   if (loading) {
     return (
@@ -1099,51 +1154,47 @@ export default function BuddyChatPage() {
                   <button
                     type="button"
                     onClick={handleSendNudge}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#FDF9F1] dark:bg-amber-950/30 flex items-center gap-2.5"
+                    className="w-full px-3 py-2 rounded-xl text-left hover:bg-subtle flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    <HandWaving size={16} weight="fill" className="text-[#FBBF24]" />
+                    <HandWaving size={16} className="text-text-secondary shrink-0" />
                     <span>Send Nudge</span>
                   </button>
                 )}
 
-                {/* 2. View Profile */}
-                <Link
-                  href={`/profile/${buddyId}`}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-surface flex items-center gap-2.5 block"
-                >
-                  <User size={16} className="text-text-secondary" />
-                  <span>View Profile</span>
-                </Link>
+                {/* 2. Upgrade to Permanent Partner (Square Connection only) */}
+                {isSquareConnection && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      handleUpgradeToPermanent()
+                    }}
+                    disabled={upgradingToPermanent}
+                    className="w-full px-3 py-2 rounded-xl text-left hover:bg-subtle flex items-center gap-2 cursor-pointer transition-colors text-amber-600 dark:text-amber-400 disabled:opacity-60"
+                  >
+                    {upgradingToPermanent ? (
+                      <CircleNotch size={16} className="animate-spin text-amber-500 shrink-0" />
+                    ) : (
+                      <Sparkle size={16} weight="fill" className="text-amber-500 shrink-0" />
+                    )}
+                    <span>Seal as Permanent Partner</span>
+                  </button>
+                )}
 
-                {/* 3. Manage Permissions */}
+                {/* 3. Settings & Permissions */}
                 <button
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false)
-                    setIsPermissionsModalOpen(true)
+                    setIsSettingsOpen(true)
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-surface flex items-center gap-2.5"
+                  className="w-full px-3 py-2 rounded-xl text-left hover:bg-subtle flex items-center gap-2 cursor-pointer transition-colors"
                 >
-                  <ShieldWarning size={16} className="text-text-secondary" />
-                  <span>Manage Permissions</span>
+                  <Sliders size={16} className="text-text-secondary shrink-0" />
+                  <span>Permissions & Settings</span>
                 </button>
 
-                <div className="h-px bg-[#E5E7EB] my-1" />
-
-                {/* 4. Remove Buddy */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false)
-                    setIsRemoveBuddyConfirmOpen(true)
-                  }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-rose-50 dark:bg-red-950/30 text-rose-600 flex items-center gap-2.5"
-                >
-                  <UserMinus size={16} />
-                  <span>Remove Buddy</span>
-                </button>
-
-                {/* 5. Report User */}
+                {/* 4. Report / Block */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1160,6 +1211,40 @@ export default function BuddyChatPage() {
           </div>
         </div>
       </div>
+
+      {/* 1.5 Collaborative Live Devotion Altar Banner */}
+      {latestLiveSession && (
+        <div className="px-4 py-3 bg-gradient-to-r from-amber-500/15 via-[#FBBF24]/20 to-amber-500/15 dark:from-amber-950/40 dark:via-amber-900/40 dark:to-amber-950/40 border-b border-[#FBBF24]/40 flex items-center justify-between shrink-0 animate-in fade-in z-10">
+          <div className="flex items-center gap-2.5 truncate flex-1 min-w-0">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FBBF24]" />
+            </span>
+            <div className="truncate">
+              <p className="text-xs font-black text-text-primary truncate flex items-center gap-1.5">
+                <span>Live Devotion Altar Active</span>
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 capitalize bg-amber-200/60 dark:bg-amber-900/60 px-1.5 py-0.5 rounded">
+                  {latestLiveSession.meta?.discipline || 'prayer'} ({latestLiveSession.meta?.durationMins || 15}m)
+                </span>
+              </p>
+              {latestLiveSession.meta?.focusText && (
+                <p className="text-[10px] text-text-secondary truncate italic">
+                  &ldquo;{latestLiveSession.meta.focusText}&rdquo;
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleJoinSession(latestLiveSession)}
+            className="px-4 py-1.5 rounded-full bg-[#FBBF24] hover:bg-[#f5b318] text-[#1A1610] font-black text-xs shadow-sm flex items-center gap-1.5 shrink-0 active:scale-95 transition-all cursor-pointer"
+          >
+            <Play size={13} weight="fill" />
+            <span>{isLiveOverlayOpen ? 'View Altar' : 'Join Altar'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Anchored Banner for 3-Day Intercession Window */}
       {isSquareConnection && (
