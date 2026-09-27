@@ -7,6 +7,7 @@ import { AppShell } from "@/components/navigation/AppShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 import { SWRProvider } from "@/components/providers/SWRProvider";
+import { ServiceWorkerRegister } from "@/components/providers/ServiceWorkerRegister";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -16,11 +17,22 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
   colorScheme: "light dark",
+  themeColor: "#234537",
 };
 
 export const metadata: Metadata = {
   title: "FaithSync | Spiritual Habit Tracking & Accountability",
   description: "Sync your spiritual walk. Track prayer, scripture, study, and grow with faithful buddies.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FaithSync",
+  },
+  icons: {
+    icon: "/assets/logo.png",
+    apple: "/assets/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -39,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-surface text-text-primary selection:bg-[#FBBF24]/30">
+        <ServiceWorkerRegister />
         <SWRProvider>
           <ThemeProvider>
             <TimerProvider>
