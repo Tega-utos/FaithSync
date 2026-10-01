@@ -12,18 +12,30 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export async function registerPushSubscription(): Promise<{ success: boolean; error?: string }> {
-  if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) {
-    return { success: false, error: 'Push notifications are not supported on this device/browser.' }
+  if (typeof window === 'undefined') {
+    return { success: false, error: 'Push notifications are not supported in this environment.' }
+  }
+
+  // iOS Safari check: Notifications only work in standalone PWA mode (added to home screen)
+  if (!('Notification' in window)) {
+    return {
+      success: false,
+      error: 'On iPhone (iOS), Web Push requires adding FaithSync to your Home Screen first! Tap the Share button in Safari -> "Add to Home Screen", then open the FaithSync app from your home screen.',
+    }
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    return { success: false, error: 'Service Workers are not supported on this browser.' }
   }
 
   const perm = await Notification.requestPermission()
   if (perm !== 'granted') {
-    return { success: false, error: 'Notification permission was denied.' }
+    return { success: false, error: 'Notification permission was denied. Please allow notifications in your browser or device settings.' }
   }
 
   try {
     const reg = await navigator.serviceWorker.ready
-    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BDwApgmIg2Les1F_yn7Hs20aEIEN6N1DPJlA9uJJqEd0paFf58Pe37xbCH_bgY9kvUUQAzlNjsvd0KaoZxKdHY8'
 
     let sub = await reg.pushManager.getSubscription()
     if (!sub && vapidKey) {

@@ -906,14 +906,28 @@ export default function ProfilePage() {
 
         <h1 className="text-sm font-extrabold text-text-primary tracking-tight">Profile</h1>
 
-        <button
-          type="button"
-          onClick={handleOpenEditModal}
-          className="p-2 rounded-xl text-[#FBBF24] hover:text-text-primary transition-colors"
-          title="Edit Profile"
-        >
-          <PencilSimple size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsNotificationsOpen(true)}
+            className="p-2 rounded-xl text-text-secondary hover:text-[#FBBF24] hover:bg-subtle/50 transition-colors relative"
+            title="Push Notifications & Preferences"
+          >
+            <Bell size={18} weight={pushPermissionStatus === 'granted' ? 'fill' : 'regular'} className={pushPermissionStatus === 'granted' ? 'text-emerald-500' : 'text-[#FBBF24]'} />
+            {pushPermissionStatus !== 'granted' && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FBBF24] animate-ping" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenEditModal}
+            className="p-2 rounded-xl text-[#FBBF24] hover:text-text-primary transition-colors"
+            title="Edit Profile"
+          >
+            <PencilSimple size={18} />
+          </button>
+        </div>
       </div>
 
       {/* 1. Primary Identity Card */}
@@ -1011,6 +1025,41 @@ export default function ProfilePage() {
             </span>
           </div>
         </Link>
+      </div>
+
+      {/* Push Notifications Quick Action Bar */}
+      <div
+        onClick={() => setIsNotificationsOpen(true)}
+        className="p-3.5 rounded-2xl bg-card border border-border hover:border-[#FBBF24]/50 transition-all flex items-center justify-between cursor-pointer shadow-xs group"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+            pushPermissionStatus === 'granted'
+              ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+              : 'bg-[#FDF9F1] dark:bg-amber-950/30 text-[#FBBF24] border border-[#FBBF24]/40'
+          }`}>
+            <Bell size={18} weight="fill" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black text-text-primary">Push Notifications</span>
+              <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider ${
+                pushPermissionStatus === 'granted'
+                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+              }`}>
+                {pushPermissionStatus === 'granted' ? 'Active ✓' : 'Tap to Enable'}
+              </span>
+            </div>
+            <p className="text-[10px] text-text-secondary truncate">
+              {pushPermissionStatus === 'granted'
+                ? 'Devotion alarms, buddy alerts & live sync active'
+                : 'Get notified when your buddy clocks in or sends prayer'}
+            </p>
+          </div>
+        </div>
+
+        <CaretRight size={16} className="text-text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
       </div>
 
       {/* 2. The Progress Hub (Streaks & Accountability) */}
