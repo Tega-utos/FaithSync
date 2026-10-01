@@ -33,7 +33,7 @@ export default function WelcomePage() {
           </p>
 
           <div className="mb-3">
-            <Logo height={32} priority />
+            <Logo height={52} priority />
           </div>
 
           <p className="text-[13.5px] text-[#4A4A4A] leading-[1.45] mb-6">

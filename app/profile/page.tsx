@@ -702,12 +702,15 @@ export default function ProfilePage() {
       }
       if (res.success) {
         setToastMessage('Push notifications enabled ✓')
-        setTimeout(() => setToastMessage(null), 3000)
+        setTimeout(() => setToastMessage(null), 3500)
       } else if (res.error) {
-        alert(res.error)
+        setToastMessage(res.error)
+        setTimeout(() => setToastMessage(null), 5000)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Push enable error:', err)
+      setToastMessage(err?.message || 'Failed to enable push notifications')
+      setTimeout(() => setToastMessage(null), 4000)
     } finally {
       setIsSubscribingPush(false)
     }

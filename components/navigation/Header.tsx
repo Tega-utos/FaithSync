@@ -84,7 +84,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
         {/* Left Brand Logo */}
         <Link href="/home" className="flex items-center gap-2 group shrink-0">
-          <Logo height={20} />
+          <Logo height={32} />
         </Link>
 
         {/* Desktop & Tablet Navigation Links (md+) */}

@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="min-h-screen min-h-[100dvh] bg-surface flex flex-col items-center justify-center px-6 py-12 text-center select-none">
       <div className="max-w-md w-full faith-card p-8 space-y-6 animate-fade-up">
         <div className="flex justify-center">
-          <Logo height={36} />
+          <Logo height={52} />
         </div>
 
         <div className="space-y-2">

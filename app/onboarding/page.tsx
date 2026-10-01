@@ -393,7 +393,7 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center space-y-2 pt-2 animate-fade-up">
           <div className="flex justify-center mb-1">
-            <Logo height={28} priority />
+            <Logo height={44} priority />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-text-primary">
             Set your spiritual walk.

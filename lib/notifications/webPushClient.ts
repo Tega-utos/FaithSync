@@ -35,6 +35,13 @@ export async function registerPushSubscription(): Promise<{ success: boolean; er
 
   try {
     const reg = await navigator.serviceWorker.ready
+    if (!reg || !reg.pushManager) {
+      return {
+        success: false,
+        error: 'Push Manager is unavailable on this browser session. On iPhone, please tap Share -> "Add to Home Screen" and open FaithSync from your home screen.',
+      }
+    }
+
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BDwApgmIg2Les1F_yn7Hs20aEIEN6N1DPJlA9uJJqEd0paFf58Pe37xbCH_bgY9kvUUQAzlNjsvd0KaoZxKdHY8'
 
     let sub = await reg.pushManager.getSubscription()
@@ -47,7 +54,7 @@ export async function registerPushSubscription(): Promise<{ success: boolean; er
 
     if (sub) {
       const subJson = sub.toJSON()
-      await fetch('/api/notifications/push', {
+      const res = await fetch('/api/notifications/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,6 +64,11 @@ export async function registerPushSubscription(): Promise<{ success: boolean; er
           auth: subJson.keys?.auth,
         }),
       })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return { success: false, error: data?.error || 'Failed to save push subscription to server' }
+      }
     }
 
     return { success: true }

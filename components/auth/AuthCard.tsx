@@ -67,8 +67,8 @@ export function AuthCard({
         )}
 
         {/* Centralized Header with Logo and Subtitle Underneath */}
-        <div className="flex flex-col items-center justify-center text-center pt-1 pb-0.5 space-y-1.5">
-          <Logo height={32} priority />
+        <div className="flex flex-col items-center justify-center text-center pt-1 pb-0.5 space-y-2">
+          <Logo height={52} priority />
           {subtitle && (
             <p className="text-xs font-bold text-text-secondary tracking-tight">
               {subtitle}

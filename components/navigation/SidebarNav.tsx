@@ -183,7 +183,7 @@ export function SidebarNav() {
       {/* Top Header / Brand Logo */}
       <div className="p-5 lg:p-6 border-b border-border/70 flex items-center justify-between">
         <Link href="/home" className="flex items-center gap-2.5 group">
-          <Logo height={24} />
+          <Logo height={36} />
         </Link>
         <ThemeToggle />
       </div>
