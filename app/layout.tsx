@@ -30,8 +30,15 @@ export const metadata: Metadata = {
     title: "FaithSync",
   },
   icons: {
-    icon: "/assets/logo.png",
-    apple: "/assets/logo.png",
+    icon: [
+      { url: "/assets/app-icon-light.png", media: "(prefers-color-scheme: light)" },
+      { url: "/assets/app-icon-dark.png", media: "(prefers-color-scheme: dark)" },
+      { url: "/assets/app-icon-dark.png" },
+    ],
+    apple: [
+      { url: "/assets/app-icon-dark.png" },
+    ],
+    shortcut: ["/assets/app-icon-dark.png"],
   },
 };
 
